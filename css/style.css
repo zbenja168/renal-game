@@ -511,6 +511,29 @@ footer {
 }
 .builder-pieces h4, .lymph-pool h4 { font-size: 0.9rem; color: var(--primary-dark); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
 .builder-pieces .pieces-list, .lymph-pool .pieces-list { display: flex; flex-wrap: wrap; gap: 8px; min-height: 60px; }
+
+/* Sticky wordbank — keeps the drag pool in view while you scroll long boards (esp. boss games). */
+.lymph-pool {
+  position: sticky;
+  top: 8px;
+  z-index: 30;
+  margin-bottom: 18px;
+  /* Solid layered background so scrolling content doesn't show through */
+  background:
+    linear-gradient(135deg, var(--bg-2), white 90%),
+    white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  backdrop-filter: blur(6px);
+}
+.lymph-pool .pieces-list {
+  max-height: 28vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+/* Subtle handle so the user knows the pool is scrollable when it overflows */
+.lymph-pool .pieces-list::-webkit-scrollbar { width: 8px; }
+.lymph-pool .pieces-list::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 4px; }
+.lymph-pool .pieces-list::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 .builder-zones { display: flex; flex-direction: column; gap: 12px; }
 .zone-row { display: flex; flex-direction: column; gap: 4px; }
 .zone-row .zone-label { font-size: 0.86rem; color: var(--ink-soft); font-weight: 600; }
