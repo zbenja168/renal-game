@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Handle It! — Module 7</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 7</a></div>
+  <h1>Game 2 — Handle It!</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔀</div>
+      <h2>Sort each substance by how the kidney handles it</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Compare each substance's clearance (C<sub>x</sub>) to GFR. If C<sub>x</sub> &lt; GFR → net reabsorption. If C<sub>x</sub> = GFR → filtration only. If C<sub>x</sub> &gt; GFR → net secretion. Drag each substance to the correct bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 7</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Substances</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Renal handling classified!</h3>
+      <p>Cx &lt; GFR = reabsorption (glucose, amino acids, sodium normally). Cx = GFR = filtration only (inulin). Cx &gt; GFR = secretion (PAH, creatinine, penicillin, organic acids). This logic drives drug dosing and toxicology.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "i1", label: "Inulin (Cx = GFR exactly)",                   bucket: "filt" },
+    { id: "i2", label: "Glucose (completely returned to blood)",       bucket: "reab" },
+    { id: "i3", label: "Amino acids (nearly all reclaimed)",           bucket: "reab" },
+    { id: "i4", label: "Sodium (most reabsorbed under normal conditions)", bucket: "reab" },
+    { id: "i5", label: "Para-aminohippuric acid / PAH",                bucket: "secr" },
+    { id: "i6", label: "Creatinine (filtered + some tubular secretion)", bucket: "secr" },
+    { id: "i7", label: "Penicillin (secreted by organic anion transporters)", bucket: "secr" }
+  ];
+
+  const buckets = [
+    { id: "reab", label: "Net Reabsorption (Cx < GFR)" },
+    { id: "filt", label: "Filtration Only (Cx = GFR)" },
+    { id: "secr", label: "Net Secretion (Cx > GFR)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dragSource.textContent;
+        zone.appendChild(p);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Compare Cx to GFR for this substance.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

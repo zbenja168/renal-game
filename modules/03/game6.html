@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 3</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 3</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all three learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of sixteen labels. Drop each onto the correct slot spanning embryologic basis, anatomic consequences, and clinical significance of congenital kidney disorders. Wrong drops count as misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the brick!</h3>
+      <p>You can trace each congenital kidney disorder from its embryologic error through its anatomic disruption to its clinical outcome.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "embryo", title: "Embryologic Basis", lo: "LO1",
+      slots: [
+        { id: "e1", label: "Embryologic error behind horseshoe kidney",                        answer: "Inferior pole fusion during ascent" },
+        { id: "e2", label: "Embryologic error behind renal agenesis",                          answer: "Ureteric bud fails to form or induce blastema" },
+        { id: "e3", label: "Embryologic error behind multicystic dysplastic kidney",           answer: "Abnormal ureteric bud-mesenchyme interaction" },
+        { id: "e4", label: "Embryologic error behind duplicated collecting system",            answer: "Duplication of the ureteric bud" }
+      ]
+    },
+    {
+      id: "anat", title: "Anatomic & Functional Consequences", lo: "LO2",
+      slots: [
+        { id: "a1", label: "Characteristic shape of a horseshoe kidney",                      answer: "U-shaped (inferior poles fused)" },
+        { id: "a2", label: "Blood supply to an ectopic (pelvic) kidney",                      answer: "Local iliac vessels (not renal artery)" },
+        { id: "a3", label: "Functional status of a multicystic dysplastic kidney",             answer: "Nonfunctional (no filtration capacity)" },
+        { id: "a4", label: "Kidney response to loss of the contralateral side",               answer: "Compensatory hypertrophy" }
+      ]
+    },
+    {
+      id: "potter", title: "Potter Sequence", lo: "LO2",
+      slots: [
+        { id: "p1", label: "Root cause of Potter sequence — absent production of this fluid",  answer: "Fetal urine (→ oligohydramnios)" },
+        { id: "p2", label: "Potter sequence feature: flattened nose and recessed chin",        answer: "Facial abnormalities" },
+        { id: "p3", label: "Potter sequence feature that causes respiratory failure at birth",  answer: "Pulmonary hypoplasia" },
+        { id: "p4", label: "Potter sequence feature: hip dislocation or clubfoot",            answer: "Limb deformities" }
+      ]
+    },
+    {
+      id: "clinical", title: "Clinical Significance", lo: "LO3",
+      slots: [
+        { id: "c1", label: "Most common renal congenital anomaly overall",                    answer: "Duplicated collecting system" },
+        { id: "c2", label: "Vessel whose root traps the horseshoe kidney below the umbilicus", answer: "Inferior mesenteric artery" },
+        { id: "c3", label: "Prognosis of bilateral renal agenesis",                           answer: "Lethal — incompatible with postnatal survival" },
+        { id: "c4", label: "Long-term risk from renal hypoplasia — reduced nephron number",   answer: "Hypertension and CKD" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+
+  const ICONS = { embryo: "🧬", anat: "🫘", potter: "🫁", clinical: "🩺" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${pi.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

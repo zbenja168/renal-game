@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lymph Drainage Sorter — Module 1</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 1</a></div>
+  <h1>Game 4 — Lymph Drainage Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧬</div>
+      <h2>Drag each region into the correct lymph node group</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each region from the pool into the lymph node group that receives its drainage. Some buckets accept more than one region. The brick maps each region precisely — ureters and bladder both have segment-specific drainage.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drainage regions</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Lymph map complete!</h3>
+      <p>Kidneys → para-aortic & paracaval. Ureters drain by thirds. Bladder splits between external (upper) and internal (lower) iliac nodes. This is the order in which spread happens, so it's the order to remember.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // Each region maps to exactly one bucket id (per the brick).
+  const items = [
+    { id: "k_left",      label: "Left kidney",                                   bucket: "para_aortic" },
+    { id: "k_right",     label: "Right kidney",                                  bucket: "para_aortic_paracaval" },
+    { id: "ur_upL",      label: "Upper third of LEFT ureter",                    bucket: "para_aortic" },
+    { id: "ur_upR",      label: "Upper third of RIGHT ureter",                   bucket: "paracaval" },
+    { id: "ur_mid",      label: "Middle third of both ureters",                  bucket: "common_iliac" },
+    { id: "ur_low",      label: "Lower third of ureters",                        bucket: "common_int_ext_iliac" },
+    { id: "bl_sup",      label: "Superior bladder",                              bucket: "external_iliac" },
+    { id: "bl_inf",      label: "Inferior bladder",                              bucket: "internal_iliac" }
+  ];
+
+  const buckets = [
+    { id: "para_aortic",            label: "Para-aortic (lumbar) nodes" },
+    { id: "para_aortic_paracaval",  label: "Para-aortic AND paracaval nodes" },
+    { id: "paracaval",              label: "Paracaval nodes" },
+    { id: "common_iliac",           label: "Common iliac nodes" },
+    { id: "common_int_ext_iliac",   label: "Common iliac + internal iliac + external iliac nodes" },
+    { id: "external_iliac",         label: "External iliac nodes" },
+    { id: "internal_iliac",         label: "Internal iliac nodes" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        // Remove placeholder if first item
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct: ${placedItem.textContent}`, "correct");
+        if (placed === items.length) {
+          Game.celebrate("winBanner");
+        }
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ Not the right node group for ${dragSource.textContent}.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

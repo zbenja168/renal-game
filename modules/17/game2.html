@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permeability Sorter — Module 17</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 17</a></div>
+  <h1>Game 2 — Permeability Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Drag each property into the correct nephron segment bucket</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each nephron segment has distinct permeabilities to water and sodium. These differential permeabilities are the engine of both urine dilution and concentration. Place each property in the correct segment.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted correctly: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Segment properties</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Permeabilities sorted!</h3>
+      <p>The descending limb lets water out but keeps sodium in. The thick ascending limb (TAL) is the diluting segment — it pumps out sodium but is water-tight. The collecting duct is the key regulatory segment where ADH controls water reabsorption via aquaporin-2.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "desc_w",   label: "Permeable to water — water leaves passively into hypertonic interstitium", bucket: "desc" },
+    { id: "desc_s",   label: "Cannot reabsorb sodium — tubular fluid becomes more concentrated as it descends", bucket: "desc" },
+    { id: "asc_imp",  label: "Impermeable to water — tubular fluid is diluted despite losing sodium", bucket: "asc" },
+    { id: "asc_nkcc", label: "Actively reabsorbs sodium chloride via NKCC2 transporter", bucket: "asc" },
+    { id: "asc_dilu", label: "Called the 'diluting segment' — tubular fluid can reach 50 mOsm/kg here", bucket: "asc" },
+    { id: "cd_base",  label: "Impermeable to water at baseline (no ADH present)",                      bucket: "cd" },
+    { id: "cd_adh",   label: "Becomes highly water-permeable when ADH inserts aquaporin-2 (AQP2) channels", bucket: "cd" },
+    { id: "cd_urea",  label: "Urea is reabsorbed from here, recycling into the inner medullary interstitium", bucket: "cd" },
+    { id: "cd_max",   label: "When maximally stimulated by ADH, urine equilibrates with inner medulla — up to 1,250 mOsm/kg", bucket: "cd" }
+  ];
+
+  const buckets = [
+    { id: "desc", label: "Descending limb of loop of Henle" },
+    { id: "asc",  label: "Thick ascending limb (TAL) of loop of Henle" },
+    { id: "cd",   label: "Collecting duct (principal cells)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct: " + placedItem.textContent, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Wrong segment — think about which part of the nephron has this property.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 10</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 10</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of sixteen labels. Drop each onto the correct slot covering sodium distribution, nephron reabsorption, regulation, and electrolyte comparison. Wrong drops count as misses — aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the Sodium Homeostasis brick!</h3>
+      <p>You correctly identified every compartment, transporter, regulatory mechanism, and electrolyte distinction. You are ready for sodium physiology on a real exam.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "dist", title: "Sodium Distribution", lo: "LO1",
+      slots: [
+        { id: "d1", label: "Fraction of body mass that is total body water",               answer: "60% of body mass" },
+        { id: "d2", label: "Fraction of TBW in the extracellular fluid space",             answer: "1/3 of TBW" },
+        { id: "d3", label: "Fluid space that expands when sodium balance is positive",     answer: "Extracellular fluid (ECF)" },
+        { id: "d4", label: "Pump that keeps sodium outside the cell and potassium inside", answer: "Na/K-ATPase" }
+      ]
+    },
+    {
+      id: "reabs", title: "Nephron Reabsorption", lo: "LO2",
+      slots: [
+        { id: "r1", label: "Segment reabsorbing ~65–80% of filtered Na+ isotonically",            answer: "Proximal tubule" },
+        { id: "r2", label: "Transporter blocked by loop diuretics (TAL)",                          answer: "NKCC2" },
+        { id: "r3", label: "Transporter blocked by thiazides (DCT)",                               answer: "NCC" },
+        { id: "r4", label: "Channel in the collecting duct regulated by aldosterone",              answer: "ENaC" }
+      ]
+    },
+    {
+      id: "reg", title: "Regulation of Reabsorption", lo: "LO3",
+      slots: [
+        { id: "n1", label: "Intrarenal mechanism: proximal tubule reabsorption rises proportionally with GFR (no hormone needed)", answer: "Glomerulotubular balance" },
+        { id: "n2", label: "Intrarenal mechanism: macula densa detects NaCl and adjusts GFR via renin/JG cells",                    answer: "Tubuloglomerular feedback" },
+        { id: "n3", label: "Extrarenal system: renin → Ang II + aldosterone → increase Na+ reabsorption",                          answer: "RAAS" },
+        { id: "n4", label: "Natriuretic peptide released by atria that counterregulates RAAS and promotes Na+ excretion",          answer: "ANP" }
+      ]
+    },
+    {
+      id: "comp", title: "Electrolyte Comparison", lo: "LO4",
+      slots: [
+        { id: "c1", label: "Sodium: actively secreted vs. reabsorbed — it is NEVER secreted into the tubule",       answer: "Never secreted" },
+        { id: "c2", label: "Electrolyte opposite to sodium: primarily secreted distally, reabsorbed proximally",    answer: "Potassium (K+)" },
+        { id: "c3", label: "Electrolyte that is a 'mirror image' of sodium in its reabsorption pattern",            answer: "Magnesium (Mg++)" },
+        { id: "c4", label: "When sodium intake increases, the kidneys respond by increasing excretion via this peptide", answer: "BNP" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const ICONS = { dist: "🧂", reabs: "🔬", reg: "⚖️", comp: "🧪" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+  let placed = 0, misses = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${pi.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

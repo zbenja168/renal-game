@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parameter Match — Module 6</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 6</a></div>
+  <h1>Game 3 — Parameter Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🃏</div>
+      <h2>Match each physiological change to its GFR / FF effect</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Flip cards to find the matching pairs. Each change (left side of a pair) is matched to its combined effect on GFR and filtration fraction (right side). Six pairs from the brick's Table 1.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
+      <span>Flips: <span class="score" id="flips">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All parameters matched!</h3>
+      <p>Afferent constriction drops both GFR and RBF. Efferent constriction raises GFR but cuts RBF. Plasma protein and Kf changes alter GFR with no change in RBF — key table from the brick.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Afferent arteriole constriction",  b: "GFR decreases · FF variable (often decreases)" },
+    { a: "Afferent arteriole dilation",      b: "GFR increases · FF variable (often increases)" },
+    { a: "Efferent arteriole constriction",  b: "GFR increases · FF increases" },
+    { a: "Efferent arteriole dilation",      b: "GFR decreases · FF decreases" },
+    { a: "Decreased plasma proteins",        b: "GFR increases · FF decreases (RBF unchanged)" },
+    { a: "Increased Kf (filtration coefficient)", b: "GFR increases · FF increases (RBF unchanged)" }
+  ];
+
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const flipsEl = document.getElementById("flips");
+  const fbEl = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let flips = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; flips = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    flipsEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    board.innerHTML = "";
+
+    const cards = [];
+    pairs.forEach((p, i) => {
+      cards.push({ pairId: i, text: p.a });
+      cards.push({ pairId: i, text: p.b });
+    });
+    Game.shuffle(cards);
+    cards.forEach(c => {
+      const el = document.createElement("div");
+      el.className = "match-card";
+      el.dataset.pairId = c.pairId;
+      el.dataset.text = c.text;
+      el.textContent = "?";
+      el.addEventListener("click", () => onPick(el));
+      board.appendChild(el);
+    });
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("flipped") || card.classList.contains("matched")) return;
+    flip(card, true);
+    flips++;
+    flipsEl.textContent = flips;
+    if (!firstPick) { firstPick = card; return; }
+    if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      showFb("Not a match — think about what each change does to glomerular pressure.", "info");
+      const a = firstPick, b = card;
+      setTimeout(() => { flip(a, false); flip(b, false); firstPick = null; lock = false; }, 900);
+    }
+  }
+
+  function flip(card, on) {
+    if (on) { card.classList.add("flipped"); card.textContent = card.dataset.text; }
+    else { card.classList.remove("flipped"); card.textContent = "?"; }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenario Lab — Module 14</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 14</a></div>
+  <h1>Game 5 — Clinical Scenario Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Round 1: Sort the renal effects of mannitol</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each renal/tubular effect of mannitol into the correct category — whether it happens at the glomerulus, the tubule, or as a downstream systemic result.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Renal effects</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios — different from the brick's verbatim review questions — each testing a key fact about osmotic diuretics.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Clinical Scenario Lab complete!</h3>
+      <p>You are ready for the boss round — Game 6 covers all three learning objectives together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ========== ROUND 1: SORTER ========== */
+  const effects = [
+    { id: "glom_filter",   label: "Freely filtered at the glomerulus without being reabsorbed",  bin: "glom" },
+    { id: "glom_osmol",    label: "Raises tubular fluid osmolality, preventing water reabsorption at the tubule", bin: "tubule" },
+    { id: "tub_prox",      label: "Effect most marked in the proximal tubule but occurs throughout all nephron segments", bin: "tubule" },
+    { id: "tub_na",        label: "Increased sodium delivery to the tubule leads to natriuresis", bin: "tubule" },
+    { id: "sys_urine",     label: "Increased urine output (diuresis) — the downstream systemic result", bin: "systemic" },
+    { id: "sys_shrink",    label: "Reduction of intracellular volume (cells shrink) — systemic osmotic effect", bin: "systemic" }
+  ];
+
+  const bins = [
+    { id: "glom",     label: "Glomerular level" },
+    { id: "tubule",   label: "Tubular level" },
+    { id: "systemic", label: "Systemic / downstream result" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, effects.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(effects.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, effects.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === effects.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think where this effect occurs in the nephron.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ========== ROUND 2: QUIZ (new questions) ========== */
+  const questions = [
+    {
+      q: "A patient with SIADH (syndrome of inappropriate antidiuretic hormone) has chronic euvolemic hyponatremia. Which osmotic agent could be given orally to increase free water excretion and correct the sodium level?",
+      options: ["Mannitol IV", "Urea orally", "Glycerol IV", "Acetazolamide orally"],
+      correct: 1,
+      explain: "Per the brick, urea given orally is used as an osmotic diuretic for patients with chronic euvolemic hyponatremia from SIADH. It is filtered into the nephron and increases free water excretion into the urine."
+    },
+    {
+      q: "Why is mannitol described as being 'freely filtered at the glomerulus' yet effective in the tubule?",
+      options: [
+        "It is actively secreted into the tubule by transporters",
+        "It diffuses poorly across cell membranes, so it stays in the tubular lumen and exerts osmotic pressure",
+        "It binds to aldosterone receptors in the collecting duct",
+        "It is reabsorbed in the loop of Henle, then secreted distally"
+      ],
+      correct: 1,
+      explain: "Mannitol diffuses poorly across cell membranes. After being freely filtered at the glomerulus, it cannot be reabsorbed through tubular cell membranes. It stays in the tubular lumen and draws water osmotically, increasing urine output."
+    },
+    {
+      q: "A patient with chronic kidney disease (low GFR) is given IV mannitol. What is the primary concern with this scenario?",
+      options: [
+        "Mannitol will not be filtered and will have no diuretic effect",
+        "Mannitol will be retained in the plasma, expanding extracellular volume and potentially causing pulmonary edema",
+        "Mannitol will be actively secreted in excess, causing severe dehydration",
+        "Mannitol will trigger aldosterone release, worsening hypertension"
+      ],
+      correct: 1,
+      explain: "In patients with poor kidney function (low GFR), mannitol cannot be adequately excreted. It accumulates in the plasma, raises serum osmolality, draws more water into the extracellular space, and can cause volume overload and pulmonary edema — a key contraindication."
+    },
+    {
+      q: "Inhaled mannitol is occasionally used in patients with which of the following conditions?",
+      options: [
+        "Chronic obstructive pulmonary disease (COPD)",
+        "Cystic fibrosis with thick bronchial secretions",
+        "Pneumonia requiring antibiotic delivery",
+        "Pulmonary hypertension"
+      ],
+      correct: 1,
+      explain: "Per the brick, inhaled mannitol is used to draw water into bronchial secretions in cystic fibrosis, thinning the thick mucus and aiding airway clearance."
+    },
+    {
+      q: "A patient being monitored in the ICU after receiving mannitol develops signs of hyponatremia. Which mechanism best explains this finding?",
+      options: [
+        "Mannitol blocks ADH receptors, causing water retention",
+        "Mannitol's osmotic shift draws water into the extracellular space, diluting serum sodium",
+        "Mannitol increases aldosterone secretion, causing sodium wasting",
+        "Mannitol directly inhibits the sodium-potassium ATPase pump"
+      ],
+      correct: 1,
+      explain: "Mannitol's osmotic activity draws water from the intracellular compartment into the extracellular space. This dilutes the serum sodium concentration, causing hyponatremia — one of the electrolyte disturbances requiring close monitoring."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

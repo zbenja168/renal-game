@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treatment Lab — Module 19</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 19</a></div>
+  <h1>Game 5 — Treatment Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Round 1: Sort treatments by hypernatremia mechanism</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each treatment into the correct category — the type of hypernatremia it primarily addresses.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Treatments</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios based on the brick's management content.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Treatment Lab complete!</h3>
+      <p>Now face the boss — Game 6 tests all four LOs together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: TREATMENT SORTER ===================== */
+  const treatments = [
+    { id: "t1", label: "D5W (5% dextrose in water) — pure free water replacement",          bin: "free_water" },
+    { id: "t2", label: "0.45% (half-normal) saline — free water + volume replacement",      bin: "volume_and_water" },
+    { id: "t3", label: "0.9% normal saline — correct low extracellular volume first",       bin: "volume_first" },
+    { id: "t4", label: "Desmopressin (DDAVP) — replace missing ADH",                        bin: "central_di" },
+    { id: "t5", label: "Amiloride — blocks ENaC channel, used when nephrogenic DI from lithium", bin: "nephro_di" },
+    { id: "t6", label: "Thiazide diuretic + low-salt diet — paradoxically helps nephrogenic DI", bin: "nephro_di" }
+  ];
+
+  const bins = [
+    { id: "free_water",      label: "Pure free water deficit (patient can't drink)" },
+    { id: "volume_and_water", label: "Volume + water deficit (both depleted)" },
+    { id: "volume_first",    label: "Correct low ECV first (before water deficit)" },
+    { id: "central_di",      label: "Central diabetes insipidus" },
+    { id: "nephro_di",       label: "Nephrogenic diabetes insipidus" }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl   = document.getElementById("score");
+  const fbEl      = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, treatments.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(treatments.slice()).forEach(t => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = t.bin;
+      el.textContent = t.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target   = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, treatments.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === treatments.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think which scenario this treatment targets.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===================== ROUND 2: QUIZ ===================== */
+  const questions = [
+    {
+      q: "An ICU patient with hypernatremia (Na 168 mEq/L) has orthostatic hypotension and poor skin turgor. What should be corrected first before addressing the free water deficit?",
+      options: [
+        "Give D5W immediately to lower sodium",
+        "Administer desmopressin to stop urinary losses",
+        "Restore extracellular volume with isotonic normal saline",
+        "Start free water flushes via nasogastric tube"
+      ],
+      correct: 2,
+      explain: "Per the brick: low ECV (volume depletion) must be corrected first with isotonic saline because it determines blood pressure and perfusion. Once ECV is restored, address the free water deficit with hypotonic solutions."
+    },
+    {
+      q: "A patient with central DI is started on desmopressin (DDAVP). Why does this medication work for central but NOT nephrogenic DI?",
+      options: [
+        "Desmopressin increases sodium reabsorption in the proximal tubule",
+        "Desmopressin replaces missing ADH, inserting aquaporins in the collecting duct — only works if the kidney can respond",
+        "Desmopressin suppresses the pituitary from releasing excess ADH",
+        "Desmopressin blocks the V2 receptor, reducing water loss"
+      ],
+      correct: 1,
+      explain: "Desmopressin is an ADH analog. In central DI the kidney is intact but ADH is missing, so DDAVP restores aquaporin insertion and water reabsorption. In nephrogenic DI the kidney cannot respond to ADH, so DDAVP has no effect."
+    },
+    {
+      q: "A patient with chronic hypernatremia (Na 162 mEq/L over two weeks) is being rehydrated. What rate of sodium correction is safest?",
+      options: [
+        "As fast as possible — lower Na by 20 mEq/L in 4 hours",
+        "Correct at ≤ 10 mEq/L per day to avoid cerebral edema",
+        "Correct sodium completely in 24 hours with D5W",
+        "No rate limit — chronic hypernatremia has no correction risk"
+      ],
+      correct: 1,
+      explain: "Per the brick, correction of chronic hypernatremia must be done slowly — generally no more than 10 mEq/L per day — to avoid overcorrection that causes cerebral edema as brain cells (which adapted by accumulating osmoles) swell too rapidly."
+    },
+    {
+      q: "Why is pure intravenous water not used to treat hypernatremia, even though the patient has a water deficit?",
+      options: [
+        "It would raise the serum sodium further",
+        "IV pure water would lyse red blood cells (hemolysis)",
+        "Pure water cannot be absorbed by the kidneys",
+        "Water is only effective when given orally for hypernatremia"
+      ],
+      correct: 1,
+      explain: "Per the brick: pure IV water cannot be given because it is hypotonic and would cause immediate lysis of red blood cells. Instead, D5W is used — the dextrose is quickly metabolized, leaving free water that distributes throughout body fluid compartments."
+    },
+    {
+      q: "A patient with lithium-induced nephrogenic DI has polyuria and Na of 149 mEq/L. Lithium cannot be stopped due to psychiatric need. Which medication blocks the channel lithium uses to enter collecting duct principal cells?",
+      options: [
+        "Desmopressin",
+        "Amiloride",
+        "Furosemide",
+        "Tolvaptan"
+      ],
+      correct: 1,
+      explain: "Lithium enters principal cells of the collecting duct through the epithelial sodium channel (ENaC) and interferes with ADH signaling. Amiloride blocks ENaC, preventing lithium entry and reducing the nephrogenic DI effect. This is a brick-specific clinical correlation."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  const winEl         = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Force Field — Module 6</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 6</a></div>
+  <h1>Game 2 — Force Field</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚖️</div>
+      <h2>Click each Starling force: does it PROMOTE or OPPOSE filtration?</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four Starling forces govern glomerular filtration. Click each force label to classify it as <strong>PROMOTES filtration</strong> or <strong>OPPOSES filtration</strong>. Your choice toggles between the two. Lock in all four, then hit Check.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="forceCards" style="display:flex; flex-direction:column; gap:12px; margin-top:16px;"></div>
+
+    <div style="margin-top:16px; text-align:center;">
+      <button class="btn" id="checkBtn">Check answers</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Forces mastered!</h3>
+      <p>Glomerular hydrostatic pressure (P<sub>GC</sub>) and Bowman's space oncotic pressure promote filtration. Bowman's capsule hydrostatic pressure (P<sub>BS</sub>) and glomerular capillary oncotic pressure (π<sub>GC</sub>) oppose it.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const forces = [
+    { id: "f1", label: "Glomerular capillary hydrostatic pressure (Pᵊᴄ)",   correct: "promotes",
+      explain: "P_GC is the main driving force — blood pressure in the glomerular capillary pushes fluid into Bowman's space." },
+    { id: "f2", label: "Bowman's capsule hydrostatic pressure (P_BS)",                  correct: "opposes",
+      explain: "The fluid already in Bowman's space exerts a back-pressure that resists further filtration." },
+    { id: "f3", label: "Glomerular capillary oncotic pressure (π_GC)",            correct: "opposes",
+      explain: "Plasma proteins retained in the capillary pull fluid back in, opposing filtration. It rises along the capillary as water is filtered out." },
+    { id: "f4", label: "Bowman's space oncotic pressure (π_BS)",                  correct: "promotes",
+      explain: "Normally near zero (proteins don't cross freely), so it provides negligible promotion — but conceptually it would draw fluid in." }
+  ];
+
+  const container = document.getElementById("forceCards");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const state = {};
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function init() {
+    Game.setScore(scoreEl, 0, forces.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    container.innerHTML = "";
+    forces.forEach(f => {
+      state[f.id] = null;
+      const card = document.createElement("div");
+      card.style.cssText = "border:2px solid var(--border); border-radius:10px; padding:14px; background:var(--surface);";
+      card.innerHTML = `<div style="font-weight:600; margin-bottom:10px;">${f.label}</div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn secondary" data-fid="${f.id}" data-val="promotes" style="flex:1;">Promotes filtration</button>
+          <button class="btn secondary" data-fid="${f.id}" data-val="opposes"  style="flex:1;">Opposes filtration</button>
+        </div>
+        <div class="force-explain" id="exp-${f.id}" style="display:none; margin-top:8px; font-size:0.88rem; color:var(--muted);"></div>`;
+      container.appendChild(card);
+    });
+
+    container.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-fid]");
+      if (!btn) return;
+      const fid = btn.dataset.fid;
+      const val = btn.dataset.val;
+      state[fid] = val;
+      // Highlight selected
+      container.querySelectorAll(`button[data-fid="${fid}"]`).forEach(b => {
+        b.classList.toggle("success", b.dataset.val === val);
+      });
+    });
+  }
+
+  document.getElementById("checkBtn").addEventListener("click", () => {
+    let correct = 0;
+    forces.forEach(f => {
+      const expEl = document.getElementById("exp-" + f.id);
+      expEl.style.display = "block";
+      if (state[f.id] === f.correct) {
+        correct++;
+        expEl.textContent = "✓ " + f.explain;
+        expEl.style.color = "var(--good)";
+      } else {
+        expEl.textContent = "✗ " + f.explain;
+        expEl.style.color = "var(--bad)";
+      }
+    });
+    Game.setScore(scoreEl, correct, forces.length);
+    if (correct === forces.length) {
+      Game.celebrate("winBanner");
+    } else {
+      showFb(`${correct}/${forces.length} correct — read the explanations and try again.`, "info");
+    }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

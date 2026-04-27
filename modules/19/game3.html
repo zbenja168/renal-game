@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DI Cause Match — Module 19</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 19</a></div>
+  <h1>Game 3 — DI Cause Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧬</div>
+      <h2>Match each DI cause with its type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Flip cards to find matching cause–type pairs. Central DI = problem with ADH release; Nephrogenic DI = kidney can't respond to ADH. Six pairs from the brick.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
+      <span>Flips: <span class="score" id="flips">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All DI causes matched!</h3>
+      <p>Central DI: pituitary fails to release ADH (autoimmune, tumor, surgery, head trauma). Nephrogenic DI: kidney fails to respond to ADH (lithium, hypercalcemia, chronic kidney disease, V2 receptor mutations).</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Autoimmune attack on the pituitary (50% of central DI)",   b: "Central DI [1]" },
+    { a: "Pituitary or CNS tumor (40% of central DI)",               b: "Central DI [2]" },
+    { a: "Head trauma or intracranial surgery",                       b: "Central DI [3]" },
+    { a: "Lithium therapy for bipolar disorder",                      b: "Nephrogenic DI [1]" },
+    { a: "Hypercalcemia impairs collecting duct concentration",       b: "Nephrogenic DI [2]" },
+    { a: "Rare hereditary V2 receptor mutation",                      b: "Nephrogenic DI [3]" }
+  ];
+
+  const board   = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const flipsEl = document.getElementById("flips");
+  const fbEl    = document.getElementById("feedback");
+  const winEl   = document.getElementById("winBanner");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let flips   = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; flips = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    flipsEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    board.innerHTML = "";
+
+    const cards = [];
+    pairs.forEach((p, i) => {
+      cards.push({ pairId: i, text: p.a });
+      cards.push({ pairId: i, text: p.b });
+    });
+    Game.shuffle(cards);
+    cards.forEach(c => {
+      const el = document.createElement("div");
+      el.className = "match-card";
+      el.dataset.pairId = c.pairId;
+      el.dataset.text   = c.text;
+      el.textContent    = "?";
+      el.addEventListener("click", () => onPick(el));
+      board.appendChild(el);
+    });
+  }
+
+  function onPick(card) {
+    if (lock) return;
+    if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
+    flip(card, true);
+    flips++;
+    flipsEl.textContent = flips;
+
+    if (!firstPick) { firstPick = card; return; }
+
+    if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      showFb("Not a match — keep tracking the cards.", "info");
+      const a = firstPick, b = card;
+      setTimeout(() => { flip(a, false); flip(b, false); firstPick = null; lock = false; }, 900);
+    }
+  }
+
+  function flip(card, on) {
+    if (on) {
+      card.classList.add("flipped");
+      // Strip uniqueness suffix like " [1]" for the DI type cards
+      card.textContent = card.dataset.text.replace(/ \[\d\]$/, "");
+    } else {
+      card.classList.remove("flipped");
+      card.textContent = "?";
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+# Build artifacts — pre-rendered PDF page images used during construction.
+# Not needed at runtime; safe to delete or exclude from your repo.
+_pdfpages/

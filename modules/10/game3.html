@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diuretic Match — Module 10</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 10</a></div>
+  <h1>Game 3 — Diuretic Match</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Match each transporter or drug to the nephron segment it acts on</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Flip cards to find matching pairs. Each transporter or diuretic is paired with the nephron segment where it works. Six pairs total — all facts from the sodium homeostasis brick.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
+      <span>Flips: <span class="score" id="flips">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All pairs matched!</h3>
+      <p>NHE3 drives PT reabsorption. NKCC2 in the TAL is blocked by loop diuretics. NCC in the DCT is blocked by thiazides. ENaC in the collecting duct is regulated by aldosterone. These transporters underpin sodium balance.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "NHE3 (Na+/H+ exchanger)",            b: "Proximal tubule — drives 65–80% of Na+ reabsorption" },
+    { a: "NKCC2 cotransporter",                 b: "Thick ascending limb — blocked by loop diuretics" },
+    { a: "Furosemide (loop diuretic)",          b: "Inhibits NKCC2 in ascending limb; treats CHF edema" },
+    { a: "NCC (Na+/Cl- cotransporter)",         b: "Distal convoluted tubule — blocked by thiazides" },
+    { a: "Thiazide diuretics",                  b: "First-line for hypertension; inhibit DCT NCC transporter" },
+    { a: "ENaC (epithelial Na+ channels)",      b: "Collecting duct — regulated by aldosterone; fine-tunes 2–5%" }
+  ];
+
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const flipsEl = document.getElementById("flips");
+  const fbEl = document.getElementById("feedback");
+  let firstPick = null, lock = false, matched = 0, flips = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; flips = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    flipsEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    board.innerHTML = "";
+    const cards = [];
+    pairs.forEach((p, i) => {
+      cards.push({ pairId: i, text: p.a });
+      cards.push({ pairId: i, text: p.b });
+    });
+    Game.shuffle(cards);
+    cards.forEach(c => {
+      const el = document.createElement("div");
+      el.className = "match-card";
+      el.dataset.pairId = c.pairId;
+      el.dataset.text = c.text;
+      el.textContent = "?";
+      el.addEventListener("click", () => onPick(el));
+      board.appendChild(el);
+    });
+  }
+
+  function onPick(card) {
+    if (lock) return;
+    if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
+    flip(card, true);
+    flips++;
+    flipsEl.textContent = flips;
+    if (!firstPick) { firstPick = card; return; }
+    if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      showFb("Not a match — keep those transporters sorted!", "info");
+      const a = firstPick, b = card;
+      setTimeout(() => { flip(a, false); flip(b, false); firstPick = null; lock = false; }, 900);
+    }
+  }
+
+  function flip(card, on) {
+    if (on) { card.classList.add("flipped"); card.textContent = card.dataset.text; }
+    else { card.classList.remove("flipped"); card.textContent = "?"; }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

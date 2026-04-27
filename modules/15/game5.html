@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenario Lab — Module 15</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 15</a></div>
+  <h1>Game 5 — Clinical Scenario Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Round 1: Sort drug interactions by mechanism</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Certain co-medications increase potassium levels dangerously when combined with potassium-sparing diuretics. Drag each drug into the correct mechanism bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Co-medications</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios — new questions testing the brick's content on mechanism, drug classes, indications, and adverse effects.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Clinical Scenario Lab complete!</h3>
+      <p>Head to Game 6 — the boss round — to test everything together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ========== ROUND 1: DRUG INTERACTION SORTER ========== */
+  const drugs = [
+    { id: "ace",    label: "ACE inhibitors (e.g., lisinopril, enalapril)",          bin: "raas" },
+    { id: "arb",    label: "Angiotensin II receptor blockers (ARBs, e.g., losartan)", bin: "raas" },
+    { id: "ksupp",  label: "Oral potassium supplements",                             bin: "direct" },
+    { id: "nsaid",  label: "NSAIDs — can impair renal function, worsening hyperkalemia", bin: "renal" },
+    { id: "ckd",    label: "Chronic kidney disease (reduced GFR → less K+ excretion)", bin: "renal" },
+    { id: "heparin", label: "Heparin — can suppress aldosterone secretion, adding to K+ retention", bin: "direct" }
+  ];
+
+  const bins = [
+    { id: "raas",   label: "Block RAAS → ↓ aldosterone → ↑ serum potassium" },
+    { id: "direct", label: "Directly increase serum potassium load" },
+    { id: "renal",  label: "Impair renal potassium excretion (indirect effect)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, drugs.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(drugs.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, drugs.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === drugs.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think about how this medication affects serum potassium.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ========== ROUND 2: QUIZ (new questions) ========== */
+  const questions = [
+    {
+      q: "A 62-year-old woman with chronic liver disease and ascites is started on spironolactone. Which mechanism explains why this drug is particularly useful for her ascites?",
+      options: [
+        "It blocks the loop of Henle, producing a powerful diuresis to remove abdominal fluid",
+        "It blocks aldosterone receptors in the collecting duct, reducing sodium and water retention driven by high aldosterone levels in liver disease",
+        "It directly inhibits the renin enzyme, lowering angiotensin II and aldosterone",
+        "It increases free water excretion by antagonizing ADH in the collecting duct"
+      ],
+      correct: 1,
+      explain: "In end-stage liver disease, complex physiologic mechanisms lead to high aldosterone states, causing sodium and water retention. Spironolactone blocks aldosterone receptors in the collecting duct, inducing sodium diuresis and removing ascitic fluid from the peritoneal cavity."
+    },
+    {
+      q: "A 45-year-old man on spironolactone for hyperaldosteronism develops gynecomastia and decreased libido. His physician wants to switch him to an agent with the same therapeutic benefit but fewer hormonal side effects. Which medication should be prescribed?",
+      options: ["Amiloride", "Eplerenone", "Furosemide", "Triamterene"],
+      correct: 1,
+      explain: "Eplerenone is an aldosterone receptor antagonist with much greater selectivity for the mineralocorticoid receptor, resulting in fewer antiandrogen and estrogen-like side effects (gynecomastia, sexual dysfunction) compared to spironolactone. It is the preferred option when these side effects are problematic."
+    },
+    {
+      q: "Why are potassium-sparing diuretics considered weak diuretics compared to loop diuretics?",
+      options: [
+        "They block the glomerular filtration rate, reducing urine volume",
+        "By the time tubular fluid reaches the collecting duct, most sodium has already been reabsorbed, leaving little for these drugs to block",
+        "They are rapidly metabolized before reaching the kidney",
+        "They require activation by aldosterone, which is often insufficient"
+      ],
+      correct: 1,
+      explain: "Most sodium reabsorption occurs in the proximal tubule and loop of Henle. By the time tubular fluid reaches the collecting duct (where potassium-sparing diuretics act), only a small fraction of filtered sodium remains. This limits their diuretic potency compared to loop diuretics."
+    },
+    {
+      q: "A patient with primary hyperaldosteronism caused by bilateral adrenal hyperplasia (rather than a unilateral adenoma) is referred for treatment. Which class of drug is most appropriate?",
+      options: [
+        "Loop diuretics — most potent at lowering blood pressure",
+        "Aldosterone receptor antagonists — block the unregulated aldosterone effect when surgery is not an option",
+        "ENaC blockers — directly block sodium channels without needing to compete with aldosterone",
+        "Thiazide diuretics — preferred first-line for hypertension"
+      ],
+      correct: 1,
+      explain: "In bilateral adrenal hyperplasia, the adrenal glands continuously secrete aldosterone and cannot be surgically removed without causing adrenal insufficiency. Aldosterone receptor antagonists (spironolactone/eplerenone) are the preferred medical treatment, blocking the pathological effects of excess aldosterone."
+    },
+    {
+      q: "A patient on a potassium-sparing diuretic develops a serum potassium of 6.2 mEq/L. Her medication list also includes lisinopril. Which property of lisinopril explains the dangerous additive hyperkalemia?",
+      options: [
+        "Lisinopril directly blocks the renal tubular potassium channel",
+        "Lisinopril is an ACE inhibitor that reduces angiotensin II, thereby decreasing aldosterone secretion, resulting in further potassium retention",
+        "Lisinopril blocks sodium reabsorption in the collecting duct",
+        "Lisinopril enhances renin release, which increases potassium secretion"
+      ],
+      correct: 1,
+      explain: "ACE inhibitors (like lisinopril) reduce production of angiotensin II, which in turn decreases aldosterone secretion. Less aldosterone means less potassium secretion in the collecting duct. When combined with a potassium-sparing diuretic that already retains potassium, dangerous hyperkalemia can result."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

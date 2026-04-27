@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vessel Match — Module 1</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 1</a></div>
+  <h1>Game 3 — Vessel Match</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩸</div>
+      <h2>Match each vessel to what it supplies or drains</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Flip cards to find the matching vessel + structure pair. Six pairs total. The matches are taken straight from the vascular section of the brick.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
+      <span>Flips: <span class="score" id="flips">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All vessels matched!</h3>
+      <p>Renal arteries off the abdominal aorta, the left renal vein crossing under the SMA, and gonadal venous asymmetry — these are classic boards material.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // 6 vessel/structure pairs all sourced from the brick.
+  const pairs = [
+    { a: "Renal artery",                 b: "Direct branch of the abdominal aorta supplying the kidney" },
+    { a: "Left renal vein",              b: "Crosses anterior to aorta, passes under the SMA, drains into IVC" },
+    { a: "Right gonadal vein",           b: "Drains directly into the inferior vena cava" },
+    { a: "Left gonadal vein",            b: "Drains into the left renal vein" },
+    { a: "Superior vesical artery",      b: "Branch of internal iliac artery supplying the upper bladder" },
+    { a: "Inferior vesical artery",      b: "Branch of internal iliac artery supplying the lower bladder" }
+  ];
+
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const flipsEl = document.getElementById("flips");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let flips = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; flips = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    flipsEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    board.innerHTML = "";
+
+    // Build 12 cards — each pair contributes two cards sharing a pairId
+    const cards = [];
+    pairs.forEach((p, i) => {
+      cards.push({ pairId: i, text: p.a, type: "vessel" });
+      cards.push({ pairId: i, text: p.b, type: "match" });
+    });
+    Game.shuffle(cards);
+    cards.forEach(c => {
+      const el = document.createElement("div");
+      el.className = "match-card";
+      el.dataset.pairId = c.pairId;
+      el.dataset.text = c.text;
+      el.textContent = "?";
+      el.addEventListener("click", () => onPick(el));
+      board.appendChild(el);
+    });
+  }
+
+  function onPick(card) {
+    if (lock) return;
+    if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
+    flip(card, true);
+    flips++;
+    flipsEl.textContent = flips;
+
+    if (!firstPick) {
+      firstPick = card;
+      return;
+    }
+    if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb(`✓ Matched!`, "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      showFb("Not a match — keep tracking what's on each card.", "info");
+      const a = firstPick, b = card;
+      setTimeout(() => {
+        flip(a, false); flip(b, false);
+        firstPick = null;
+        lock = false;
+      }, 900);
+    }
+  }
+
+  function flip(card, on) {
+    if (on) {
+      card.classList.add("flipped");
+      card.textContent = card.dataset.text;
+    } else {
+      card.classList.remove("flipped");
+      card.textContent = "?";
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

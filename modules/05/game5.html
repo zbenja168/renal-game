@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cause-Effect Lab — Module 5</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 5</a></div>
+  <h1>Game 5 — Cause-Effect Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🗺️</div>
+      <h2>Round 1: Sequence the podocyte injury cascade</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each step of the podocyte effacement cascade into the correct order slot. The sequence runs from structural change to clinical presentation.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 5</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Steps (drag to order)</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Glomerular function clinical questions</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios applying glomerular function concepts from the brick. Questions are NOT verbatim from the brick's review section.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Cause-Effect Lab complete!</h3>
+      <p>You can trace glomerular structural changes from the molecular level to clinical urinalysis findings. The boss round awaits!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1: Sequence the cascade ===== */
+  const cascade = [
+    { id: "c1", step: "Step 1", label: "Podocyte foot process effacement (fusion)", answer: "Step 1" },
+    { id: "c2", step: "Step 2", label: "Loss of slit diaphragms between foot processes", answer: "Step 2" },
+    { id: "c3", step: "Step 3", label: "Reduced size selectivity of filtration barrier", answer: "Step 3" },
+    { id: "c4", step: "Step 4", label: "Albuminuria — albumin passes into filtrate", answer: "Step 4" },
+    { id: "c5", step: "Step 5", label: "Hypoalbuminemia → reduced oncotic pressure → edema", answer: "Step 5" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, cascade.length);
+    fbEl.classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    // Shuffle labels as draggable pieces
+    Game.shuffle(cascade.map(c => ({ label: c.label, answer: c.answer })).slice()).forEach(item => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = item.answer;
+      p.textContent = item.label;
+      attachDragR1(p);
+      piecesEl.appendChild(p);
+    });
+
+    // Render ordered slots
+    cascade.forEach(c => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${c.step}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = c.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDropR1(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDragR1(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", el.dataset.label);
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDropR1(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.label === zone.dataset.answer) {
+        zone.innerHTML = "";
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, cascade.length);
+        showFb("✓ Correct step order.", "correct");
+        if (placed === cascade.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That step belongs elsewhere in the cascade.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2 ===== */
+  const questions = [
+    {
+      q: "A patient with liver cirrhosis has very low serum albumin. How does hypoalbuminemia initially affect glomerular filtration rate according to Starling forces?",
+      options: [
+        "Decreases GFR by lowering capillary hydrostatic pressure",
+        "Increases GFR by decreasing glomerular capillary oncotic pressure (pi_GC), raising net filtration pressure",
+        "No effect because tubular reabsorption compensates",
+        "Increases GFR by constricting the efferent arteriole"
+      ],
+      correct: 1,
+      explain: "Pi_GC is generated by plasma proteins, especially albumin. When albumin is low (hypoalbuminemia), pi_GC falls. Since pi_GC normally opposes filtration, a lower pi_GC raises net filtration pressure and initially increases GFR, although other mechanisms may offset this. (Brick LO2)"
+    },
+    {
+      q: "A kidney stone completely obstructs the ureter of one kidney. How does this change net filtration pressure (NFP) in that kidney?",
+      options: [
+        "NFP increases because P_GC rises with back-pressure",
+        "NFP decreases because P_BS rises, opposing filtration",
+        "NFP is unchanged because the glomerulus autoregulates",
+        "NFP increases because albumin leaks into Bowman space"
+      ],
+      correct: 1,
+      explain: "Complete ureteric obstruction causes tubular back-pressure to build up, raising Bowman space hydrostatic pressure (P_BS). In NFP = (P_GC - P_BS) - pi_GC, increasing P_BS reduces NFP and therefore decreases GFR. (Brick LO2)"
+    },
+    {
+      q: "A 25-year-old presents with frothy urine and lower-extremity swelling. Urinalysis: 3+ protein, no blood. ACR is 3500 mg/g. Which barrier component is most likely damaged?",
+      options: [
+        "Glomerular basement membrane (GBM)",
+        "Fenestrated endothelium",
+        "Podocytes (visceral epithelial cells)",
+        "Mesangial cells"
+      ],
+      correct: 2,
+      explain: "Massive selective proteinuria (albumin only, ACR >1000 mg/g) with no hematuria points to podocyte injury. Foot process effacement removes the slit diaphragms (the main size selectivity component), allowing albumin to pass without damage to the endothelium or GBM (which would produce hematuria). (Brick LO3)"
+    },
+    {
+      q: "A patient with Alport syndrome (type IV collagen mutation) has hematuria and moderate proteinuria. Electron microscopy shows thinning and splitting of the GBM. Which filtration properties are most directly impaired?",
+      options: [
+        "Size selectivity only — hematuria occurs because cells are not blocked",
+        "Both size and charge selectivity — non-selective proteinuria plus hematuria occur because the GBM provides both",
+        "Charge selectivity only — neutral dextrans are still blocked",
+        "Surface area (Kf) only — NFP is unchanged"
+      ],
+      correct: 1,
+      explain: "The GBM contributes both charge selectivity (its heparan sulfate proteoglycans carry a negative charge) and structural support for size selectivity. GBM thinning/splitting compromises both, allowing large proteins and red blood cells through — producing non-selective proteinuria with hematuria. (Brick LO3, LO4)"
+    },
+    {
+      q: "Which factor would directly decrease the filtration coefficient (Kf) and reduce GFR even if net filtration pressure (NFP) is unchanged?",
+      options: [
+        "Afferent arteriole dilation (increasing P_GC)",
+        "Hypoalbuminemia (decreasing pi_GC)",
+        "Glomerulosclerosis — scarring that reduces functional capillary surface area",
+        "Urinary obstruction (increasing P_BS)"
+      ],
+      correct: 2,
+      explain: "Kf = hydraulic permeability × glomerular surface area. Glomerulosclerosis (scarring) destroys capillary loops, reducing the effective filtration surface area. This lowers Kf, and since GFR = Kf × NFP, GFR falls even without changing any Starling pressure. (Brick LO2)"
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

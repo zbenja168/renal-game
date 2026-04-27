@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compartment Lab — Module 16</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 16</a></div>
+  <h1>Game 5 — Compartment Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Round 1: Sort body fluid facts by compartment</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The body's fluid is distributed across compartments. Drag each fact into the correct compartment: ICF (intracellular), ECF plasma, or ECF interstitium.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Body fluid facts</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios — new questions testing all four learning objectives on body fluid composition and compartments.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Compartment Lab complete!</h3>
+      <p>Head to the boss round — Game 6 — to test everything across all four learning objectives.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ========== ROUND 1: COMPARTMENT SORTER ========== */
+  const facts = [
+    { id: "icf_two_thirds", label: "Contains approximately 2/3 of total body water",              bin: "icf" },
+    { id: "icf_k",          label: "Primary intracellular cation — potassium (K+)",               bin: "icf" },
+    { id: "plasma_25",      label: "Represents about 25% of the extracellular fluid",             bin: "plasma" },
+    { id: "plasma_alb",     label: "Contains albumin and clotting factors — main oncotic pressure source", bin: "plasma" },
+    { id: "inter_75",       label: "Represents about 75% of the extracellular fluid",             bin: "inter" },
+    { id: "inter_edema",    label: "Accumulation of fluid here causes peripheral edema",          bin: "inter" }
+  ];
+
+  const bins = [
+    { id: "icf",    label: "ICF (Intracellular Fluid)" },
+    { id: "plasma", label: "ECF — Plasma" },
+    { id: "inter",  label: "ECF — Interstitium" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, facts.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(facts.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, facts.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === facts.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Wrong compartment for that fact.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ========== ROUND 2: QUIZ (new questions) ========== */
+  const questions = [
+    {
+      q: "A patient with end-stage renal disease has a BUN of 100 mg/dL. His calculated osmolality is 320 mOsm/kg, but his measured osmolality is also 320 mOsm/kg (no osmolal gap). His cells appear normal in size. Why does the high BUN NOT cause cell shrinkage?",
+      options: [
+        "BUN is an ineffective osmole — urea freely crosses cell membranes, so it does not create an osmotic gradient or change cell volume",
+        "BUN is too large a molecule to affect osmolality",
+        "The kidney compensates by secreting extra potassium to balance the urea",
+        "BUN is only an effective osmole in the ECF, not the ICF"
+      ],
+      correct: 0,
+      explain: "Urea (BUN) freely crosses all cell membranes, making it an ineffective osmole. It raises measured osmolality but does NOT contribute to tonicity and does NOT cause water shifts or change cell volume. This explains why uremic patients can have high osmolality without cellular dehydration."
+    },
+    {
+      q: "A large volume of 0.9% NaCl (normal saline) is infused rapidly. Which complication is most associated with this specific fluid choice compared to balanced crystalloids?",
+      options: [
+        "Osmotic demyelination syndrome",
+        "Hyperchloremic metabolic acidosis (from the high chloride content of normal saline)",
+        "Cerebral edema from water shifts into brain cells",
+        "Hypokalemia from potassium dilution"
+      ],
+      correct: 1,
+      explain: "Normal saline contains 154 mEq/L of chloride — significantly higher than plasma chloride (100-106 mEq/L). Large volumes dilute bicarbonate and increase chloride, causing a non-anion gap (hyperchloremic) metabolic acidosis. Balanced crystalloids (Lactated Ringer's, PlasmaLyte) have lower chloride and a buffer, reducing this risk."
+    },
+    {
+      q: "A patient with chronic hyponatremia (Na+ 118 mEq/L over 10 days) is treated too aggressively and her sodium rises by 20 mEq/L in 24 hours. What serious complication is she at risk for?",
+      options: [
+        "Cerebral edema from cells swelling",
+        "Osmotic demyelination syndrome (formerly called central pontine myelinolysis)",
+        "Hyperkalemia from rapid cell shrinkage releasing potassium",
+        "Acute kidney injury from rapid fluid shifts"
+      ],
+      correct: 1,
+      explain: "In chronic hyponatremia, brain cells have adapted by releasing osmolytes to prevent swelling. If sodium is corrected too rapidly, the ECF becomes hypertonic relative to adapted brain cells, drawing water out and causing demyelination of oligodendrocytes — osmotic demyelination syndrome. Correction should not exceed ~8-12 mEq/L per 24 hours."
+    },
+    {
+      q: "Normal serum osmolality ranges from 275-295 mOsm/kg. The formula to calculate serum osmolality is 2×[Na+] + [Glucose]/18 + [BUN]/2.8. Which of these terms contributes to osmolality but NOT to tonicity?",
+      options: [
+        "2×[Na+]",
+        "[Glucose]/18",
+        "[BUN]/2.8",
+        "All three contribute equally to both osmolality and tonicity"
+      ],
+      correct: 2,
+      explain: "BUN (urea) is an ineffective osmole because it freely crosses cell membranes. It is included in the osmolality formula but is excluded from the tonicity formula. Tonicity = 2×[Na+] + [Glucose]/18. This distinction is clinically important when assessing whether a patient's cellular hydration status is abnormal."
+    },
+    {
+      q: "A patient with diabetic ketoacidosis has a glucose of 720 mg/dL. Her measured serum sodium is 126 mEq/L. What is the primary mechanism causing the hyponatremia?",
+      options: [
+        "Renal sodium wasting from glycosuria",
+        "High glucose is an effective osmole that draws water from cells into the ECF, diluting the measured sodium concentration",
+        "Insulin deficiency causes sodium to shift into cells",
+        "Ketone bodies displace sodium in the ECF"
+      ],
+      correct: 1,
+      explain: "Glucose is an effective osmole — at high concentrations it creates an osmotic gradient that draws water from the ICF into the ECF, diluting the extracellular sodium. This is called translocational hyponatremia. For every 100 mg/dL rise in glucose, sodium falls approximately 1.6-2.4 mEq/L (corrected Na+ formula)."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADH Agonist Quiz — Module 20</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 20</a></div>
+  <h1>Game 5 — ADH Agonist Quiz</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 1: Sort drugs by receptor profile</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each drug or property into the correct receptor-profile bucket — V1-dominant, V2-selective, or both V1 and V2.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drugs / properties</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the brick's content.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 ADH Agonist Quiz complete!</h3>
+      <p>Ready for the boss? Game 6 tests all three LOs together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: SORTER ===================== */
+  const drugs = [
+    { id: "r1", label: "Desmopressin — selective for renal collecting duct receptor",   bin: "v2" },
+    { id: "r2", label: "Vasopressin — primary use is vasoconstriction in shock",        bin: "v1_v2" },
+    { id: "r3", label: "Given IV for septic or anaphylactic shock",                     bin: "v1_dom" },
+    { id: "r4", label: "Available intranasally — appropriate for outpatient central DI", bin: "v2" },
+    { id: "r5", label: "Causes pulmonary hypertension and mesenteric ischemia",         bin: "v1_dom" },
+    { id: "r6", label: "Stimulates platelet release and von Willebrand factor",         bin: "v2" }
+  ];
+
+  const bins = [
+    { id: "v2",     label: "V2-selective (desmopressin)" },
+    { id: "v1_dom", label: "V1-dominant effects" },
+    { id: "v1_v2",  label: "Both V1 and V2 (vasopressin overall)" }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl   = document.getElementById("score");
+  const fbEl      = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, drugs.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(drugs.slice()).forEach(d => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = d.bin;
+      el.textContent = d.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target   = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, drugs.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === drugs.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think which receptor profile this describes.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===================== ROUND 2: QUIZ ===================== */
+  const questions = [
+    {
+      q: "A patient with central DI is being managed with desmopressin nasal spray. After starting the drug, her urine sodium drops to 32 mEq/L. What adverse effect should you watch for?",
+      options: [
+        "Hypernatremia from urinary sodium wasting",
+        "Hyponatremia from excessive renal water reabsorption",
+        "Pulmonary hypertension from arterial vasoconstriction",
+        "Gut ischemia from splanchnic vasoconstriction"
+      ],
+      correct: 1,
+      explain: "Desmopressin promotes V2-mediated water reabsorption. If free water intake is not restricted, excess water retention causes dilutional hyponatremia. This is the primary adverse effect of desmopressin — the brick emphasizes monitoring serum sodium."
+    },
+    {
+      q: "A trauma patient in vasodilatory shock is started on vasopressin IV. Several hours later, his ICU nurse notes abdominal pain and rising lactate. What complication is most likely?",
+      options: [
+        "Hyponatremia from V2-mediated water retention",
+        "Nocturnal enuresis from V2 receptor activation",
+        "Mesenteric ischemia from V1-mediated splanchnic vasoconstriction",
+        "Decreased platelet adhesion from inhibited vWF release"
+      ],
+      correct: 2,
+      explain: "Vasopressin's V1-mediated vasoconstriction is its therapeutic mechanism in shock, but the same effect on splanchnic vessels can cause mesenteric ischemia. The brick lists mesenteric ischemia as a key adverse effect of vasopressin. Desmopressin, with minimal V1 activity, is much less likely to cause this."
+    },
+    {
+      q: "A child with severe nocturnal enuresis (bedwetting) is started on desmopressin tablets. Why is desmopressin preferred over vasopressin for this indication?",
+      options: [
+        "Desmopressin is more potent at V1 receptors and raises blood pressure",
+        "Desmopressin is selective for V2 receptors — concentrates urine without significant vasoconstriction",
+        "Vasopressin causes bedwetting as a side effect",
+        "Desmopressin can only be given as an IV infusion"
+      ],
+      correct: 1,
+      explain: "Desmopressin's V2 selectivity means it concentrates urine (antidiuretic effect) without the cardiovascular vasoconstriction caused by V1 activation. This safety profile makes it appropriate for outpatient use in children and adults. It can be given nasally, orally, or IV."
+    },
+    {
+      q: "A 45-year-old woman with von Willebrand disease type 1 needs a minor surgical procedure. She is given desmopressin pre-operatively. What is the expected hemostatic mechanism?",
+      options: [
+        "V1 receptor activation causes platelet aggregation in vessels",
+        "V2 receptor stimulation on endothelial cells causes release of stored von Willebrand factor",
+        "Desmopressin blocks fibrinolysis by inhibiting plasminogen",
+        "V2 activation causes vasoconstriction at the surgical site"
+      ],
+      correct: 1,
+      explain: "Desmopressin activates V2 receptors on vascular endothelial cells, which releases von Willebrand factor (and factor VIII) stored in Weibel-Palade bodies. This temporarily raises vWF levels, improving platelet adhesion and coagulation in mild vWD and mild hemophilia A."
+    },
+    {
+      q: "A patient with cirrhosis develops bleeding esophageal varices. Vasopressin is given IV. What is the mechanism by which it helps control the bleeding?",
+      options: [
+        "V2-mediated water reabsorption increases blood volume",
+        "V1-mediated constriction of splanchnic arterioles reduces portal vein pressure",
+        "V2-mediated platelet release seals the varices",
+        "V1-mediated dilation of hepatic veins reduces portal pressure"
+      ],
+      correct: 1,
+      explain: "Vasopressin constricts splanchnic arterioles via V1 receptors, reducing blood flow into the portal system and thereby lowering portal vein pressure. This reduces bleeding from esophageal varices, which are dilated veins caused by portal hypertension."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  const winEl         = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

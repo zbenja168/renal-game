@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Consequence Match — Module 3</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 3</a></div>
+  <h1>Game 3 — Clinical Consequence Match</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🃏</div>
+      <h2>Match each disorder to its primary clinical consequence</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Flip cards to find pairs. Each disorder is paired with its most characteristic clinical complication or consequence as described in the brick.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
+      <span>Flips: <span class="score" id="flips">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All consequences matched!</h3>
+      <p>Horseshoe → obstruction/stones. Ectopic → hydronephrosis/VUR. Bilateral agenesis → Potter sequence. MCDK → nonfunctional + contralateral hypertrophy. Hypoplasia → CKD. Duplex → VUR/UTI.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Horseshoe kidney", b: "Predisposed to obstruction, stone formation, and infection due to limited mobility" },
+    { a: "Ectopic (pelvic) kidney", b: "Hydronephrosis and vesicoureteral reflux from abnormal ureteric course" },
+    { a: "Bilateral renal agenesis", b: "Potter sequence: oligohydramnios, pulmonary hypoplasia, limb and facial deformities" },
+    { a: "Multicystic dysplastic kidney (unilateral)", b: "Nonfunctional affected kidney; contralateral kidney undergoes compensatory hypertrophy" },
+    { a: "Renal hypoplasia", b: "Hypertension and chronic kidney disease (CKD) developing gradually" },
+    { a: "Duplicated collecting system", b: "Increased risk of vesicoureteral reflux and urinary tract infections" }
+  ];
+
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const flipsEl = document.getElementById("flips");
+  const fbEl = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let flips = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; flips = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    flipsEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    board.innerHTML = "";
+
+    const cards = [];
+    pairs.forEach((p, i) => {
+      cards.push({ pairId: i, text: p.a });
+      cards.push({ pairId: i, text: p.b });
+    });
+    Game.shuffle(cards);
+    cards.forEach(c => {
+      const el = document.createElement("div");
+      el.className = "match-card";
+      el.dataset.pairId = c.pairId;
+      el.dataset.text = c.text;
+      el.textContent = "?";
+      el.addEventListener("click", () => onPick(el));
+      board.appendChild(el);
+    });
+  }
+
+  function onPick(card) {
+    if (lock) return;
+    if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
+    flip(card, true);
+    flips++;
+    flipsEl.textContent = flips;
+    if (!firstPick) { firstPick = card; return; }
+    if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      showFb("Not a match — keep thinking.", "info");
+      const a = firstPick, b = card;
+      setTimeout(() => { flip(a, false); flip(b, false); firstPick = null; lock = false; }, 900);
+    }
+  }
+
+  function flip(card, on) {
+    if (on) { card.classList.add("flipped"); card.textContent = card.dataset.text; }
+    else { card.classList.remove("flipped"); card.textContent = "?"; }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

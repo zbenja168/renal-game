@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treatment Lab — Module 18</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 18</a></div>
+  <h1>Game 5 — Treatment Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Round 1: Sort treatments by hyponatremia type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each treatment option into the correct hyponatremia type that it primarily targets.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 7</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Treatments</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz with NEW questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios based on the brick's management content. Each tests a key management principle.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Treatment Lab complete!</h3>
+      <p>Now take on the boss — Game 6 ties all four LOs together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: TREATMENT SORTER ===================== */
+  const treatments = [
+    { id: "ins",    label: "Insulin (to lower blood glucose)",                      bin: "hypertonic" },
+    { id: "ns",     label: "Normal saline (isotonic) to restore volume",            bin: "hypovolemic" },
+    { id: "wr",     label: "Water restriction (limit free water intake)",           bin: "euvolemic" },
+    { id: "hts",    label: "3% hypertonic saline (for acute severe symptoms)",      bin: "acute_severe" },
+    { id: "loop",   label: "Loop diuretics to diurese excess fluid",                bin: "hypervolemic" },
+    { id: "vap",    label: "Vaptans (ADH antagonists) — reduce water reabsorption", bin: "euvolemic" },
+    { id: "salt",   label: "Urea packets or salt tablets (chronic SIADH)",          bin: "euvolemic" }
+  ];
+
+  const bins = [
+    { id: "hypertonic",   label: "Hypertonic hyponatremia" },
+    { id: "hypovolemic",  label: "Hypovolemic hypotonic" },
+    { id: "euvolemic",    label: "Euvolemic hypotonic (SIADH / chronic)" },
+    { id: "hypervolemic", label: "Hypervolemic hypotonic (CHF / cirrhosis)" },
+    { id: "acute_severe", label: "Acutely symptomatic (any type)" }
+  ];
+
+  const pool       = document.getElementById("pool");
+  const bucketsEl  = document.getElementById("buckets");
+  const scoreEl    = document.getElementById("score");
+  const fbEl       = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, treatments.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(treatments.slice()).forEach(t => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = t.bin;
+      el.textContent = t.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target   = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, treatments.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === treatments.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think which scenario this treatment addresses.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===================== ROUND 2: QUIZ ===================== */
+  const questions = [
+    {
+      q: "A 45-year-old marathon runner finishes a race on a cool day, drinking only water throughout. She presents confused with a serum sodium of 118 mEq/L. She has no signs of volume depletion or fluid overload. Which best explains why she developed hyponatremia despite no obvious disease?",
+      options: [
+        "She lost excessive sodium through sweat",
+        "High ADH levels from exercise combined with excess free water intake exceeded excretion capacity",
+        "Her RAAS was suppressed, causing urinary sodium wasting",
+        "She has undiagnosed SIADH from a lung tumor"
+      ],
+      correct: 1,
+      explain: "Per the brick: exercise raises ADH. If runners drink pure water without solute replacement on cool days (low insensible losses), the combination of high ADH and positive water balance causes euvolemic hyponatremia."
+    },
+    {
+      q: "A patient with SIADH and chronic hyponatremia (Na 126 mEq/L) is started on intravenous 3% hypertonic saline. What is the main danger of correcting this patient's sodium too quickly?",
+      options: [
+        "Hyperkalemia from rapid fluid shifts",
+        "Osmotic demyelination syndrome (ODS) from overly rapid correction",
+        "Worsening cerebral edema",
+        "Acute kidney injury from high-sodium load"
+      ],
+      correct: 1,
+      explain: "The brick warns that hyponatremia must not be corrected too rapidly to avoid osmotic demyelination syndrome (ODS). In chronic hyponatremia, brain cells have adapted; rapid correction causes dangerous osmotic shifts in myelin sheaths."
+    },
+    {
+      q: "A patient with congestive heart failure has a serum sodium of 130 mEq/L, serum osmolality 262 mOsm/kg, and urine sodium 18 mEq/L. Urine osmolality is 540 mOsm/kg. Why is the urine sodium low?",
+      options: [
+        "The kidneys are diseased and cannot filter sodium",
+        "Low effective circulating volume activates RAAS, causing avid renal sodium retention",
+        "ADH is suppressed, so sodium spills into urine",
+        "The patient is on loop diuretics that waste sodium"
+      ],
+      correct: 1,
+      explain: "In CHF (hypervolemic hyponatremia), low effective circulating volume activates RAAS and aldosterone, causing renal sodium avidity. The kidneys retain sodium avidly, resulting in low urine sodium (<25 mEq/L) despite total-body sodium excess."
+    },
+    {
+      q: "Pseudohyponatremia is detected in a patient with severe hyperlipidemia. What is the appropriate next management step?",
+      options: [
+        "Administer 3% hypertonic saline immediately",
+        "Start water restriction",
+        "No sodium treatment; address the underlying hyperlipidemia",
+        "Give a vaptan (ADH antagonist)"
+      ],
+      correct: 2,
+      explain: "Pseudohyponatremia (isotonic) is a lab artifact caused by excess lipids or proteins displacing water in the plasma sample. Serum osmolality is normal. No sodium correction is needed; treat the underlying cause (hyperlipidemia or myeloma)."
+    },
+    {
+      q: "A patient is confirmed to have SIADH from a small cell lung cancer. She has mild confusion but no acute life-threatening symptoms. Serum Na is 124 mEq/L. Which chronic management options are consistent with the brick's recommendations?",
+      options: [
+        "Loop diuretics alone",
+        "Water restriction ± urea/salt tablets or a vaptan to reduce water reabsorption",
+        "3% hypertonic saline infusion indefinitely",
+        "Normal saline IV to replenish sodium"
+      ],
+      correct: 1,
+      explain: "Per the brick, chronic SIADH is managed by limiting free water intake and either reducing water reabsorption with vaptans (ADH antagonists) or increasing solute excretion with urea packets or salt tablets. Hypertonic saline is reserved for acute severe symptoms. Normal saline can worsen SIADH."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  const winEl         = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

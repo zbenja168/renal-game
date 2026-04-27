@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indication Sorter — Module 13</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 13</a></div>
+  <h1>Game 2 — Thiazide Indication Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💉</div>
+      <h2>Drag each condition to the correct thiazide indication category</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Thiazides have specific indications — and specific situations where they should NOT be used. Drag each condition or scenario into the correct bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Clinical scenarios</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Indications sorted!</h3>
+      <p>Thiazides are first-line for primary hypertension, kidney stone prevention, and nephrogenic DI. They are contraindicated with sulfa allergy and pregnancy. For severe volume overload, loops are better. For metabolic syndrome patients, ACE inhibitors are preferred over thiazides.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "htn",      label: "Primary hypertension — thiazides are a FIRST-LINE drug class",                          bucket: "indicated" },
+    { id: "stones",   label: "Recurrent calcium-containing kidney stones — thiazides reduce urinary Ca2+",            bucket: "indicated" },
+    { id: "ndi",      label: "Nephrogenic diabetes insipidus — thiazides paradoxically reduce urine volume",          bucket: "indicated" },
+    { id: "refract",  label: "Refractory edema in CHF — add thiazide to loop diuretic for sequential nephron blockade", bucket: "indicated" },
+    { id: "sulfa",    label: "Patient with sulfa drug allergy — thiazides are sulfonamides and should be avoided",    bucket: "contraindicated" },
+    { id: "preg",     label: "Pregnancy — thiazides can cause fetal/neonatal jaundice and thrombocytopenia",          bucket: "contraindicated" },
+    { id: "meta_syn", label: "Patient with metabolic syndrome (impaired glucose tolerance, high triglycerides) — prefer ACE-I/ARB", bucket: "contraindicated" },
+    { id: "pulm_ed",  label: "Acute pulmonary edema in CHF — loops are more potent and faster; thiazides alone insufficient", bucket: "contraindicated" }
+  ];
+
+  const buckets = [
+    { id: "indicated",      label: "Thiazides indicated / beneficial" },
+    { id: "contraindicated",label: "Contraindicated or not preferred for this situation" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bucket;
+      const target = zone.dataset.bucketId;
+      if (expected === target) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Recall the thiazide indications and contraindications from the brick.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

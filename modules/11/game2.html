@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nephron K+ Hotspot — Module 11</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 11</a></div>
+  <h1>Game 2 — Nephron K+ Hotspot</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click each nephron segment to reveal how it handles K+</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Unlike sodium, potassium is both reabsorbed AND secreted along the nephron. Click all four segments to reveal what happens to K+ at each location. Find all four to win.
+    </div>
+
+    <div class="score-bar">
+      <span>Segments found: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 400 560" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="560" fill="#f8f4ef" rx="12"/>
+        <!-- Glomerulus -->
+        <circle cx="200" cy="55" r="28" fill="#e8c9c9" stroke="#a04848" stroke-width="2"/>
+        <text x="200" y="51" text-anchor="middle" fill="#6b2828" font-size="9" font-weight="700">Glomerulus</text>
+        <text x="200" y="63" text-anchor="middle" fill="#6b2828" font-size="8">freely filters K+</text>
+
+        <!-- Proximal Tubule -->
+        <path d="M200 83 C155 105 115 130 95 165 C75 200 80 235 95 255" stroke="#4a90d9" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="62" y="180" text-anchor="middle" fill="#1d4a85" font-size="10" font-weight="700">Proximal</text>
+        <text x="62" y="193" text-anchor="middle" fill="#1d4a85" font-size="9">Tubule</text>
+
+        <!-- Descending loop -->
+        <path d="M95 255 C85 285 82 315 90 350" stroke="#aac4e0" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+        <!-- Thick ascending limb -->
+        <path d="M90 350 C100 390 118 408 145 418 C170 428 198 423 215 418" stroke="#e09a4a" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="150" y="448" text-anchor="middle" fill="#7a4a10" font-size="10" font-weight="700">Thick Ascending</text>
+        <text x="150" y="461" text-anchor="middle" fill="#7a4a10" font-size="9">Limb (TAL)</text>
+
+        <!-- DCT + Collecting duct label zone -->
+        <path d="M215 418 C255 412 292 400 315 378 C335 356 330 325 315 308" stroke="#7db87d" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="340" y="360" text-anchor="start" fill="#2a6a2a" font-size="10" font-weight="700">DCT</text>
+
+        <path d="M315 308 C320 275 317 248 310 218 C303 188 295 165 290 148" stroke="#9b59b6" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="335" y="252" text-anchor="start" fill="#5b2d8a" font-size="10" font-weight="700">Collecting</text>
+        <text x="335" y="265" text-anchor="start" fill="#5b2d8a" font-size="9">Duct</text>
+
+        <text x="200" y="32" text-anchor="middle" fill="#555" font-size="9">90% of K+ excretion regulated by kidneys</text>
+      </svg>
+
+      <!-- Hotspots -->
+      <div class="hotspot" data-name="Proximal Tubule" style="left:24%;top:34%"></div>
+      <div class="hotspot" data-name="Thick Ascending Limb" style="left:38%;top:77%"></div>
+      <div class="hotspot" data-name="Distal Convoluted Tubule" style="left:74%;top:62%"></div>
+      <div class="hotspot" data-name="Cortical Collecting Duct" style="left:74%;top:46%"></div>
+    </div>
+
+    <div id="infoPanel" style="margin-top:12px;"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 K+ nephron map complete!</h3>
+      <p>~70% of filtered K+ is reabsorbed in the PT. Another ~20% is reabsorbed in the TAL via NKCC2. The cortical collecting duct is the KEY secretory site — principal cells secrete K+ via ROMK and BK channels under aldosterone control. This is where K+ balance is regulated.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const segmentInfo = {
+    "Proximal Tubule": {
+      action: "Reabsorbs ~70% of filtered K+",
+      detail: "Passive, paracellular reabsorption coupled to water and sodium; not hormonally regulated"
+    },
+    "Thick Ascending Limb": {
+      action: "Reabsorbs ~20% of filtered K+",
+      detail: "Via NKCC2 cotransporter; additional K+ recycling keeps lumen positive to drive Ca2+/Mg2+ reabsorption"
+    },
+    "Distal Convoluted Tubule": {
+      action: "Variable reabsorption or early secretion",
+      detail: "When K+ intake is low, DCT reabsorbs K+ via H+/K+-ATPase; acts as a transition zone before collecting duct"
+    },
+    "Cortical Collecting Duct": {
+      action: "PRIMARY site of K+ secretion — this is where K+ balance is regulated",
+      detail: "Principal cells secrete K+ via ROMK (constitutive) and BK (flow-activated) channels into the lumen; aldosterone upregulates ENaC increasing lumen negativity, driving K+ secretion; high K+ intake or high aldosterone → more secretion"
+    }
+  };
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl  = document.getElementById("misses");
+  const fbEl    = document.getElementById("feedback");
+  const infoEl  = document.getElementById("infoPanel");
+  let found = new Set(), misses = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2800);
+  }
+
+  function init() {
+    found = new Set(); misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    infoEl.innerHTML = "";
+    canvas.querySelectorAll(".hotspot").forEach(h => { h.classList.remove("found"); h.style.pointerEvents = "auto"; });
+    canvas.querySelectorAll(".miss-marker").forEach(m => m.remove());
+  }
+
+  canvas.querySelectorAll(".hotspot").forEach(h => {
+    h.addEventListener("click", e => {
+      e.stopPropagation();
+      const name = h.dataset.name;
+      if (found.has(name)) return;
+      h.classList.add("found");
+      h.style.pointerEvents = "none";
+      found.add(name);
+      const info = segmentInfo[name];
+      const card = document.createElement("div");
+      card.className = "feedback show correct";
+      card.style.marginBottom = "6px";
+      card.innerHTML = `<strong>${name}</strong>: ${info.action} — <em>${info.detail}</em>`;
+      infoEl.appendChild(card);
+      Game.setScore(scoreEl, found.size, 4);
+      showFb(`✓ Found: ${name}`, "correct");
+      if (found.size === 4) Game.celebrate("winBanner");
+    });
+  });
+
+  canvas.addEventListener("click", e => {
+    if (e.target.classList && e.target.classList.contains("hotspot")) return;
+    if (found.size === 4) return;
+    misses++;
+    missEl.textContent = misses;
+    const rect = canvas.getBoundingClientRect();
+    const m = document.createElement("div");
+    m.className = "hotspot miss miss-marker";
+    m.style.left = (e.clientX - rect.left) + "px";
+    m.style.top  = (e.clientY - rect.top) + "px";
+    m.style.pointerEvents = "none";
+    canvas.appendChild(m);
+    setTimeout(() => m.remove(), 700);
+    showFb("✗ Click on a visible nephron segment.", "incorrect");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

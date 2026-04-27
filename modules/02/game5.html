@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Development Lab — Module 2</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 2</a></div>
+  <h1>Game 5 — Development Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💡</div>
+      <h2>Round 1: Sort each structure by tissue of origin</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each embryonic structure comes from one of three sources. Drag it into the correct bin.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Embryonic structures</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical-developmental scenarios. Each tests a single key fact from the brick (questions are NOT the brick's verbatim review questions).
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Development Lab complete!</h3>
+      <p>You've mastered the embryology of the urinary system. Take on the boss — Game 6 covers all three LOs at once.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1 ===== */
+  const nerves = [
+    { id: "im1",  label: "Kidneys and gonads",               bin: "inter_meso" },
+    { id: "im2",  label: "Ureters (from ureteric bud)",      bin: "inter_meso" },
+    { id: "ub1",  label: "Renal pelvis and calyces",         bin: "ureteric_bud" },
+    { id: "ub2",  label: "Collecting tubules of nephron",    bin: "ureteric_bud" },
+    { id: "end1", label: "Epithelium of the bladder (trigone excluded)", bin: "endoderm" },
+    { id: "end2", label: "Urethra epithelium",               bin: "endoderm" }
+  ];
+  const bins = [
+    { id: "inter_meso",  label: "Intermediate Mesoderm" },
+    { id: "ureteric_bud", label: "Ureteric Bud" },
+    { id: "endoderm",    label: "Endoderm (urogenital sinus)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, nerves.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(nerves.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, nerves.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === nerves.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think which germ layer or tissue forms this structure.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: NEW quiz questions ===== */
+  const questions = [
+    {
+      q: "A newborn is found to have only one kidney on ultrasound. Which embryologic event most likely failed?",
+      options: [
+        "Division of the cloaca by the urorectal septum",
+        "Outgrowth of the ureteric bud from the mesonephric duct",
+        "Descent of the kidney from the lumbar region",
+        "Formation of the allantois from the yolk sac"
+      ],
+      correct: 1,
+      explain: "The ureteric bud sprouts from the mesonephric duct and invades the metanephrogenic blastema. If the bud fails to form or branch, the blastema cannot be induced and renal agenesis results. (Brick LO1)"
+    },
+    {
+      q: "A surgeon performing a left colectomy ligates the inferior mesenteric artery. Which congenital anomaly would that vessel's root have blocked during embryological development?",
+      options: [
+        "Duplex collecting system",
+        "Horseshoe kidney from ascending past the IMA root",
+        "Patent urachus",
+        "Vesicoureteric reflux"
+      ],
+      correct: 1,
+      explain: "When the lower poles of both kidneys fuse (horseshoe kidney), the fused mass cannot pass the root of the inferior mesenteric artery during the ascent, so it remains lower than normal. (Brick LO2)"
+    },
+    {
+      q: "In a male neonate, urine is draining from the umbilicus. The most likely cause is failure of which structure to obliterate?",
+      options: [
+        "Mesonephric duct",
+        "Ureteric bud",
+        "Allantois (urachus)",
+        "Urorectal septum"
+      ],
+      correct: 2,
+      explain: "The allantois normally obliterates and becomes the fibrous median umbilical ligament (urachus). A patent urachus allows urine to leak from the bladder to the umbilicus. (Brick LO3)"
+    },
+    {
+      q: "The metanephrogenic blastema is induced to differentiate by signals from the ureteric bud. What does the blastema give rise to?",
+      options: [
+        "Ureter and renal pelvis",
+        "Collecting tubules and calyces",
+        "Bowman capsule, proximal tubule, loop of Henle, and distal tubule",
+        "The trigone of the bladder"
+      ],
+      correct: 2,
+      explain: "The metanephrogenic blastema differentiates into the filtering units of the nephron: Bowman capsule, proximal convoluted tubule, loop of Henle, and distal convoluted tubule. The collecting system comes from the ureteric bud. (Brick LO1)"
+    },
+    {
+      q: "In females, remnants of the mesonephric (Wolffian) duct are called Gartner ducts. Where are they found?",
+      options: [
+        "Within the broad ligament of the uterus, along the lateral vaginal wall",
+        "Adjacent to the trigone of the bladder",
+        "Along the anterior abdominal wall",
+        "In the ovarian hilum"
+      ],
+      correct: 0,
+      explain: "In females the mesonephric duct mostly degenerates but small nonfunctional remnants (Gartner ducts) can persist along the lateral wall of the vagina and in the broad ligament. They occasionally form small asymptomatic cysts. (Brick LO3)"
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

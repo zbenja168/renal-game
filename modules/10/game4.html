@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulation Sorter — Module 10</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 10</a></div>
+  <h1>Game 4 — Regulation Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚖️</div>
+      <h2>Drag each mechanism into the correct regulatory category</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Sodium reabsorption is regulated by intrarenal and extrarenal mechanisms. Drag each mechanism from the pool into the correct bucket. Some mechanisms work minute-to-minute; others handle large systemic challenges.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Regulatory mechanisms</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Regulation sorted!</h3>
+      <p>Intrarenal mechanisms (GT balance, TGF) make small, rapid adjustments without hormones. Extrarenal mechanisms (RAAS, SNS, natriuretic peptides) handle large-scale sodium challenges like hemorrhage or heart failure.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "gtb",   label: "Glomerulotubular balance — PT reabsorption rises with GFR via peritubular oncotic pressure", bucket: "intrarenal" },
+    { id: "tgf",   label: "Tubuloglomerular feedback — macula densa senses Na+/Cl- and signals JG cells to alter GFR",   bucket: "intrarenal" },
+    { id: "md",    label: "Macula densa — specialized cells at distal tubule that detect luminal Na+ and Cl- levels",     bucket: "intrarenal" },
+    { id: "jg",    label: "Juxtaglomerular (JG) cells — release renin in response to macula densa and low BP signals",   bucket: "intrarenal" },
+    { id: "raas",  label: "RAAS — renin → angiotensin II + aldosterone → increase Na+ reabsorption in PT and CD",        bucket: "extrarenal" },
+    { id: "sns",   label: "Sympathetic nervous system — releases catecholamines; directly stimulates tubular Na+ reabsorption and activates RAAS", bucket: "extrarenal" },
+    { id: "anp",   label: "ANP (atrial natriuretic peptide) — counters RAAS; increases Na+ excretion (natriuresis)",     bucket: "extrarenal" },
+    { id: "bnp",   label: "BNP (brain natriuretic peptide) — secreted by ventricles in volume overload; opposes RAAS",   bucket: "extrarenal" }
+  ];
+
+  const buckets = [
+    { id: "intrarenal", label: "Intrarenal mechanisms (rapid, minute-to-minute, no hormones)" },
+    { id: "extrarenal", label: "Extrarenal mechanisms (hormonal/SNS, large-scale adjustments)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bucket;
+      const target = zone.dataset.bucketId;
+      if (expected === target) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think: does this mechanism require hormones or nervous signals?", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

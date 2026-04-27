@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histology Lab — Module 4</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 4</a></div>
+  <h1>Game 5 — Histology Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 1: Sort each cell type by its location in the nephron</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each cell type into the correct nephron compartment: renal corpuscle, tubular system, or juxtaglomerular apparatus.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Cell types</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Round 2: Histology clinical questions</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh scenarios that apply histology knowledge from the brick. Questions are NOT verbatim from the brick's review section.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Histology Lab complete!</h3>
+      <p>You know the cells, their layers, and their functions. The boss round ties it all together!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1 ===== */
+  const cells = [
+    { id: "c1", label: "Podocytes (visceral epithelial cells)",   bin: "corpuscle" },
+    { id: "c2", label: "Parietal epithelial cells",               bin: "corpuscle" },
+    { id: "c3", label: "Mesangial cells",                         bin: "corpuscle" },
+    { id: "c4", label: "Principal cells (with aquaporins)",       bin: "tubular" },
+    { id: "c5", label: "Brush-border cuboidal cells",             bin: "tubular" },
+    { id: "c6", label: "Juxtaglomerular (JG) cells — secrete renin", bin: "jga" }
+  ];
+  const bins = [
+    { id: "corpuscle", label: "Renal Corpuscle" },
+    { id: "tubular",   label: "Renal Tubular System" },
+    { id: "jga",       label: "Juxtaglomerular Apparatus" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, cells.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(cells.slice()).forEach(c => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = c.bin;
+      el.textContent = c.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, cells.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === cells.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-read where this cell type lives in the nephron.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2 ===== */
+  const questions = [
+    {
+      q: "A biopsy of a patient with heavy proteinuria shows fusion of podocyte foot processes on electron microscopy. Which layer of the glomerular filtration barrier is primarily affected?",
+      options: [
+        "Fenestrated capillary endothelium (layer 1)",
+        "Glomerular basement membrane (layer 2)",
+        "Podocytes / slit diaphragms (layer 3)",
+        "Parietal epithelial cells of Bowman capsule"
+      ],
+      correct: 2,
+      explain: "Podocytes form the innermost (urinary-space) layer of the filtration barrier. Their foot processes connect via slit diaphragms that size-selectively filter the GBM filtrate. Foot process fusion (effacement) disrupts this barrier, allowing albumin into urine (proteinuria). (Brick LO2)"
+    },
+    {
+      q: "Which tubule segment is most active in reabsorbing glucose, amino acids, and vitamins from the filtrate, and what is its distinguishing histologic feature?",
+      options: [
+        "Collecting duct — aquaporin-rich principal cells",
+        "Distal convoluted tubule — no brush border, smaller lumen",
+        "Proximal convoluted tubule — prominent brush border of microvilli",
+        "Thin limb of loop of Henle — simple squamous epithelium"
+      ],
+      correct: 2,
+      explain: "The proximal convoluted tubule (PCT) reabsorbs all the filtered glucose, amino acids, and vitamins (as well as 2/3 of filtered water and electrolytes). Its cells are specialized for active reabsorption with a prominent brush border (microvilli) and abundant mitochondria. (Brick LO3)"
+    },
+    {
+      q: "Diabetes mellitus damages the kidney by causing thickening of the glomerular basement membrane, mesangial matrix expansion, and sclerosis of the glomerulus. Which process explains why protein subsequently appears in urine?",
+      options: [
+        "Increased GFR forces more protein through an intact barrier",
+        "Damage to the filtration barrier allows previously retained proteins to pass into filtrate",
+        "Tubule cells lose their brush border and stop reabsorbing protein",
+        "Podocytes proliferate and block the tubular pole"
+      ],
+      correct: 1,
+      explain: "The GBM and podocytes (layers 2 and 3) normally retain large proteins. Diabetic changes thicken and alter the GBM's charge selectivity and damage podocytes, compromising the barrier and allowing protein into the filtrate — producing proteinuria. (Brick LO2, clinical correlation)"
+    },
+    {
+      q: "The juxtaglomerular apparatus (JGA) includes specialized smooth muscle cells in the afferent arteriole wall. What do these JG cells release, and what triggers their release?",
+      options: [
+        "Aldosterone; triggered by high serum potassium",
+        "Renin; triggered by decreased arterial blood pressure",
+        "ADH (vasopressin); triggered by high plasma osmolality",
+        "Erythropoietin; triggered by low oxygen tension"
+      ],
+      correct: 1,
+      explain: "JG cells (modified smooth muscle of the afferent arteriole) are part of the RAAS. They release renin in response to decreased arterial pressure (sensed by stretch receptors) and low NaCl in the distal tubule (sensed by macula densa). (Brick LO3, clinical correlation)"
+    },
+    {
+      q: "On a light-microscopy slide of renal cortex, one tubule has cells with an acidophilic (pink) cytoplasm, a central nucleus, and a brush border at the apical surface. Another nearby tubule has smaller, paler cells with no brush border and a more open lumen. Which pair does this describe?",
+      options: [
+        "Loop of Henle (thick ascending) and collecting duct",
+        "Proximal convoluted tubule (brush border, pink) and distal convoluted tubule (no brush border, pale)",
+        "Collecting duct (pink) and proximal tubule (pale)",
+        "Glomerulus (pink) and Bowman capsule (pale)"
+      ],
+      correct: 1,
+      explain: "PCT cells have abundant mitochondria giving acidophilic (pink) cytoplasm plus a brush border. DCT cells are similar cuboidal epithelium but lack the brush border and have fewer organelles — resulting in smaller, paler-staining cells with a larger, emptier lumen. (Brick LO3)"
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

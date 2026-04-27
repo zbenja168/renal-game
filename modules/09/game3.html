@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permeability Match — Module 9</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 9</a></div>
+  <h1>Game 3 — Permeability Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🃏</div>
+      <h2>Match each segment to its permeability and osmolality outcome</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Flip cards to find the matching pairs. Each nephron segment has a specific water/solute permeability profile that determines how tubular fluid osmolality changes. Six pairs from the brick's LO2 section.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
+      <span>Flips: <span class="score" id="flips">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Permeabilities matched!</h3>
+      <p>PCT: water-permeable → isosmotic (~300 mOsm/kg). tDL: water-permeable → fluid concentrates. TAL: water-impermeable → fluid dilutes (~100 mOsm/kg). DCT: water-impermeable. CD: ADH-regulated → concentrated or dilute final urine.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Proximal convoluted tubule (PCT)",      b: "Highly water-permeable with AQP1; reabsorption is isosmotic (~300 mOsm/kg throughout)" },
+    { a: "Thin descending limb",                  b: "Water-permeable, relatively solute-impermeable; tubular fluid concentrates as it descends into hypertonic medulla" },
+    { a: "Thick ascending limb (TAL)",            b: "Completely water-impermeable; active NaCl reabsorption creates 'solute without water' → tubular fluid dilutes to ~100 mOsm/kg" },
+    { a: "Distal convoluted tubule (DCT)",         b: "Water-impermeable; continues dilution process; fine-tunes NaCl and Ca²⁺ reabsorption" },
+    { a: "Collecting duct with ADH present",      b: "AQP2 channels inserted; water follows osmotic gradient into hypertonic medulla → concentrated urine" },
+    { a: "Collecting duct without ADH (diabetes insipidus)", b: "Remains water-impermeable; large volumes of dilute urine (~50–100 mOsm/kg) are excreted" }
+  ];
+
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const flipsEl = document.getElementById("flips");
+  const fbEl = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let flips = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; flips = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    flipsEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    board.innerHTML = "";
+
+    const cards = [];
+    pairs.forEach((p, i) => {
+      cards.push({ pairId: i, text: p.a });
+      cards.push({ pairId: i, text: p.b });
+    });
+    Game.shuffle(cards);
+    cards.forEach(c => {
+      const el = document.createElement("div");
+      el.className = "match-card";
+      el.dataset.pairId = c.pairId;
+      el.dataset.text = c.text;
+      el.textContent = "?";
+      el.addEventListener("click", () => onPick(el));
+      board.appendChild(el);
+    });
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("flipped") || card.classList.contains("matched")) return;
+    flip(card, true);
+    flips++;
+    flipsEl.textContent = flips;
+    if (!firstPick) { firstPick = card; return; }
+    if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      showFb("Not a match — think about permeability and osmolality effects.", "info");
+      const a = firstPick, b = card;
+      setTimeout(() => { flip(a, false); flip(b, false); firstPick = null; lock = false; }, 900);
+    }
+  }
+
+  function flip(card, on) {
+    if (on) { card.classList.add("flipped"); card.textContent = card.dataset.text; }
+    else { card.classList.remove("flipped"); card.textContent = "?"; }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

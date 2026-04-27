@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CKD Consequences Lab — Module 6</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 6</a></div>
+  <h1>Game 5 — CKD Consequences Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">📊</div>
+      <h2>Round 1: Match each CKD stage to its GFR range</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each CKD stage label (G1–G5) into the correct GFR range slot. The KDIGO classification is taken directly from the brick's LO4 section.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 5</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>CKD Stages</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: CKD Consequences — Apply the brick</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh scenarios testing CKD staging and its homeostatic consequences (K⁺, acid-base, volume). New scenarios — not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 CKD Consequences Lab complete!</h3>
+      <p>You can now stage CKD from GFR data and predict hyperkalemia, metabolic acidosis, and volume overload. Ready for the boss round!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* === ROUND 1: CKD Stage Drag-Builder === */
+  const slots = [
+    { id: "g1", label: "GFR ≥ 90 mL/min/1.73m² (normal or high)", answer: "G1" },
+    { id: "g2", label: "GFR 60–89 mL/min/1.73m² (mildly decreased)", answer: "G2" },
+    { id: "g3", label: "GFR 30–59 mL/min/1.73m² (moderately decreased)", answer: "G3" },
+    { id: "g4", label: "GFR 15–29 mL/min/1.73m² (severely decreased)", answer: "G4" },
+    { id: "g5", label: "GFR < 15 mL/min/1.73m² (kidney failure / ESRD)", answer: "G5" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dropped;
+        zone.appendChild(p);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb(`✓ ${dropped} placed correctly.`, "correct");
+        if (placed === slots.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Check the GFR cut-offs from the brick's KDIGO table.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* === ROUND 2: Fresh quiz questions === */
+  const questions = [
+    {
+      q: "A patient's eGFR is 22 mL/min/1.73m². According to KDIGO staging, which category does this fall into?",
+      options: ["G2 — mildly decreased", "G3 — moderately decreased", "G4 — severely decreased", "G5 — kidney failure"],
+      correct: 2,
+      explain: "GFR 15–29 mL/min/1.73m² is stage G4 (severely decreased) per the brick's KDIGO classification."
+    },
+    {
+      q: "As GFR falls below 30 mL/min/1.73m² in CKD, which electrolyte complication becomes most dangerous?",
+      options: ["Hyponatremia", "Hyperkalemia", "Hypercalcemia", "Hypomagnesemia"],
+      correct: 1,
+      explain: "Hyperkalemia occurs because the kidneys — the primary regulators of potassium balance — can no longer excrete the daily potassium load as nephron mass declines."
+    },
+    {
+      q: "A patient with advanced CKD develops metabolic acidosis. What is the primary mechanism described in the brick?",
+      options: [
+        "Excessive respiratory loss of CO₂",
+        "Failure to excrete the daily metabolic acid load and decreased ammonium excretion",
+        "Overproduction of lactic acid",
+        "Increased bicarbonate reabsorption"
+      ],
+      correct: 1,
+      explain: "As GFR falls, the kidneys cannot excrete the daily acid load (~1 mEq/kg) or generate adequate ammonium as a buffer, leading to accumulating metabolic acidosis."
+    },
+    {
+      q: "Why does serum creatinine remain normal until GFR falls to roughly 50% of baseline in a healthy adult?",
+      options: [
+        "Tubular secretion compensates fully at higher GFR",
+        "The hyperbolic GFR–creatinine relationship means large GFR falls cause only small creatinine rises at normal GFR levels",
+        "Muscle mass increases to produce more creatinine",
+        "Bowman's capsule pressure rises to maintain filtration"
+      ],
+      correct: 1,
+      explain: "The hyperbolic relationship between GFR and plasma creatinine makes serum creatinine insensitive to early GFR loss — large absolute GFR decreases translate to minimal creatinine changes at the normal end of the curve."
+    },
+    {
+      q: "A patient with CKD-G3 develops hypertension and peripheral edema. Which of the following best explains the volume overload?",
+      options: [
+        "Excessive aldosterone suppression",
+        "Inadequate sodium excretion by the reduced nephron mass leading to volume retention",
+        "Increased ADH production",
+        "Loss of urinary protein causing oncotic overload"
+      ],
+      correct: 1,
+      explain: "As functioning nephron mass decreases in CKD, each remaining nephron must handle a greater filtered sodium load. Once this compensatory capacity is exceeded, sodium and water are retained, causing volume overload, hypertension, and edema."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

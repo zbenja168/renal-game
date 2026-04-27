@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adverse Effect Sorter — Module 13</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 13</a></div>
+  <h1>Game 4 — Adverse Effect Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚠️</div>
+      <h2>Sort thiazide adverse effects into their categories</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Thiazide adverse effects include some shared with loop diuretics AND unique ones. Drag each adverse effect into the correct category bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Adverse effects</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Adverse effects sorted!</h3>
+      <p>Shared with loops: hypokalemia, metabolic alkalosis, volume depletion. Unique to thiazides: hyponatremia (impair diluting segment), hypercalcemia (retain Ca2+), hyperuricemia (compete with uric acid transporter), hyperglycemia, and hyperlipidemia.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "hypok",  label: "Hypokalemia — increased K+ secretion from high distal Na+ delivery",               bucket: "shared" },
+    { id: "malk",   label: "Metabolic alkalosis — volume contraction activates RAAS, retaining HCO3-",         bucket: "shared" },
+    { id: "voldep", label: "Volume depletion — excessive Na+ and water loss from tubular blockade",            bucket: "shared" },
+    { id: "hypona", label: "Hyponatremia — thiazides block the DCT diluting segment; patient cannot excrete free water", bucket: "unique" },
+    { id: "hyperca",label: "Hypercalcemia — reduced luminal Na+ → more NCX activity → more Ca2+ reabsorbed",  bucket: "unique" },
+    { id: "hyperur",label: "Hyperuricemia — thiazides compete with uric acid for secretion; can trigger gout", bucket: "unique" },
+    { id: "hyperg", label: "Hyperglycemia — thiazides impair insulin secretion and may worsen glucose tolerance", bucket: "unique" },
+    { id: "hyperl", label: "Hyperlipidemia — mechanism linked to insulin resistance; triglycerides and LDL rise", bucket: "unique" }
+  ];
+
+  const buckets = [
+    { id: "shared",  label: "Shared with loop diuretics" },
+    { id: "unique",  label: "Unique to thiazide diuretics" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bucket;
+      const target = zone.dataset.bucketId;
+      if (expected === target) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Is this something loops also cause, or is it specific to the DCT mechanism?", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

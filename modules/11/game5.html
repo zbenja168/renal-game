@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Potassium Lab — Module 11</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 11</a></div>
+  <h1>Game 5 — Potassium Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Round 1: Sort K+ regulators by their primary mechanism</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Potassium balance is maintained by internal shifts and renal secretion. Drag each regulator into the correct mechanism bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Potassium regulators</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the potassium homeostasis brick. New framings — not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Potassium Lab complete!</h3>
+      <p>You've mastered K+ shifts and renal secretion. Take on the boss in Game 6!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ---- ROUND 1: K+ regulator sorter ---- */
+  const regulators = [
+    { id: "ins",    label: "Insulin — shifts K+ into cells by activating Na+/K+-ATPase",              bin: "internal" },
+    { id: "aldo",   label: "Aldosterone — upregulates ENaC and ROMK in collecting duct",              bin: "renal" },
+    { id: "acid",   label: "Acidemia — moves H+ into cells, K+ out (raises serum K+)",                bin: "internal" },
+    { id: "romk",   label: "ROMK channels — constitutive K+ secretion in principal cells",            bin: "renal" },
+    { id: "bk",     label: "BK (maxi-K) channels — flow-activated K+ secretion in collecting duct",  bin: "renal" },
+    { id: "beta2",  label: "Beta-2 agonists — stimulate Na+/K+-ATPase, driving K+ into cells",       bin: "internal" }
+  ];
+
+  const bins = [
+    { id: "internal", label: "Internal K+ balance (ICF ↔ ECF shift)" },
+    { id: "renal",    label: "Renal K+ secretion (collecting duct)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, regulators.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(regulators.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = it.bin;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, regulators.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === regulators.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Does this factor shift K+ across cell membranes, or does it regulate secretion in the collecting duct?", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ---- ROUND 2: New quiz questions ---- */
+  const questions = [
+    {
+      q: "A marathon runner finishes a race with significant muscle fatigue. During exercise, skeletal muscle cells release potassium into the extracellular space. What is the physiological purpose of this shift?",
+      options: [
+        "To raise serum K+ so aldosterone is stimulated and kidneys retain more potassium",
+        "To act as a local vasodilator, increasing blood flow to exercising muscle",
+        "To correct acidemia caused by lactate production",
+        "To stimulate the Na+/K+-ATPase in cardiac cells"
+      ],
+      correct: 1,
+      explain: "Exercise depletes ATP, opening K+ channels in muscle. K+ moves out of cells into the extracellular space, where it acts as a vasodilator metabolite on skeletal muscle arterioles, increasing local blood flow to meet metabolic demands."
+    },
+    {
+      q: "A patient with type 1 diabetes presents with DKA (pH 7.20, glucose 520 mg/dL, serum K+ 5.8 mEq/L). Despite the HIGH serum K+, total body K+ is actually LOW. Why?",
+      options: [
+        "The kidneys retained extra K+ because aldosterone was suppressed",
+        "Insulin deficiency and acidemia caused K+ to shift from ICF to ECF, masking total-body K+ depletion",
+        "The high glucose trapped K+ in the plasma",
+        "BK channels in the collecting duct were maximally activated"
+      ],
+      correct: 1,
+      explain: "In DKA, insulin deficiency (loses Na+/K+-ATPase stimulation) and acidemia (H+ into cells pushes K+ out) both shift K+ from intracellular to extracellular fluid. This makes serum K+ appear HIGH even though patients have lost significant total body K+ via osmotic diuresis in the urine."
+    },
+    {
+      q: "A physician adds spironolactone (an aldosterone antagonist) to a patient's regimen for heart failure. Which specific mechanism explains why this drug causes potassium retention?",
+      options: [
+        "It blocks NKCC2 in the thick ascending limb, preventing K+ secretion",
+        "It blocks ENaC in the collecting duct, reducing the lumen-negative potential needed to drive K+ secretion",
+        "It directly blocks ROMK channels in principal cells",
+        "It reduces GFR, decreasing K+ filtration"
+      ],
+      correct: 1,
+      explain: "Spironolactone blocks aldosterone receptors on principal cells, preventing aldosterone from upregulating ENaC. Without ENaC, less Na+ is reabsorbed, so the lumen remains less negative. This reduces the electrochemical gradient driving K+ secretion through ROMK channels — causing K+ retention (hyperkalemia risk)."
+    },
+    {
+      q: "A patient's serum potassium is 2.8 mEq/L (hypokalemia). Arterial blood gas shows pH 7.50 (alkalemia). What is the relationship between these two findings?",
+      options: [
+        "Alkalemia causes K+ to shift INTO cells, contributing to the low serum K+",
+        "Alkalemia causes K+ to shift OUT of cells, causing the low serum K+",
+        "They are unrelated — alkalemia does not affect K+ distribution",
+        "Alkalemia directly inhibits collecting duct K+ secretion, causing hypokalemia"
+      ],
+      correct: 0,
+      explain: "In alkalemia, H+ ions leave cells to restore blood pH. To maintain electroneutrality, K+ shifts INTO the cells. This reduces the extracellular K+ concentration, contributing to hypokalemia. In addition, alkalemia enhances distal K+ secretion — so both shifts lead to hypokalemia."
+    },
+    {
+      q: "The normal range of dietary K+ intake is 80–100 mEq/day. Approximately what fraction of this ingested potassium is excreted by the kidneys?",
+      options: [
+        "About 10% (most is excreted in feces)",
+        "About 50% (split evenly between urine and feces)",
+        "About 90% (kidneys are primary excretory organ)",
+        "About 100% (all dietary K+ is excreted by the kidney)"
+      ],
+      correct: 2,
+      explain: "The kidneys are responsible for approximately 90% of potassium excretion. The remaining ~10% is excreted via the gastrointestinal tract. This is why advanced kidney disease is so dangerous for potassium balance — the GI route cannot compensate."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

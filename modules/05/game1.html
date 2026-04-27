@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filtration Sorter — Module 5</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 5</a></div>
+  <h1>Game 1 — Filtration Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">📐</div>
+      <h2>Sort each substance by its filtration status across the glomerular barrier</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The glomerular filtration barrier uses size and charge to determine what passes. Drag each substance into the correct category: freely filtered, partially restricted, or excluded under normal conditions.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Substances</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Filtration categories sorted!</h3>
+      <p>Small solutes (&lt;20 kDa, &lt;2 nm) pass freely. Medium molecules (20–70 kDa) are partially restricted. Large or negatively charged molecules (&gt;70 kDa or &gt;4 nm) — especially albumin — are excluded under normal conditions.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "i1",  label: "Creatinine (~0.1 kDa)",               bucket: "free" },
+    { id: "i2",  label: "Electrolytes (Na⁺, K⁺, Cl⁻)",         bucket: "free" },
+    { id: "i3",  label: "Glucose (~0.18 kDa)",                 bucket: "free" },
+    { id: "i4",  label: "Urea (~0.06 kDa)",                    bucket: "free" },
+    { id: "i5",  label: "β2-microglobulin (~11.8 kDa, radius ~1.6 nm)", bucket: "partial" },
+    { id: "i6",  label: "Neutral dextrans (20–70 kDa range)",  bucket: "partial" },
+    { id: "i7",  label: "Small proteins (radius ~2–4 nm)",      bucket: "partial" },
+    { id: "i8",  label: "Albumin (~66 kDa, negatively charged)", bucket: "excluded" },
+    { id: "i9",  label: "Red blood cells and globulins",        bucket: "excluded" }
+  ];
+
+  const bkts = [
+    { id: "free",     label: "Freely Filtered (&lt;20 kDa / &lt;2 nm)" },
+    { id: "partial",  label: "Partially Restricted (20–70 kDa / 2–4 nm)" },
+    { id: "excluded", label: "Excluded Under Normal Conditions (&gt;70 kDa / &gt;4 nm)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bkts.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct: ${pi.textContent}`, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ Consider the molecule's size and charge relative to the filtration barrier.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

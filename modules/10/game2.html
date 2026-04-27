@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nephron Hotspot — Module 10</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 10</a></div>
+  <h1>Game 2 — Nephron Hotspot</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click each nephron segment to reveal its sodium reabsorption</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four nephron segments each reabsorb sodium differently. Click all four hotspots on the diagram to reveal their percentage and transporter. Find all four to win.
+    </div>
+
+    <div class="score-bar">
+      <span>Segments revealed: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 400 560" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background -->
+        <rect width="400" height="560" fill="#f8f4ef" rx="12"/>
+
+        <!-- Glomerulus -->
+        <circle cx="200" cy="60" r="30" fill="#e8c9c9" stroke="#a04848" stroke-width="2"/>
+        <text x="200" y="55" text-anchor="middle" fill="#6b2828" font-size="10" font-weight="700">Glomerulus</text>
+        <text x="200" y="68" text-anchor="middle" fill="#6b2828" font-size="9">freely filters Na+</text>
+
+        <!-- Proximal Tubule -->
+        <path d="M200 90 C160 110 120 130 100 160 C80 190 85 220 100 240" stroke="#4a90d9" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="70" y="175" text-anchor="middle" fill="#1d4a85" font-size="10" font-weight="700">Proximal</text>
+        <text x="70" y="188" text-anchor="middle" fill="#1d4a85" font-size="9">Tubule</text>
+
+        <!-- Loop of Henle descending -->
+        <path d="M100 240 C90 270 88 300 95 340" stroke="#aac4e0" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+        <!-- Thin/thick ascending limb -->
+        <path d="M95 340 C102 380 115 400 140 410 C165 420 190 415 210 410" stroke="#e09a4a" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="148" y="440" text-anchor="middle" fill="#7a4a10" font-size="10" font-weight="700">Thick Ascending</text>
+        <text x="148" y="453" text-anchor="middle" fill="#7a4a10" font-size="9">Limb (TAL)</text>
+
+        <!-- DCT -->
+        <path d="M210 410 C250 405 290 395 310 375 C330 355 325 325 310 310" stroke="#7db87d" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="330" y="355" text-anchor="start" fill="#2a6a2a" font-size="10" font-weight="700">DCT</text>
+
+        <!-- Collecting Duct -->
+        <path d="M310 310 C315 280 312 250 305 220 C298 190 290 170 285 150" stroke="#9b59b6" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="330" y="245" text-anchor="start" fill="#5b2d8a" font-size="10" font-weight="700">Collecting</text>
+        <text x="330" y="258" text-anchor="start" fill="#5b2d8a" font-size="9">Duct</text>
+
+        <!-- Arrows from glomerulus to PT -->
+        <line x1="200" y1="90" x2="190" y2="105" stroke="#a04848" stroke-width="2" marker-end="url(#arr)"/>
+        <defs>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#a04848"/>
+          </marker>
+        </defs>
+
+        <!-- Labels pointing to segments -->
+        <text x="200" y="35" text-anchor="middle" fill="#555" font-size="9">99% of filtered Na+ is reabsorbed total</text>
+      </svg>
+
+      <!-- Hotspots -->
+      <div class="hotspot" data-name="Proximal Tubule" style="left:25%;top:33%"></div>
+      <div class="hotspot" data-name="Thick Ascending Limb" style="left:37%;top:75%"></div>
+      <div class="hotspot" data-name="Distal Convoluted Tubule" style="left:73%;top:60%"></div>
+      <div class="hotspot" data-name="Collecting Duct" style="left:73%;top:43%"></div>
+    </div>
+
+    <div id="infoPanel" style="margin-top:12px;"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Nephron mapped!</h3>
+      <p>PT reabsorbs ~65–80% (NHE3 + paracellular). TAL reabsorbs 10–20% (NKCC2 — target of loop diuretics). DCT reabsorbs ~10% (NCC — target of thiazides). Collecting duct fine-tunes 2–5% via ENaC under aldosterone control.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const segmentInfo = {
+    "Proximal Tubule": {
+      pct: "65–80% of filtered Na+",
+      transport: "NHE3 (Na+/H+ exchanger) + paracellular reabsorption; isotonic reabsorption of salt and water"
+    },
+    "Thick Ascending Limb": {
+      pct: "10–20% of filtered Na+",
+      transport: "NKCC2 cotransporter (Na+/K+/2Cl-); impermeable to water — target of loop diuretics (furosemide)"
+    },
+    "Distal Convoluted Tubule": {
+      pct: "~10% of filtered Na+",
+      transport: "NCC (Na+/Cl- cotransporter) — target of thiazide diuretics (first-line for hypertension)"
+    },
+    "Collecting Duct": {
+      pct: "2–5% of filtered Na+",
+      transport: "ENaC (epithelial Na+ channels) — regulated by aldosterone; this is where fine-tuning occurs"
+    }
+  };
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl  = document.getElementById("misses");
+  const fbEl    = document.getElementById("feedback");
+  const infoEl  = document.getElementById("infoPanel");
+  let found = new Set();
+  let misses = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2800);
+  }
+
+  function init() {
+    found = new Set(); misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    infoEl.innerHTML = "";
+    canvas.querySelectorAll(".hotspot").forEach(h => {
+      h.classList.remove("found");
+      h.style.pointerEvents = "auto";
+    });
+    canvas.querySelectorAll(".miss-marker").forEach(m => m.remove());
+  }
+
+  canvas.querySelectorAll(".hotspot").forEach(h => {
+    h.addEventListener("click", e => {
+      e.stopPropagation();
+      const name = h.dataset.name;
+      if (found.has(name)) return;
+      h.classList.add("found");
+      h.style.pointerEvents = "none";
+      found.add(name);
+      const info = segmentInfo[name];
+      const card = document.createElement("div");
+      card.className = "feedback show correct";
+      card.style.marginBottom = "6px";
+      card.innerHTML = `<strong>${name}</strong>: reabsorbs <em>${info.pct}</em> — ${info.transport}`;
+      infoEl.appendChild(card);
+      Game.setScore(scoreEl, found.size, 4);
+      showFb(`✓ Found: ${name}`, "correct");
+      if (found.size === 4) Game.celebrate("winBanner");
+    });
+  });
+
+  canvas.addEventListener("click", e => {
+    if (e.target.classList && e.target.classList.contains("hotspot")) return;
+    if (found.size === 4) return;
+    misses++;
+    missEl.textContent = misses;
+    const rect = canvas.getBoundingClientRect();
+    const m = document.createElement("div");
+    m.className = "hotspot miss miss-marker";
+    m.style.left = (e.clientX - rect.left) + "px";
+    m.style.top  = (e.clientY - rect.top) + "px";
+    m.style.pointerEvents = "none";
+    canvas.appendChild(m);
+    setTimeout(() => m.remove(), 700);
+    showFb("✗ Click directly on a visible nephron segment.", "incorrect");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

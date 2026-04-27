@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diuretics Lab — Module 12</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 12</a></div>
+  <h1>Game 5 — Diuretics Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Round 1: Sort each drug property into the correct loop diuretic</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each of the four loop diuretics has unique properties. Drag each property to the correct drug.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drug properties</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the loop diuretics brick — new framings, not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Diuretics Lab complete!</h3>
+      <p>You have mastered loop diuretic pharmacology. Take on the boss in Game 6!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ---- ROUND 1: Drug property sorter ---- */
+  const properties = [
+    { id: "furo_bio",  label: "Oral bioavailability of 60% — most commonly used loop diuretic",     bin: "furosemide" },
+    { id: "bum_pot",   label: "Reference potency = 1; 1 mg equates to 40 mg furosemide",            bin: "bumetanide" },
+    { id: "tors_bio",  label: "80% oral bioavailability and relative potency of 20",                bin: "torsemide" },
+    { id: "eth_sulfa", label: "No sulfonamide group — used in sulfa-allergic patients",             bin: "ethacrynic" },
+    { id: "eth_oto",   label: "Causes ototoxicity more frequently than other loop diuretics",       bin: "ethacrynic" },
+    { id: "furo_siadh",label: "Used to treat SIADH hyponatremia in combination with normal saline", bin: "furosemide" }
+  ];
+
+  const bins = [
+    { id: "furosemide",  label: "Furosemide" },
+    { id: "bumetanide",  label: "Bumetanide" },
+    { id: "torsemide",   label: "Torsemide" },
+    { id: "ethacrynic",  label: "Ethacrynic Acid" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, properties.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(properties.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = it.bin;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, properties.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === properties.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Check which drug has that specific property.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ---- ROUND 2: New quiz questions ---- */
+  const questions = [
+    {
+      q: "A patient with heart failure who takes 40 mg furosemide daily needs a higher diuretic effect. The physician switches to bumetanide. What dose of bumetanide would produce the equivalent diuresis?",
+      options: ["0.5 mg", "1 mg", "10 mg", "20 mg"],
+      correct: 1,
+      explain: "The potency ratio from the brick: 40 mg furosemide = 1 mg bumetanide (relative potency 1 vs 40). So the equivalent dose of bumetanide is 1 mg."
+    },
+    {
+      q: "A patient on furosemide develops a serum K+ of 2.9 mEq/L and blood pH of 7.52. What is the mechanism connecting loop diuretic use to these two findings?",
+      options: [
+        "Furosemide directly inhibits aldosterone, causing K+ retention and alkalosis",
+        "Large Na+ delivery to the collecting duct increases K+ secretion; volume depletion activates RAAS, which retains HCO3- (contraction alkalosis)",
+        "Loop diuretics block the Na+/Cl- transporter in the DCT, causing hypokalemia",
+        "Furosemide causes direct tubular secretion of H+ ions, raising blood pH"
+      ],
+      correct: 1,
+      explain: "NKCC2 blockade delivers more Na+ to the collecting duct, which the principal cells reabsorb in exchange for K+ secretion, causing hypokalemia. Volume depletion activates RAAS; aldosterone retains Na+ and HCO3- accumulates (contraction alkalosis). These two effects together cause hypokalemic metabolic alkalosis."
+    },
+    {
+      q: "A patient with a known sulfa drug allergy develops acute hypercalcemia. The team wants to use a loop diuretic with normal saline. Which loop diuretic is most appropriate?",
+      options: ["Furosemide", "Bumetanide", "Torsemide", "Ethacrynic acid"],
+      correct: 3,
+      explain: "Furosemide, bumetanide, and torsemide all contain a sulfonamide (sulfa) group and should be avoided in sulfa-allergic patients. Ethacrynic acid lacks the sulfonamide group and is safe in this population, though it carries a higher risk of ototoxicity."
+    },
+    {
+      q: "Why do loop diuretics INCREASE urinary calcium excretion, while thiazide diuretics DECREASE it?",
+      options: [
+        "Loop diuretics reduce aldosterone; thiazides increase it — aldosterone determines Ca2+ handling",
+        "Loop diuretics block NKCC2, abolishing the lumen-positive potential that drives paracellular Ca2+ reabsorption in the TAL; thiazides increase Ca2+ reabsorption distally",
+        "Loop diuretics cause hyperphosphatemia which binds Ca2+ in the tubule",
+        "Loop diuretics acidify the urine, which dissolves Ca2+ crystals"
+      ],
+      correct: 1,
+      explain: "In the TAL, the lumen-positive transepithelial potential (created by K+ recycling via NKCC2) drives paracellular Ca2+ and Mg2+ reabsorption. When loop diuretics block NKCC2, this lumen-positive charge is lost, and Ca2+ (and Mg2+) can no longer be reabsorbed paracellularly — leading to calciuresis. This is why loop diuretics can treat hypercalcemia."
+    },
+    {
+      q: "A patient receiving high-dose IV furosemide and gentamicin (an aminoglycoside antibiotic) suddenly notices ringing in his ears and difficulty hearing. What is the most likely explanation?",
+      options: [
+        "Furosemide directly damages the cochlea by blocking NKCC2 in the stria vascularis; aminoglycosides are independently ototoxic — combined, the risk is additive",
+        "Furosemide blocks gentamicin clearance, causing gentamicin accumulation in the blood",
+        "Gentamicin causes metabolic alkalosis, which impairs cochlear function",
+        "High-dose furosemide causes volume depletion, reducing blood flow to the cochlea"
+      ],
+      correct: 0,
+      explain: "Loop diuretics can cause ototoxicity (especially with rapid IV infusion) by blocking NKCC2 in the stria vascularis of the inner ear, disrupting endolymph ion balance. Aminoglycosides are also independently ototoxic. Combining these two drug classes increases ototoxicity risk additively — this is a classic drug interaction to know."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

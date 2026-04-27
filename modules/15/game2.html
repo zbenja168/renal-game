@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Comparison — Module 15</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 15</a></div>
+  <h1>Game 2 — Class Comparison</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚖️</div>
+      <h2>Drag each drug or property into its correct class</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> There are two main classes of potassium-sparing diuretics. Drag each drug name or property into the correct class bucket. Some properties are shared by both classes — those go in the "Both" bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted correctly: <span class="score" id="score">0 / 10</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drugs and properties</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Classes sorted!</h3>
+      <p>Aldosterone receptor antagonists (spironolactone, eplerenone) work by blocking the mineralocorticoid receptor. ENaC blockers (amiloride, triamterene) work directly on the luminal sodium channel without interacting with the aldosterone receptor.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "spiro",   label: "Spironolactone",                                          bucket: "aldo" },
+    { id: "eplere",  label: "Eplerenone",                                              bucket: "aldo" },
+    { id: "amil",    label: "Amiloride",                                               bucket: "enac" },
+    { id: "triam",   label: "Triamterene",                                             bucket: "enac" },
+    { id: "mec_aldo", label: "Blocks mineralocorticoid (aldosterone) receptor",        bucket: "aldo" },
+    { id: "mec_enac", label: "Directly blocks luminal ENaC without binding aldosterone receptor", bucket: "enac" },
+    { id: "anti_an", label: "Has antiandrogen and estrogen-like side effects (gynecomastia)", bucket: "aldo" },
+    { id: "eplere_safe", label: "Fewer antiandrogen effects — preferred when hormonal side effects concern patient", bucket: "aldo" },
+    { id: "hyper_k", label: "Both classes can cause hyperkalemia",                    bucket: "both" },
+    { id: "coll_duct", label: "Both classes act at the collecting duct principal cells", bucket: "both" }
+  ];
+
+  const buckets = [
+    { id: "aldo", label: "Aldosterone Receptor Antagonists (e.g., spironolactone, eplerenone)" },
+    { id: "enac", label: "ENaC Blockers (e.g., amiloride, triamterene)" },
+    { id: "both", label: "Both Classes" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct: " + placedItem.textContent, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Wrong class for: " + dragSource.textContent, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

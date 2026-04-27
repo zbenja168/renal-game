@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypo/Hyperkalemia Match — Module 11</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 11</a></div>
+  <h1>Game 3 — Hypo/Hyperkalemia Match</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Match each cause or mechanism to its K+ disturbance</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Flip cards to find matching pairs. Each clinical cause is paired with the K+ disturbance it produces and its mechanism. Six pairs — all from the potassium homeostasis brick.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
+      <span>Flips: <span class="score" id="flips">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All K+ disturbances matched!</h3>
+      <p>Understanding which conditions shift K+ in vs. out is essential for managing hyperkalemia and hypokalemia in clinical practice — and for predicting the effect of drugs like diuretics, insulin, and beta-agonists.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Diabetic ketoacidosis (DKA) — serum K+ is HIGH before insulin",       b: "Acidemia + insulin deficiency → K+ shifts OUT of cells into ECF" },
+    { a: "Insulin treatment in DKA — serum K+ falls after insulin given",        b: "Insulin stimulates Na+/K+-ATPase → K+ driven INTO cells → hypokalemia" },
+    { a: "Loop diuretics (furosemide) cause hypokalemia",                        b: "Increased Na+ delivery to collecting duct + high urine flow → more K+ secretion" },
+    { a: "Alkalemia (high blood pH) causes hypokalemia",                         b: "H+ moves out of cells; K+ enters cells to maintain electroneutrality" },
+    { a: "Advanced chronic kidney disease (GFR <10-20%) causes hyperkalemia",    b: "Reduced GFR → less K+ filtered and less distal delivery → K+ retention" },
+    { a: "Albuterol (beta-2 agonist) can acutely lower serum K+",               b: "Beta-2 stimulation activates Na+/K+-ATPase → K+ shifts INTO cells" }
+  ];
+
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const flipsEl = document.getElementById("flips");
+  const fbEl = document.getElementById("feedback");
+  let firstPick = null, lock = false, matched = 0, flips = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; flips = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    flipsEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    board.innerHTML = "";
+    const cards = [];
+    pairs.forEach((p, i) => {
+      cards.push({ pairId: i, text: p.a });
+      cards.push({ pairId: i, text: p.b });
+    });
+    Game.shuffle(cards);
+    cards.forEach(c => {
+      const el = document.createElement("div");
+      el.className = "match-card";
+      el.dataset.pairId = c.pairId;
+      el.dataset.text = c.text;
+      el.textContent = "?";
+      el.addEventListener("click", () => onPick(el));
+      board.appendChild(el);
+    });
+  }
+
+  function onPick(card) {
+    if (lock) return;
+    if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
+    flip(card, true);
+    flips++;
+    flipsEl.textContent = flips;
+    if (!firstPick) { firstPick = card; return; }
+    if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      showFb("Not a match — think cause vs. mechanism.", "info");
+      const a = firstPick, b = card;
+      setTimeout(() => { flip(a, false); flip(b, false); firstPick = null; lock = false; }, 900);
+    }
+  }
+
+  function flip(card, on) {
+    if (on) { card.classList.add("flipped"); card.textContent = card.dataset.text; }
+    else { card.classList.remove("flipped"); card.textContent = "?"; }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

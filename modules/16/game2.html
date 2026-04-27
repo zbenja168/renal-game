@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluid Shift Predictor — Module 16</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 16</a></div>
+  <h1>Game 2 — Fluid Shift Predictor</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💧</div>
+      <h2>For each scenario, click the correct prediction of ICF and ECF changes</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each scenario describes a gain or loss of a specific type of fluid. Predict whether the ICF (intracellular) and ECF (extracellular) volumes increase, decrease, or stay the same. Click the correct option.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Fluid shifts mastered!</h3>
+      <p>Isotonic gains/losses only affect ECF. Hypertonic gains draw water from ICF to ECF (cells shrink). Hypotonic gains send water into both compartments (cells swell). These principles guide clinical fluid therapy choices.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      scenario: "A patient receives a 1-liter infusion of isotonic saline (0.9% NaCl). What happens to the fluid compartments?",
+      options: [
+        "ECF increases, ICF unchanged (no change in tonicity, water stays in ECF)",
+        "Both ECF and ICF increase equally",
+        "ICF increases, ECF unchanged",
+        "ECF decreases, ICF increases"
+      ],
+      correct: 0,
+      explain: "Isotonic saline has the same tonicity as plasma. It expands only the ECF without driving water into cells. The ICF remains unchanged because there is no osmotic gradient created."
+    },
+    {
+      scenario: "A patient loses a large amount of isotonic fluid through severe diarrhea (hemorrhage-like loss). What happens?",
+      options: [
+        "ECF decreases, ICF unchanged",
+        "Both ECF and ICF decrease equally",
+        "ECF unchanged, ICF decreases",
+        "ECF increases, ICF decreases"
+      ],
+      correct: 0,
+      explain: "Loss of isotonic fluid reduces ECF volume without creating an osmotic gradient. No water shifts into or out of cells, so ICF remains unchanged — classic isotonic dehydration (e.g., hemorrhage, severe diarrhea)."
+    },
+    {
+      scenario: "3% hypertonic saline is infused to treat severe symptomatic hyponatremia. What happens to the fluid compartments?",
+      options: [
+        "Water shifts from ICF to ECF — ECF increases (tonicity up), ICF decreases (cells shrink)",
+        "Both ECF and ICF increase as saline distributes evenly",
+        "ECF decreases, ICF increases",
+        "No change — the high sodium stays in the ECF without causing shifts"
+      ],
+      correct: 0,
+      explain: "Hypertonic saline raises ECF effective osmolality. Water moves osmotically from the ICF (lower tonicity) to the ECF (higher tonicity). ECF volume expands and ICF volume contracts — cells shrink. This is used therapeutically to reduce cerebral edema in acute severe hyponatremia."
+    },
+    {
+      scenario: "A patient with SIADH retains excess free water. What happens to the fluid compartments?",
+      options: [
+        "Water distributes into both ECF and ICF — both expand, ECF becomes hypotonic, cells swell",
+        "Only ECF expands (water stays in blood vessels)",
+        "Only ICF expands (water rushes into cells only)",
+        "ECF decreases, ICF increases proportionally"
+      ],
+      correct: 0,
+      explain: "Excess free water lowers ECF tonicity. Water then shifts down the osmotic gradient into the ICF. Both compartments expand, but cells swell particularly — risking cerebral edema if severe."
+    },
+    {
+      scenario: "A patient with diabetes insipidus loses excess free water (hypotonic loss). What happens?",
+      options: [
+        "ECF becomes hypertonic, water shifts from ICF to ECF — ICF decreases (cellular dehydration), ECF volume changes minimally",
+        "ECF decreases, ICF unchanged",
+        "Both compartments decrease proportionally",
+        "ICF increases as the body compensates"
+      ],
+      correct: 0,
+      explain: "Loss of free water raises ECF tonicity (hypernatremia). Water moves osmotically from the ICF to the ECF to re-equilibrate. This results in cellular dehydration (ICF shrinks) — the basis of the symptoms in hypernatremia."
+    },
+    {
+      scenario: "D5W (5% dextrose in water) is infused. After glucose is metabolized, what is the net effect on compartments?",
+      options: [
+        "Net hypotonic effect — water distributes into both ICF and ECF, cells swell slightly",
+        "Isotonic effect — only ECF expands",
+        "Hypertonic effect — water shifts from ICF to ECF",
+        "No net effect on any compartment"
+      ],
+      correct: 0,
+      explain: "D5W is initially isotonic in the bag, but after glucose is rapidly metabolized, it becomes equivalent to free water. Free water distributes into both ICF and ECF (2/3 ICF, 1/3 ECF), causing both compartments to expand and slightly lowering tonicity."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let correct = 0;
+  let answered = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2800);
+  }
+
+  function init() {
+    correct = 0; answered = 0;
+    Game.setScore(scoreEl, 0, questions.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    quizContainer.innerHTML = "";
+
+    questions.forEach((qd, idx) => {
+      const block = document.createElement("div");
+      block.className = "quiz-question";
+      block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.scenario}</div>`;
+      const opts = document.createElement("div");
+      opts.className = "quiz-options";
+      const shuffledOpts = qd.options.map((o, i) => ({ text: o, origIdx: i }));
+      shuffledOpts.forEach(op => {
+        const btn = document.createElement("button");
+        btn.className = "quiz-option";
+        btn.textContent = op.text;
+        btn.addEventListener("click", () => onAnswer(block, btn, op.origIdx, qd, opts));
+        opts.appendChild(btn);
+      });
+      block.appendChild(opts);
+      const exp = document.createElement("div");
+      exp.className = "quiz-explanation";
+      exp.textContent = qd.explain;
+      block.appendChild(exp);
+      quizContainer.appendChild(block);
+    });
+    Game.setScore(scoreEl, 0, questions.length);
+  }
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      correct++;
+      showFb("✓ Correct!", "correct");
+    } else {
+      btn.classList.add("incorrect");
+      Array.from(opts.children)[qd.correct].classList.add("correct");
+      showFb("✗ Not quite — review the tonicity and osmotic gradient.", "incorrect");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(scoreEl, correct, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

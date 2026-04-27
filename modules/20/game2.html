@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receptor Hotspot — Module 20</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 20</a></div>
+  <h1>Game 2 — Receptor Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🎯</div>
+      <h2>Click the correct receptor responsible for each effect</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three ADH effects are described one by one. Click the correct receptor zone — V1 or V2 — on the diagram for each effect.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+      <strong>Effect <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- V1 receptor box -->
+        <rect x="30" y="30" width="180" height="160" rx="14" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
+        <text x="120" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">V1 Receptor</text>
+        <text x="120" y="60" text-anchor="middle" font-size="11" fill="#92400e">Location:</text>
+        <text x="120" y="76" text-anchor="middle" font-size="11" fill="#444">Vascular smooth muscle</text>
+        <text x="120" y="110" text-anchor="middle" font-size="11" fill="#92400e">Effect:</text>
+        <text x="120" y="126" text-anchor="middle" font-size="11" fill="#444">Vasoconstriction</text>
+        <text x="120" y="142" text-anchor="middle" font-size="11" fill="#444">↑ Blood pressure</text>
+        <text x="120" y="168" text-anchor="middle" font-size="10" fill="#888">Vasopressin binds here</text>
+        <!-- V2 receptor box -->
+        <rect x="270" y="30" width="180" height="160" rx="14" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+        <text x="360" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#1e3a8a">V2 Receptor</text>
+        <text x="360" y="60" text-anchor="middle" font-size="11" fill="#1e3a8a">Location:</text>
+        <text x="360" y="76" text-anchor="middle" font-size="11" fill="#444">Renal collecting duct</text>
+        <text x="360" y="92" text-anchor="middle" font-size="11" fill="#444">Vascular endothelium</text>
+        <text x="360" y="120" text-anchor="middle" font-size="11" fill="#1e3a8a">Effect:</text>
+        <text x="360" y="136" text-anchor="middle" font-size="11" fill="#444">Aquaporin insertion →</text>
+        <text x="360" y="152" text-anchor="middle" font-size="11" fill="#444">water reabsorption</text>
+        <text x="360" y="168" text-anchor="middle" font-size="10" fill="#888">Desmopressin selective here</text>
+      </svg>
+      <div class="hotspot" data-name="V1" style="left:6%;top:14%;width:37%;height:72%;border-radius:8px;"></div>
+      <div class="hotspot" data-name="V2" style="left:56%;top:14%;width:37%;height:72%;border-radius:8px;"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All receptors identified!</h3>
+      <p>V1: vascular smooth muscle → vasoconstriction (vasopressin). V2: renal collecting duct → aquaporin insertion, water reabsorption, von Willebrand factor release (desmopressin + vasopressin).</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const effects = [
+    {
+      text: "A dose of vasopressin is given to a patient in septic shock. It causes constriction of arterioles and raises blood pressure. Which receptor mediates this vasoconstrictive effect?",
+      answer: "V1",
+      explain: "Vasopressin binds V1 receptors on vascular smooth muscle, stimulating contraction and vasoconstriction. This raises arterial blood pressure — the rationale for its use in shock."
+    },
+    {
+      text: "A child with bedwetting (nocturnal enuresis) is given desmopressin. Aquaporin-2 channels are inserted into the apical membrane of collecting duct cells, increasing water reabsorption and concentrating urine. Which receptor mediates this?",
+      answer: "V2",
+      explain: "V2 receptors on renal collecting duct principal cells trigger aquaporin-2 (AQP2) translocation to the apical membrane, making the duct permeable to water. This is the antidiuretic effect. Desmopressin is selective for V2."
+    },
+    {
+      text: "A patient with von Willebrand disease is given desmopressin pre-operatively. Vascular endothelial cells release stored von Willebrand factor and factor VIII, improving hemostasis. Which receptor on endothelial cells mediates this release?",
+      answer: "V2",
+      explain: "V2 receptors are also present on vascular endothelial cells. Stimulation causes release of von Willebrand factor from Weibel-Palade bodies. This is why desmopressin (a V2-selective agonist) is used for von Willebrand disease and mild hemophilia A."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses  = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= effects.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = effects[currentCase].text;
+    canvas.querySelectorAll(".hotspot").forEach(h => {
+      h.classList.remove("found", "miss");
+      h.style.pointerEvents = "auto";
+    });
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  canvas.querySelectorAll(".hotspot").forEach(h => {
+    h.addEventListener("click", e => {
+      e.stopPropagation();
+      if (currentCase >= effects.length) return;
+      const picked   = h.dataset.name;
+      const expected = effects[currentCase].answer;
+      const explain  = effects[currentCase].explain;
+
+      if (picked === expected) {
+        h.classList.add("found");
+        canvas.querySelectorAll(".hotspot").forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === effects.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 500);
+        } else {
+          setTimeout(loadCase, 2500);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        h.classList.add("miss");
+        setTimeout(() => h.classList.remove("miss"), 600);
+        showFb("✗ Not quite — think about where this effect occurs (kidney vs blood vessel).", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

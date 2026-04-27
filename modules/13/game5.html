@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thiazide Lab — Module 13</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 13</a></div>
+  <h1>Game 5 — Thiazide Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Round 1: Sort each drug property into the correct thiazide</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Common thiazide drugs include HCTZ, chlorthalidone, metolazone, and indapamide. Drag each property to the correct drug.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drug properties</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the thiazide diuretics brick — new framings, not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Thiazide Lab complete!</h3>
+      <p>You have mastered thiazide diuretic pharmacology. Take on the boss in Game 6!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ---- ROUND 1: Drug property sorter ---- */
+  const properties = [
+    { id: "hctz1",   label: "Most commonly prescribed thiazide — hydrochlorothiazide",                       bin: "hctz" },
+    { id: "hctz2",   label: "Used as a standard comparator thiazide in most hypertension trials",            bin: "hctz" },
+    { id: "chlort",  label: "Longer-acting thiazide with once-daily dosing; often preferred for BP control", bin: "chlorthalidone" },
+    { id: "metro",   label: "Potent thiazide-like diuretic used with loop diuretics for refractory edema",   bin: "metolazone" },
+    { id: "indap1",  label: "Thiazide-like diuretic with indole ring structure; used in hypertension",       bin: "indapamide" },
+    { id: "indap2",  label: "Thiazide-like drug that may have fewer metabolic side effects than HCTZ",       bin: "indapamide" }
+  ];
+
+  const bins = [
+    { id: "hctz",          label: "HCTZ (Hydrochlorothiazide)" },
+    { id: "chlorthalidone",label: "Chlorthalidone" },
+    { id: "metolazone",    label: "Metolazone" },
+    { id: "indapamide",    label: "Indapamide" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, properties.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(properties.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = it.bin;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, properties.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === properties.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Check the drug descriptions in the brick.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ---- ROUND 2: New quiz questions ---- */
+  const questions = [
+    {
+      q: "A patient with recurrent calcium oxalate kidney stones asks their physician why they have been prescribed hydrochlorothiazide (HCTZ) for stone prevention. What is the correct explanation?",
+      options: [
+        "HCTZ alkalinizes the urine, which dissolves calcium oxalate crystals",
+        "HCTZ blocks the NCC transporter in the DCT, which reduces luminal Na+ and increases calcium reabsorption via NCX, reducing urinary Ca2+ and stone formation",
+        "HCTZ reduces GFR, which decreases the filtered load of calcium",
+        "HCTZ chelates calcium ions in the tubular lumen before they can crystallize"
+      ],
+      correct: 1,
+      explain: "By blocking NCC, HCTZ lowers intracellular Na+ in DCT cells. This enhances the Na+/Ca2+ exchanger (NCX) on the basolateral membrane, which drives more Ca2+ from the tubular lumen into the cell and then into the blood. Less Ca2+ in the urine means fewer calcium stones."
+    },
+    {
+      q: "A patient with nephrogenic diabetes insipidus (NDI) produces 10 liters of dilute urine per day because their kidneys cannot respond to ADH. Why would adding a thiazide diuretic paradoxically REDUCE urine output in this patient?",
+      options: [
+        "Thiazides stimulate ADH receptors in the collecting duct",
+        "Thiazides cause volume depletion, which activates RAAS and increases proximal tubule Na+ reabsorption — less fluid reaches the diluting segment, reducing urine output",
+        "Thiazides block aquaporin channels in the collecting duct",
+        "Thiazides directly stimulate the Na+/K+-ATPase to retain more water"
+      ],
+      correct: 1,
+      explain: "In NDI, the collecting duct is unresponsive to ADH, so water escapes. Adding a thiazide causes mild volume depletion, which activates RAAS and upregulates proximal tubule reabsorption. More Na+ (and water) is reabsorbed proximally, so less fluid reaches the distal tubule/collecting duct, paradoxically reducing urine output."
+    },
+    {
+      q: "A patient develops a serum Na+ of 118 mEq/L (severe hyponatremia) while on hydrochlorothiazide. What is the specific mechanism by which thiazides cause this unique electrolyte disturbance — which loop diuretics do NOT cause as readily?",
+      options: [
+        "Thiazides inhibit the PT Na+ transporter, preventing Na+ retention",
+        "Thiazides block the NCC transporter in the DCT — the diluting segment — making it impossible to generate maximally dilute urine; water is retained",
+        "Thiazides stimulate ADH secretion, causing excessive water retention",
+        "Thiazides increase GFR, flushing Na+ into the urine"
+      ],
+      correct: 1,
+      explain: "The DCT (where NCC sits) is the kidney's diluting segment — the site where Na+ is reabsorbed WITHOUT water, creating dilute tubular fluid. When thiazides block NCC here, the kidney CANNOT dilute urine maximally. If the patient drinks water and ADH is present, free water accumulates → hyponatremia. Loop diuretics don't block the DCT, so they don't impair dilution the same way."
+    },
+    {
+      q: "A patient with gout and hypertension is started on hydrochlorothiazide. Three weeks later, a uric acid level is checked and found to be elevated. What is the mechanism linking thiazide use to hyperuricemia?",
+      options: [
+        "Thiazides directly stimulate uric acid synthesis in the liver",
+        "Thiazides compete with uric acid for the same secretory transporter in the proximal tubule, blocking uric acid excretion",
+        "Thiazides increase renal GFR, but uric acid is reabsorbed more at higher flow rates",
+        "Thiazides stimulate xanthine oxidase activity in the kidney"
+      ],
+      correct: 1,
+      explain: "Thiazides and uric acid compete for the same organic acid secretory transporter in the proximal tubule. When thiazides are secreted into the tubule, they reduce the available transporter for uric acid secretion. Less uric acid is excreted → serum uric acid rises → hyperuricemia and possible gout flare. This is why thiazides should be used cautiously in patients with a history of gout."
+    },
+    {
+      q: "Mutations in the NCC transporter gene (SLC12A3) cause Gitelman syndrome. What would you expect the clinical features of this condition to look like?",
+      options: [
+        "Same as having a loop diuretic on board — hypokalemia, metabolic acidosis, hypocalcemia",
+        "Same as having a thiazide on board — hypokalemia, metabolic alkalosis, hypocalciuria, hypomagnesemia",
+        "Hypertension with hyperkalemia because NCC is usually natriuretic",
+        "Hypernatremia and hyperchloremia because NCC retains Na+ and Cl-"
+      ],
+      correct: 1,
+      explain: "Gitelman syndrome is caused by loss-of-function mutations in NCC — the exact transporter that thiazides block. These patients have a phenotype identical to someone chronically taking a thiazide: hypokalemic metabolic alkalosis, hypocalciuria (low urine Ca2+), and hypomagnesemia. The brick notes that 'Gitelman syndrome looks just like a patient taking a thiazide.'"
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

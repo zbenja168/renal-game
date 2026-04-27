@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nephron Builder — Module 9</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 9</a></div>
+  <h1>Game 1 — Nephron Builder</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧱</div>
+      <h2>Drag each transport function into the correct nephron segment</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each nephron segment has a defining primary function. Drag each function into the correct segment slot — PCT, thin descending limb, thick ascending limb, DCT, or collecting duct. All from the brick's LO1 section.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Functions</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Nephron mapped!</h3>
+      <p>PCT: bulk reabsorption, isosmotic. tDL: water exits, fluid concentrates. TAL: NaCl pumped out, fluid dilutes. DCT: fine NaCl and Ca²⁺ regulation. CD: final Na⁺/K⁺ adjustment by aldosterone; water reabsorption by ADH.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "s1", label: "Proximal convoluted tubule (PCT) — primary job",                 answer: "Reabsorbs 65–70% Na⁺, all glucose, all amino acids, HCO₃⁻; isosmotic" },
+    { id: "s2", label: "PCT — Na⁺ reabsorption driving force",                           answer: "Na⁺/K⁺-ATPase on basolateral membrane" },
+    { id: "s3", label: "Thin descending limb — permeability",                            answer: "Highly water-permeable; impermeable to solutes — fluid concentrates" },
+    { id: "s4", label: "Thick ascending limb (TAL) — key action",                        answer: "Reabsorbs NaCl via NKCC2; completely water-impermeable — fluid dilutes" },
+    { id: "s5", label: "TAL — also reabsorbs these ions paracellularly",                 answer: "Ca²⁺ and Mg²⁺" },
+    { id: "s6", label: "Distal convoluted tubule (DCT) — primary function",              answer: "NaCl reabsorption via NCC; regulated Ca²⁺ reabsorption via TRPV5 (PTH-stimulated)" },
+    { id: "s7", label: "Collecting duct principal cells — hormone-regulated action",     answer: "Aldosterone stimulates ENaC (Na⁺ reabsorption) and ROMK (K⁺ secretion)" },
+    { id: "s8", label: "Collecting duct — water reabsorption mechanism",                 answer: "ADH inserts AQP2 channels into apical membrane" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dropped;
+        zone.appendChild(p);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think about which segment performs this specific function.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

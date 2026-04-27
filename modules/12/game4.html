@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adverse Effect Sorter — Module 12</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 12</a></div>
+  <h1>Game 4 — Adverse Effect Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚠️</div>
+      <h2>Drag each adverse effect into its category</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Most loop diuretic side effects stem from excessive fluid and electrolyte loss. Drag each adverse effect or interaction into the correct category bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Adverse effects and interactions</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Adverse effects sorted!</h3>
+      <p>Electrolyte imbalances dominate: hypokalemia + metabolic alkalosis (contraction alkalosis) is the classic combination. Volume depletion can cause prerenal AKI and hypotension. Ototoxicity is the unique non-electrolyte toxicity — worst with ethacrynic acid and rapid IV dosing.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "hypok",   label: "Hypokalemia — increased K+ secretion from high Na+ delivery to collecting duct",  bucket: "electrolyte" },
+    { id: "malk",    label: "Metabolic alkalosis (contraction alkalosis) — RAAS activation retains HCO3-",     bucket: "electrolyte" },
+    { id: "hypomg",  label: "Hypomagnesemia — Mg2+ lost when lumen-positive charge is abolished in TAL",       bucket: "electrolyte" },
+    { id: "hypoca",  label: "Hypocalcemia — Ca2+ lost because paracellular reabsorption requires lumen positivity", bucket: "electrolyte" },
+    { id: "vol_dep", label: "Volume depletion — excessive diuresis → hypotension, prerenal AKI",               bucket: "fluid" },
+    { id: "hypo_bp", label: "Hypotension / syncope — especially in elderly or volume-depleted patients",       bucket: "fluid" },
+    { id: "ototox",  label: "Ototoxicity (tinnitus, hearing loss, vertigo) — especially with ethacrynic acid and rapid IV", bucket: "other" },
+    { id: "nsaids",  label: "NSAIDs reduce diuretic efficacy by blocking prostaglandin-mediated vasodilation",  bucket: "other" }
+  ];
+
+  const buckets = [
+    { id: "electrolyte", label: "Electrolyte imbalances" },
+    { id: "fluid",       label: "Fluid / volume effects" },
+    { id: "other",       label: "Other toxicities and drug interactions" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bucket;
+      const target = zone.dataset.bucketId;
+      if (expected === target) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think: is this an electrolyte imbalance, a fluid effect, or a different mechanism?", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

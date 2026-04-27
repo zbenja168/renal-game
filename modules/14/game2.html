@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indication Spotter — Module 14</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 14</a></div>
+  <h1>Game 2 — Indication Spotter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🏥</div>
+      <h2>Click every valid clinical indication for osmotic diuretics</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The board shows 8 clinical scenarios. Click ONLY those for which osmotic diuretics (e.g., mannitol, urea) are a recognized indication per the brick. Clicking an incorrect scenario counts as a miss.
+    </div>
+
+    <div class="score-bar">
+      <span>Found: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="indicationBoard" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four indications found!</h3>
+      <p>Osmotic diuretics are indicated for: elevated intracranial pressure, elevated intraocular pressure in acute angle-closure glaucoma, increasing urinary excretion of some ingested toxins, and (occasionally) enhancing urine output in diminished renal function.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const scenarios = [
+    { text: "Patient with traumatic brain injury and elevated intracranial pressure (ICP)", correct: true },
+    { text: "Acute angle-closure glaucoma with elevated intraocular pressure", correct: true },
+    { text: "Ingestion of a toxin — need to increase urinary excretion of the substance", correct: true },
+    { text: "Patient with diminished renal function needing enhanced urine output", correct: true },
+    { text: "Patient with congestive heart failure and pulmonary edema", correct: false },
+    { text: "Chronic hypertension managed in outpatient clinic", correct: false },
+    { text: "Severe dehydration with signs of hypotension and shock", correct: false },
+    { text: "Chronic kidney disease with anuria (no urine output at all)", correct: false }
+  ];
+
+  const board = document.getElementById("indicationBoard");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+
+  let found = 0;
+  let misses = 0;
+  const TOTAL = scenarios.filter(s => s.correct).length;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2800);
+  }
+
+  function init() {
+    found = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    board.innerHTML = "";
+
+    const shuffled = Game.shuffle(scenarios.slice());
+    shuffled.forEach(sc => {
+      const card = document.createElement("div");
+      card.className = "drop-zone";
+      card.style.cssText = "padding:14px;cursor:pointer;text-align:center;font-size:0.92em;min-height:80px;display:flex;align-items:center;justify-content:center;";
+      card.textContent = sc.text;
+      card.dataset.correct = sc.correct ? "1" : "0";
+      card.addEventListener("click", () => onPick(card, sc));
+      board.appendChild(card);
+    });
+  }
+
+  function onPick(card, sc) {
+    if (card.classList.contains("correct") || card.classList.contains("incorrect")) return;
+    if (sc.correct) {
+      card.classList.add("correct");
+      found++;
+      Game.setScore(scoreEl, found, TOTAL);
+      showFb("✓ Correct indication!", "correct");
+      if (found === TOTAL) Game.celebrate("winBanner");
+    } else {
+      card.classList.add("incorrect");
+      misses++;
+      missEl.textContent = misses;
+      showFb("✗ That is not a recognized indication for osmotic diuretics.", "incorrect");
+      setTimeout(() => card.classList.remove("incorrect"), 800);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

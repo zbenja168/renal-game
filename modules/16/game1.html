@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osmole Classifier — Module 16</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 16</a></div>
+  <h1>Game 1 — Osmole Classifier</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Drag each solute into the correct category</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Effective osmoles cannot freely cross cell membranes — they create an osmotic gradient that drives water movement and change cell volume. Ineffective osmoles cross freely, so they do NOT alter cell volume. Sort each solute correctly.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Solutes to classify</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Osmoles classified!</h3>
+      <p>Effective osmoles (sodium, glucose, mannitol, albumin) cannot freely cross cell membranes and drive water movement. Ineffective osmoles (urea, ethanol, methanol) cross freely and do not cause water shifts — so they raise osmolality without affecting tonicity or cell volume.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "sodium",    label: "Sodium (Na+) — primary determinant of ECF tonicity",          bucket: "eff" },
+    { id: "glucose",   label: "Glucose — effective osmole when elevated (e.g., hyperglycemia)", bucket: "eff" },
+    { id: "mannitol",  label: "Mannitol — exogenous osmotic agent that draws water from cells", bucket: "eff" },
+    { id: "albumin",   label: "Albumin — large plasma protein, cannot cross membranes easily",  bucket: "eff" },
+    { id: "urea",      label: "Urea (BUN) — freely crosses all membranes, does NOT cause water shifts", bucket: "ineff" },
+    { id: "ethanol",   label: "Ethanol — freely crosses cell membranes (ineffective osmole)",   bucket: "ineff" },
+    { id: "methanol",  label: "Methanol — crosses membranes freely (raises osmolality, not tonicity)", bucket: "ineff" },
+    { id: "isoprop",   label: "Isopropanol — freely crosses membranes; contributes to osmolal gap only", bucket: "ineff" }
+  ];
+
+  const buckets = [
+    { id: "eff",   label: "Effective Osmoles — cause water shifts, change cell volume" },
+    { id: "ineff", label: "Ineffective Osmoles — freely cross membranes, do NOT change cell volume" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct: " + placedItem.textContent, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Incorrect. Think about whether this solute crosses cell membranes freely.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

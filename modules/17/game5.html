@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vasa Recta &amp; Clinical Lab — Module 17</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 17</a></div>
+  <h1>Game 5 — Vasa Recta &amp; Clinical Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚗️</div>
+      <h2>Round 1: Sort vasa recta facts and thirst trigger mechanisms</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each fact into the correct bucket — the vasa recta (countercurrent exchange vessels) or the thirst response triggers. These are two separate but related systems that maintain water homeostasis.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Homeostasis facts</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios — new questions testing all five learning objectives of water regulation.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vasa Recta &amp; Clinical Lab complete!</h3>
+      <p>Head to the boss round — Game 6 — to test everything about water regulation together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ========== ROUND 1: SORTER ========== */
+  const facts = [
+    { id: "vr1", label: "Descending vasa recta: blood absorbs solutes from the hypertonic medullary interstitium", bin: "vr" },
+    { id: "vr2", label: "Ascending vasa recta: blood loses solutes back to the interstitium — gradient is preserved", bin: "vr" },
+    { id: "vr3", label: "Prevents 'washout' of the medullary gradient by carrying blood in hairpin loops", bin: "vr" },
+    { id: "th1", label: "Thirst trigger 1: increased serum osmolality detected by hypothalamic osmoreceptors", bin: "thirst" },
+    { id: "th2", label: "Thirst trigger 2: decreased blood volume from hemorrhage or dehydration", bin: "thirst" },
+    { id: "th3", label: "Thirst trigger 3: increased angiotensin II (part of the RAAS response to low volume)", bin: "thirst" }
+  ];
+
+  const bins = [
+    { id: "vr",     label: "Vasa Recta — Countercurrent Exchange" },
+    { id: "thirst", label: "Thirst Response Triggers" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, facts.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(facts.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, facts.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === facts.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That fact belongs to the other category.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ========== ROUND 2: QUIZ (new questions) ========== */
+  const questions = [
+    {
+      q: "A patient with a head injury is found to have very dilute urine (osmolality 80 mOsm/kg) and rising serum osmolality (310 mOsm/kg). He has polydipsia and polyuria. His symptoms improve dramatically after receiving intranasal desmopressin. Which condition does this represent?",
+      options: [
+        "Nephrogenic diabetes insipidus",
+        "SIADH",
+        "Central (cranial) diabetes insipidus",
+        "Primary polydipsia"
+      ],
+      correct: 2,
+      explain: "Central diabetes insipidus results from insufficient ADH production or release (e.g., after head trauma affecting the hypothalamus or posterior pituitary). The kidney lacks the signal to insert aquaporins, so dilute urine is produced despite high serum osmolality. Treatment with desmopressin (synthetic vasopressin) restores the response — confirming that the kidney's response pathway is intact."
+    },
+    {
+      q: "A patient with lithium toxicity develops polyuria with a urine osmolality of 100 mOsm/kg despite a serum ADH level that is elevated. What explains this pattern?",
+      options: [
+        "Lithium causes the hypothalamus to stop producing ADH",
+        "Lithium causes nephrogenic diabetes insipidus — the collecting duct cannot respond to ADH",
+        "Lithium causes SIADH by increasing ADH secretion",
+        "Lithium blocks NKCC2 in the ascending limb, destroying the gradient"
+      ],
+      correct: 1,
+      explain: "Lithium is a classic cause of nephrogenic diabetes insipidus (NDI). It accumulates in collecting duct cells and interferes with the intracellular signaling cascade that triggers AQP2 insertion. Despite high ADH levels, the kidney cannot insert aquaporin-2 channels, so dilute urine is produced — a pattern of ADH present but ineffective."
+    },
+    {
+      q: "A patient takes a large dose of furosemide (loop diuretic). In addition to losing sodium, why does this significantly reduce the kidney's ability to concentrate urine?",
+      options: [
+        "Furosemide blocks aquaporin-2 channels in the collecting duct directly",
+        "Furosemide blocks the NKCC2 transporter in the thick ascending limb, preventing the creation of the medullary osmolality gradient",
+        "Furosemide stimulates ADH release, causing water diuresis",
+        "Furosemide increases vasa recta blood flow, washing out the gradient"
+      ],
+      correct: 1,
+      explain: "Furosemide (a loop diuretic) blocks NKCC2 in the thick ascending limb — the very transporter responsible for building the medullary concentration gradient. Without active NaCl reabsorption by the TAL, the interstitial gradient from 300 to 1,250 mOsm/kg cannot form. Even with maximal ADH, there is no gradient to concentrate urine against."
+    },
+    {
+      q: "A patient with a lung tumor (small cell carcinoma) is found to have hyponatremia (Na+ 122 mEq/L), with urine osmolality of 600 mOsm/kg and urine sodium of 60 mEq/L. Serum osmolality is 252 mOsm/kg. What is the most likely diagnosis?",
+      options: [
+        "Central diabetes insipidus",
+        "Primary polydipsia",
+        "SIADH — ectopic ADH production by the tumor causing water retention",
+        "Nephrogenic diabetes insipidus"
+      ],
+      correct: 2,
+      explain: "SIADH from ectopic ADH production (common with small cell lung carcinoma) causes inappropriate water retention. The urine is concentrated (high osmolality) despite low serum osmolality — the opposite of what should happen if the kidney was responding appropriately to low osmolality. This creates dilutional hyponatremia."
+    },
+    {
+      q: "Why does the kidney need such a large glomerular filtration rate (~180 L/day) when the body only produces about 1-2 L of urine per day?",
+      options: [
+        "Most filtered water is reabsorbed in the descending limb of Henle",
+        "The large GFR is required to handle large intermittent water loads — the kidney can excrete up to ~20% of GFR as free water to quickly correct dilution",
+        "Most of the GFR is used for protein filtration and reabsorption",
+        "A high GFR is needed to maintain blood pressure independent of water excretion"
+      ],
+      correct: 1,
+      explain: "The kidney filters ~180 L/day but produces only 1-2 L of urine because 99%+ is reabsorbed. The high GFR is necessary because humans can excrete up to ~20% of GFR as free water. This capacity is essential for rapidly correcting the serum osmolality after a large water load — a mechanism that requires a large amount of initial filtrate to work with."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

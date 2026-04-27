@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 1</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 1</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of labels — sixteen of them. Drop each onto the correct anatomical, vascular, lymphatic, or neural slot. Items refuse to land in the wrong slot, so a wrong drop costs you a tally on the misses counter. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the brick!</h3>
+      <p>You placed every organ, vessel, lymph group, and nerve correctly. You are ready for the renal system on a real exam.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // 4 sections, 4 slots each = 16 items. All facts strictly from the brick.
+  const sections = [
+    {
+      id: "anat", title: "Anatomy", lo: "LO1",
+      slots: [
+        { id: "a1", label: "Paired filtering organ at T12–L3, retroperitoneal",            answer: "Kidney" },
+        { id: "a2", label: "25–30 cm muscular tube carrying urine to the bladder",        answer: "Ureter" },
+        { id: "a3", label: "Hollow muscular reservoir with apex, body, fundus, and neck", answer: "Urinary bladder" },
+        { id: "a4", label: "Tube that carries urine from the bladder to the outside",     answer: "Urethra" }
+      ]
+    },
+    {
+      id: "vasc", title: "Vascular Supply", lo: "LO2",
+      slots: [
+        { id: "v1", label: "Direct branch of the abdominal aorta supplying the kidney",            answer: "Renal artery" },
+        { id: "v2", label: "Longer renal vein that crosses under the SMA on the way to the IVC",   answer: "Left renal vein" },
+        { id: "v3", label: "Drains into the left renal vein (asymmetric drainage)",                answer: "Left gonadal vein" },
+        { id: "v4", label: "Drains directly into the inferior vena cava",                          answer: "Right gonadal vein" }
+      ]
+    },
+    {
+      id: "lymph", title: "Lymphatic Drainage", lo: "LO3",
+      slots: [
+        { id: "l1", label: "Where kidney lymphatics drain",                       answer: "Para-aortic & paracaval nodes" },
+        { id: "l2", label: "Where the middle third of the ureters drains",        answer: "Common iliac nodes" },
+        { id: "l3", label: "Where the SUPERIOR bladder drains",                   answer: "External iliac nodes" },
+        { id: "l4", label: "Where the INFERIOR bladder drains",                   answer: "Internal iliac nodes" }
+      ]
+    },
+    {
+      id: "innerv", title: "Innervation", lo: "LO4",
+      slots: [
+        { id: "n1", label: "Parasympathetic from S2–S4 — contracts detrusor for voiding",        answer: "Pelvic splanchnic nerves" },
+        { id: "n2", label: "Sympathetic to bladder — promotes filling/storage",                  answer: "Hypogastric nerve" },
+        { id: "n3", label: "Somatic motor to external urethral sphincter — voluntary control",   answer: "Pudendal nerve" },
+        { id: "n4", label: "Smooth muscle that contracts to expel urine during micturition",     answer: "Detrusor muscle" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  const ICONS = { anat: "🫘", vasc: "🩸", lymph: "🧬", innerv: "⚡" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    // Build the pool from all answers (shuffled)
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    // Build the board
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

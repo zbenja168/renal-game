@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaptan Quiz — Module 21</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 21</a></div>
+  <h1>Game 5 — Vaptan Quiz</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 1: Sort vaptans by receptor profile</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each drug or property into the correct bucket — V2-selective, V1+V2 antagonist, or mild/indirect ADH antagonist.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drugs / properties</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the brick's content — vaptan selection, safety, and drug interactions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vaptan Quiz complete!</h3>
+      <p>Now face the boss — Game 6 tests all four LOs together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: SORTER ===================== */
+  const drugs = [
+    { id: "r1", label: "Tolvaptan — oral, selective for renal V2 receptor",       bin: "v2" },
+    { id: "r2", label: "Oral medication approved for ADPKD to slow cyst growth",  bin: "v2" },
+    { id: "r3", label: "Conivaptan — IV, blocks both V1 and V2 ADH receptors",    bin: "v1v2" },
+    { id: "r4", label: "Can cause orthostatic hypotension by blocking V1 vessels", bin: "v1v2" },
+    { id: "r5", label: "Demeclocycline — antibiotic used off-label for SIADH",    bin: "mild" },
+    { id: "r6", label: "Interferes with AQP signaling but is not a true vaptan",  bin: "mild" }
+  ];
+
+  const bins = [
+    { id: "v2",    label: "V2-selective vaptan (tolvaptan)" },
+    { id: "v1v2",  label: "V1 + V2 antagonist (conivaptan)" },
+    { id: "mild",  label: "Mild / indirect ADH antagonist (demeclocycline)" }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl   = document.getElementById("score");
+  const fbEl      = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, drugs.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(drugs.slice()).forEach(d => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = d.bin;
+      el.textContent = d.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target   = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, drugs.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === drugs.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think which receptor profile this drug or property describes.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===================== ROUND 2: QUIZ ===================== */
+  const questions = [
+    {
+      q: "A patient with SIADH is started on tolvaptan. After 48 hours, serum sodium has risen from 118 to 131 mEq/L (a rise of 13 mEq/L). What dangerous complication has occurred, and what is the mechanism?",
+      options: [
+        "Hypernatremia from over-excretion of sodium in the urine",
+        "Osmotic demyelinating syndrome from too-rapid correction of chronic hyponatremia",
+        "Hepatic failure from tolvaptan's effect on liver enzymes",
+        "CYP3A4 inhibition causing drug toxicity from concomitant medications"
+      ],
+      correct: 1,
+      explain: "The brick states that rapid correction of hyponatremia by more than 6–8 mEq/L per 24 hours risks osmotic demyelinating syndrome (ODS). Brain cells adapted to low sodium can shrink rapidly when sodium rises too fast, damaging myelin sheaths. Tolvaptan must be started with close sodium monitoring to prevent overcorrection."
+    },
+    {
+      q: "A patient with cirrhosis and SIADH needs treatment for hyponatremia. Why is tolvaptan relatively contraindicated in this patient?",
+      options: [
+        "Tolvaptan blocks aldosterone, worsening sodium retention in cirrhosis",
+        "Tolvaptan is associated with hepatotoxicity and elevated transaminases, unsafe in liver disease",
+        "Tolvaptan causes orthostatic hypotension that is dangerous in cirrhosis",
+        "Tolvaptan is only available IV, which is impractical in cirrhotic patients"
+      ],
+      correct: 1,
+      explain: "Per the brick, tolvaptan has been associated with elevated liver transaminases and is not recommended in patients with underlying liver disease, including cirrhosis. The FDA has issued a warning about liver injury. Conivaptan or demeclocycline may be alternatives, though both have their own limitations in cirrhosis."
+    },
+    {
+      q: "A patient on tolvaptan for SIADH is also prescribed ketoconazole for a fungal infection. Why does this combination require caution?",
+      options: [
+        "Ketoconazole is a CYP3A4 inhibitor; tolvaptan is also a CYP3A4 inhibitor — combination can increase both drug levels",
+        "Ketoconazole blocks V2 receptors and will antagonize tolvaptan",
+        "Ketoconazole causes hyponatremia, worsening SIADH",
+        "Both drugs are excreted renally and compete for tubular secretion"
+      ],
+      correct: 0,
+      explain: "The brick specifies that conivaptan and tolvaptan are moderate CYP3A4 inhibitors. Ketoconazole is a strong CYP3A4 inhibitor. Combining CYP3A4 inhibitors can raise plasma levels of drugs metabolized by CYP3A4, including tolvaptan itself, leading to toxicity."
+    },
+    {
+      q: "Why do vaptans cause aquaresis rather than natriuresis (unlike conventional diuretics like furosemide)?",
+      options: [
+        "Vaptans block sodium channels in the collecting duct, preventing sodium loss",
+        "By blocking V2, vaptans prevent aquaporin insertion — only water (not sodium) fails to be reabsorbed, excreting electrolyte-free water",
+        "Vaptans stimulate aldosterone release, which retains sodium during the diuresis",
+        "Vaptans block the RAAS, causing sodium retention while water is excreted"
+      ],
+      correct: 1,
+      explain: "V2 receptors control aquaporin insertion specifically. Without aquaporins, the collecting duct is impermeable to water only — sodium and electrolyte transport is not directly affected. So vaptans produce electrolyte-free water excretion (aquaresis), which raises serum sodium without depleting electrolytes."
+    },
+    {
+      q: "A 60-year-old patient with SIADH due to small cell lung cancer is treated with conivaptan IV in the hospital. After discharge, the physician wants to continue ADH antagonist therapy at home. Which drug is the most appropriate switch?",
+      options: [
+        "Continue conivaptan IV at home through a PICC line",
+        "Switch to oral tolvaptan — V2-selective, available orally for outpatient SIADH",
+        "Switch to desmopressin — it is an ADH analog that controls urine output",
+        "Switch to vasopressin IV for continued V1+V2 coverage"
+      ],
+      correct: 1,
+      explain: "Conivaptan is only available IV and is for inpatient use. Tolvaptan is the oral V2-selective vaptan appropriate for outpatient management of SIADH. However, the physician must monitor liver enzymes and avoid using it for more than 30 days due to FDA hepatotoxicity warnings."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  const winEl         = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

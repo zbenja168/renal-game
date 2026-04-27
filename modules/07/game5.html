@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drug Clearance Lab — Module 7</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 7</a></div>
+  <h1>Game 5 — Drug Clearance Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Round 1: Match each tubular transport factor to its effect</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four factors alter tubular drug transport. Drag each factor into either "Decreases drug clearance" or "Changes passive reabsorption". All from the brick's LO4 table.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Factors</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Drug Clearance — Apply the brick</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios on renal clearance, tubular transport, and dose adjustment. New scenarios — not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Drug Clearance Lab complete!</h3>
+      <p>You can now predict how tubular transport competition, saturation, and urine pH alter drug elimination — and when dose adjustment is necessary. Ready for the boss!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* === ROUND 1: Factor Sorter === */
+  const items = [
+    { id: "f1", label: "Competition for OAT/OCT transporters by another drug",  bucket: "dec" },
+    { id: "f2", label: "Transporter saturation at high drug concentrations",      bucket: "dec" },
+    { id: "f3", label: "Genetic polymorphisms reducing transporter expression",   bucket: "dec" },
+    { id: "f4", label: "Renal disease reducing transporter expression/function",  bucket: "dec" },
+    { id: "f5", label: "Alkaline urine — ionizes weak acids, traps them in urine", bucket: "pass" },
+    { id: "f6", label: "Acidic urine — un-ionizes weak bases, allows reabsorption", bucket: "pass" }
+  ];
+
+  const buckets = [
+    { id: "dec",  label: "Decreases drug clearance (reduces active secretion)" },
+    { id: "pass", label: "Changes passive reabsorption via urine pH / ionization" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dragSource.textContent;
+        zone.appendChild(p);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Consider whether this affects active transport or passive diffusion.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* === ROUND 2: Fresh quiz questions === */
+  const questions = [
+    {
+      q: "A patient receives both penicillin and probenecid. Probenecid competes for organic anion transporters. What is the expected effect on penicillin clearance?",
+      options: [
+        "Penicillin clearance increases because probenecid enhances secretion",
+        "Penicillin clearance decreases because competition reduces tubular secretion",
+        "No effect — penicillin is eliminated by filtration only",
+        "Penicillin clearance doubles due to transporter upregulation"
+      ],
+      correct: 1,
+      explain: "Probenecid competes for the same organic anion transporters (OATs) used to secrete penicillin. Blocking secretion decreases penicillin's tubular clearance, raising plasma levels — this was historically exploited to prolong penicillin's effect."
+    },
+    {
+      q: "A substance has Ux = 200 mg/mL, V̇ = 1 mL/min, and Px = 2 mg/mL. If GFR is 120 mL/min, how is this substance handled?",
+      options: [
+        "Filtration only — Cx equals GFR",
+        "Net reabsorption — Cx is less than GFR",
+        "Net secretion — Cx is greater than GFR",
+        "Cannot be determined without hematocrit"
+      ],
+      correct: 2,
+      explain: "Cx = (200 × 1) / 2 = 100 mL/min. Since Cx (100) < GFR (120), the kidney returns some of the filtered substance back to blood — net reabsorption."
+    },
+    {
+      q: "PAH clearance is 630 mL/min and hematocrit is 0.45. What is the approximate renal blood flow?",
+      options: ["630 mL/min", "945 mL/min", "1,145 mL/min", "283 mL/min"],
+      correct: 2,
+      explain: "RBF = RPF ÷ (1 − Hct) = 630 ÷ (1 − 0.45) = 630 ÷ 0.55 ≈ 1,145 mL/min. This is within the normal range of 1,000–1,200 mL/min."
+    },
+    {
+      q: "An organic cation transporter (OCT) carries metformin into tubular cells for secretion. If OCT is saturated at high metformin doses, what happens to metformin clearance?",
+      options: [
+        "Clearance increases proportionally with dose",
+        "Clearance plateaus — maximum transport rate is reached, non-linear elimination occurs",
+        "Clearance falls to zero",
+        "Filtration compensates fully for saturated secretion"
+      ],
+      correct: 1,
+      explain: "When OCT transporters are saturated (Tm reached), further increases in metformin dose do not increase its secretion rate. Clearance therefore plateaus, creating non-linear elimination kinetics and risk of accumulation."
+    },
+    {
+      q: "In congestive heart failure, filtration fraction is elevated. What renal hemodynamic change best explains this according to the brick?",
+      options: [
+        "RPF decreases more than GFR due to efferent arteriolar constriction by angiotensin II",
+        "GFR decreases more than RPF due to afferent constriction",
+        "Both GFR and RPF increase equally",
+        "Hematocrit falls, increasing plasma volume"
+      ],
+      correct: 0,
+      explain: "In heart failure, angiotensin II preferentially constricts the efferent arteriole, which maintains GFR while RPF falls more sharply. Since FF = GFR/RPF, when RPF decreases proportionally more than GFR, FF rises above the normal 15–20%."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

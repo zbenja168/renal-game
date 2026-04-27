@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Reasoning Lab — Module 8</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 8</a></div>
+  <h1>Game 5 — Clinical Reasoning Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🏥</div>
+      <h2>Round 1: Sequence the hemorrhage response</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> In acute hemorrhage, a predictable sequence of renal hemodynamic events occurs. Drag each event label into the correct numbered step. All six steps are from the brick's LO4 hemorrhage scenario.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Events</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Quiz -->
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Systemic Changes — Apply the brick</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh scenarios linking systemic physiological changes to predicted changes in RBF, GFR, and filtration fraction. New scenarios — not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Clinical Reasoning Lab complete!</h3>
+      <p>You can now predict how hemorrhage, heart failure, sepsis, and drug interventions cascade through renal hemodynamics to alter RBF, FF, and GFR. Ready for the boss!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* === ROUND 1: Hemorrhage Sequence === */
+  const slots = [
+    { id: "h1", label: "Step 1: Initial trigger",              answer: "Blood volume decreases → MAP falls" },
+    { id: "h2", label: "Step 2: Baroreceptor response",        answer: "Baroreceptors detect low pressure → sympathetic activation" },
+    { id: "h3", label: "Step 3: Renal vasoconstriction",       answer: "Sympathetic stimulation constricts afferent arterioles → RBF decreases" },
+    { id: "h4", label: "Step 4: RAAS activation",              answer: "Renin release → angiotensin II → efferent constriction → GFR partially maintained" },
+    { id: "h5", label: "Step 5: Compensatory vasodilation",    answer: "Local prostaglandin production increases → counterbalances afferent constriction" },
+    { id: "h6", label: "Step 6: Failure with severe hemorrhage", answer: "MAP falls below ~80 mmHg → autoregulation fails → GFR falls precipitously" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dropped;
+        zone.appendChild(p);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb("✓ Correct step!", "correct");
+        if (placed === slots.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think about the sequence of events in hemorrhage.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* === ROUND 2: Fresh quiz questions === */
+  const questions = [
+    {
+      q: "An NSAID (like ibuprofen) blocks prostaglandin synthesis. In a patient with heart failure already depending on prostaglandins to maintain renal perfusion, what is the expected renal consequence?",
+      options: [
+        "RBF increases because vasoconstrictors are unopposed by prostaglandins — no wait, this reduces vasodilation",
+        "Acute kidney injury due to loss of prostaglandin-mediated afferent dilation, causing severe reduction in RBF and GFR",
+        "No effect — prostaglandins are only relevant in sepsis",
+        "GFR increases because efferent constriction is enhanced"
+      ],
+      correct: 1,
+      explain: "In heart failure or reduced-perfusion states, prostaglandins are critically upregulated to dilate the afferent arteriole and maintain GFR. NSAIDs block this protective mechanism, precipitating acute kidney injury — a key clinical pearl from the brick."
+    },
+    {
+      q: "In early sepsis, cardiac output is actually high, yet patients develop acute kidney injury. What renal hemodynamic mechanism explains this paradox?",
+      options: [
+        "Systemic vasodilation pools blood peripherally, reducing effective renal perfusion pressure despite high cardiac output",
+        "Sepsis directly destroys nephrons through bacterial invasion",
+        "Sympathetic activation raises RVR enough to overcome high cardiac output",
+        "Glomerular capillary permeability falls, blocking filtration"
+      ],
+      correct: 0,
+      explain: "In sepsis, inflammatory mediators cause systemic vasodilation and capillary leak. Despite high cardiac output, effective circulating volume and renal perfusion pressure fall due to peripheral pooling. Inflammatory microvascular damage further impairs renal microcirculation — so AKI occurs even when MAP seems acceptable."
+    },
+    {
+      q: "A patient receives an ACE inhibitor. This reduces angiotensin II levels. What is the expected effect on the efferent arteriole and filtration fraction?",
+      options: [
+        "Efferent arteriole constricts; FF increases",
+        "Efferent arteriole dilates; FF decreases",
+        "Afferent arteriole constricts; GFR increases",
+        "No change in arteriolar tone; only tubular effects occur"
+      ],
+      correct: 1,
+      explain: "Angiotensin II preferentially constricts the efferent arteriole, maintaining glomerular hydrostatic pressure and GFR. ACE inhibitors reduce Ang II, causing efferent dilation, which lowers glomerular hydrostatic pressure, decreases GFR, and reduces filtration fraction. This is especially significant in patients with bilateral renal artery stenosis."
+    },
+    {
+      q: "The autoregulation curve maintains constant RBF between which MAP values, according to the brick?",
+      options: ["50–100 mmHg", "80–180 mmHg", "100–200 mmHg", "60–120 mmHg"],
+      correct: 1,
+      explain: "The brick states that the kidneys maintain relatively constant RBF and GFR across a MAP range of approximately 80–180 mmHg through the myogenic response and tubuloglomerular feedback. Below 80 mmHg, autoregulation fails and RBF becomes pressure-dependent."
+    },
+    {
+      q: "In a patient with severe hemorrhage (MAP falls to 60 mmHg), why does GFR fall dramatically even though angiotensin II is trying to maintain it?",
+      options: [
+        "Ang II dilates the efferent arteriole at low pressures",
+        "MAP is below the autoregulatory range — GFR becomes directly pressure-dependent regardless of efferent constriction",
+        "Sympathetic activation preferentially dilates the afferent arteriole",
+        "Prostaglandins are upregulated enough to restore GFR"
+      ],
+      correct: 1,
+      explain: "Below the autoregulatory threshold (~80 mmHg), the intrinsic mechanisms (myogenic and TGF) can no longer compensate. Glomerular hydrostatic pressure falls proportionally with MAP, and GFR becomes pressure-dependent. Even maximum efferent constriction cannot maintain filtration when perfusion pressure is severely reduced."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

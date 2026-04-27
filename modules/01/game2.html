@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stone Stuck! — Module 1</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 1</a></div>
+  <h1>Game 2 — Stone Stuck!</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🪨</div>
+      <h2>Click the 3 spots where kidney stones get stuck</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Patient:</strong> "It's another kidney stone. First it's the back pain, then it goes around into my abdomen and groin." <br>
+      <strong>Goal:</strong> Click on the diagram to mark the <strong>three classic ureteric narrowing sites</strong> where stones lodge. Misses cost you, so think before you click.
+    </div>
+
+    <div class="score-bar">
+      <span>Found: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+        <!-- Body silhouette outline (abdomen/pelvis) -->
+        <path d="M 80 40 Q 200 10 320 40 L 340 220 Q 360 320 340 420 L 320 560 L 80 560 L 60 420 Q 40 320 60 220 Z"
+              fill="#f4ebe1" stroke="#cdb89a" stroke-width="2"/>
+        <!-- Pelvic brim line -->
+        <path d="M 90 380 Q 200 410 310 380" stroke="#cdb89a" stroke-width="2" fill="none" stroke-dasharray="4 6"/>
+
+        <!-- Right kidney -->
+        <ellipse cx="135" cy="170" rx="34" ry="52" fill="#a04848" stroke="#6b2828" stroke-width="2"/>
+        <ellipse cx="135" cy="170" rx="14" ry="20" fill="#7a3030" />
+        <text x="135" y="174" text-anchor="middle" fill="white" font-size="9" font-weight="700">R kidney</text>
+
+        <!-- Left kidney (slightly higher per anatomy) -->
+        <ellipse cx="265" cy="155" rx="34" ry="52" fill="#a04848" stroke="#6b2828" stroke-width="2"/>
+        <ellipse cx="265" cy="155" rx="14" ry="20" fill="#7a3030" />
+        <text x="265" y="159" text-anchor="middle" fill="white" font-size="9" font-weight="700">L kidney</text>
+
+        <!-- Right ureter (curving down to bladder, crossing over iliac region) -->
+        <path d="M 135 222 C 145 270 160 310 175 380 C 185 430 195 460 200 480"
+              stroke="#d8a8a8" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <!-- Left ureter -->
+        <path d="M 265 207 C 255 260 240 310 225 380 C 215 430 205 460 200 480"
+              stroke="#d8a8a8" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+        <!-- Iliac vessel band (where ureter crosses) -->
+        <path d="M 90 380 Q 200 410 310 380" stroke="#3a78c5" stroke-width="6" fill="none" opacity="0.5"/>
+        <text x="200" y="403" text-anchor="middle" fill="#1d4a85" font-size="10" font-weight="700">iliac vessels (pelvic brim)</text>
+
+        <!-- Bladder -->
+        <ellipse cx="200" cy="500" rx="50" ry="32" fill="#e8c79a" stroke="#a07840" stroke-width="2"/>
+        <text x="200" y="503" text-anchor="middle" fill="#5a3d10" font-size="11" font-weight="700">Bladder</text>
+
+        <!-- Urethra -->
+        <line x1="200" y1="532" x2="200" y2="560" stroke="#a07840" stroke-width="4"/>
+
+        <!-- Annotation: ureteropelvic junction tip -->
+        <text x="135" y="240" text-anchor="middle" fill="#5a3030" font-size="9">renal pelvis → ureter</text>
+
+        <!-- Annotation: ureterovesical entry -->
+        <text x="200" y="475" text-anchor="middle" fill="#5a3d10" font-size="9">ureter → bladder</text>
+      </svg>
+
+      <!-- Hotspots positioned over the SVG. We use percentage coords so they scale. -->
+      <!-- Right UPJ -->
+      <div class="hotspot" data-name="Ureteropelvic junction (UPJ)" style="left: 33.75%; top: 37.5%"></div>
+      <!-- Left UPJ -->
+      <div class="hotspot" data-name="Ureteropelvic junction (UPJ)" style="left: 66.25%; top: 34.5%"></div>
+      <!-- Right ureter crossing iliac vessels -->
+      <div class="hotspot" data-name="Crossing of iliac vessels (pelvic brim)" style="left: 43.75%; top: 65%"></div>
+      <!-- Left ureter crossing iliac vessels -->
+      <div class="hotspot" data-name="Crossing of iliac vessels (pelvic brim)" style="left: 56.25%; top: 65%"></div>
+      <!-- Ureterovesical junction (R) -->
+      <div class="hotspot" data-name="Ureterovesical junction (UVJ)" style="left: 50%; top: 80%"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three sites located!</h3>
+      <p><strong>UPJ</strong> (ureteropelvic junction), <strong>iliac vessel crossing</strong> at the pelvic brim, and <strong>UVJ</strong> (ureterovesical junction). Stones at any of these locations cause hematuria and pain that radiates along the ureter into the groin.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let foundNames = new Set();
+  let misses = 0;
+
+  // Three distinct correct anatomic locations the brick names:
+  //  - UPJ
+  //  - Crossing of iliac vessels at the pelvic brim
+  //  - UVJ
+  // Each hotspot in the DOM matches one of these names.
+  const targetNames = [
+    "Ureteropelvic junction (UPJ)",
+    "Crossing of iliac vessels (pelvic brim)",
+    "Ureterovesical junction (UVJ)"
+  ];
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2800);
+  }
+
+  function init() {
+    foundNames = new Set();
+    misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    canvas.querySelectorAll(".hotspot").forEach(h => {
+      h.classList.remove("found");
+      h.style.pointerEvents = "auto";
+    });
+    canvas.querySelectorAll(".miss-marker").forEach(m => m.remove());
+  }
+
+  canvas.querySelectorAll(".hotspot").forEach(h => {
+    h.addEventListener("click", e => {
+      e.stopPropagation();
+      const name = h.dataset.name;
+      if (foundNames.has(name)) return;
+      h.classList.add("found");
+      h.style.pointerEvents = "none";
+      foundNames.add(name);
+      // also mark all sibling hotspots with same name as found
+      canvas.querySelectorAll(`.hotspot[data-name="${name}"]`).forEach(other => {
+        other.classList.add("found");
+        other.style.pointerEvents = "none";
+      });
+      Game.setScore(scoreEl, foundNames.size, 3);
+      showFb(`✓ Found: ${name}`, "correct");
+      if (foundNames.size === 3) Game.celebrate("winBanner");
+    });
+  });
+
+  // Click anywhere outside a hotspot = miss
+  canvas.addEventListener("click", e => {
+    if (e.target.classList && e.target.classList.contains("hotspot")) return;
+    if (foundNames.size === 3) return;
+    misses++;
+    missEl.textContent = misses;
+    // place a transient miss marker
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const m = document.createElement("div");
+    m.className = "hotspot miss miss-marker";
+    m.style.left = x + "px";
+    m.style.top  = y + "px";
+    m.style.pointerEvents = "none";
+    canvas.appendChild(m);
+    setTimeout(() => m.remove(), 700);
+    showFb("✗ Not quite — try a known anatomic narrowing of the ureter.", "incorrect");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adverse Effect Sorter — Module 15</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 15</a></div>
+  <h1>Game 4 — Adverse Effect Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚠️</div>
+      <h2>Drag each adverse effect into the correct drug class</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Some adverse effects are shared by both classes of potassium-sparing diuretics. Others are unique to aldosterone receptor antagonists. Sort each effect into the right bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted correctly: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Adverse effects</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Adverse effects sorted!</h3>
+      <p>Hyperkalemia and type IV RTA are shared by both classes. Antiandrogen effects (gynecomastia, decreased libido, erectile dysfunction) are unique to aldosterone receptor antagonists due to their structural similarity to sex steroid hormones — eplerenone has fewer of these effects than spironolactone.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "hyperk",   label: "Hyperkalemia (potassium retention)",                       bucket: "both" },
+    { id: "rtaIV",   label: "Type IV renal tubular acidosis (hyperkalemic metabolic acidosis)", bucket: "both" },
+    { id: "ammonia", label: "Suppression of proximal tubule ammonia synthesis (due to hyperkalemia)", bucket: "both" },
+    { id: "gyno",    label: "Gynecomastia (breast enlargement in men)",                   bucket: "aldo" },
+    { id: "libido",  label: "Decreased libido and erectile dysfunction",                  bucket: "aldo" },
+    { id: "menstru", label: "Menstrual irregularities and feminizing effects in women",   bucket: "aldo" },
+    { id: "epler_less", label: "Eplerenone: fewer antiandrogen effects than spironolactone", bucket: "aldo" },
+    { id: "pregnan", label: "Contraindicated in pregnancy — crosses placenta",            bucket: "aldo" },
+    { id: "renal_sto", label: "Renal stones — triamterene can precipitate in the tubule",  bucket: "enac" }
+  ];
+
+  const buckets = [
+    { id: "both", label: "Shared by BOTH classes (aldosterone antagonists AND ENaC blockers)" },
+    { id: "aldo", label: "Unique to Aldosterone Receptor Antagonists" },
+    { id: "enac", label: "Unique to ENaC Blockers (amiloride / triamterene)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct: " + placedItem.textContent, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Wrong class for: " + dragSource.textContent, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

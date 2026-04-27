@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Workup Sorter — Module 18</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 18</a></div>
+  <h1>Game 4 — Lab Workup Sorter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Drag each lab finding into the correct diagnostic bucket</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The brick uses serum osmolality, urine osmolality, and urine sodium to classify hyponatremia. Drag each lab pattern into its matching clinical bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Lab findings</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Diagnostic map complete!</h3>
+      <p>Hypovolemic: low UNa (&lt;25) + high Uosm. Euvolemic (SIADH): high UNa (&gt;40) + high Uosm. Hypervolemic: low UNa + high Uosm (cardiac/liver) or high UNa (renal failure). Serum osmolality &lt;280 in all true subtypes.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "i1",  label: "Urine sodium < 25 mEq/L (avid Na retention)",         bucket: "hypovolemic" },
+    { id: "i2",  label: "Urine osmolality typically high (> 500 mOsm/kg)",      bucket: "hypovolemic" },
+    { id: "i3",  label: "History: vomiting, diarrhea, diuretics",               bucket: "hypovolemic" },
+    { id: "i4",  label: "Urine sodium > 40 mEq/L (normal renal Na handling)",   bucket: "euvolemic" },
+    { id: "i5",  label: "Urine osmolality > 100 mOsm/kg (concentrated urine)",  bucket: "euvolemic" },
+    { id: "i6",  label: "Normal ECV, no edema, no orthostatic changes",          bucket: "euvolemic" },
+    { id: "i7",  label: "Urine sodium < 25 mEq/L (secondary hyperaldosteronism)", bucket: "hypervolemic" },
+    { id: "i8",  label: "Peripheral edema, ascites, or signs of heart failure",  bucket: "hypervolemic" },
+    { id: "i9",  label: "Serum osmolality < 280 mOsm/kg (true hyponatremia)",   bucket: "all_hypotonic" }
+  ];
+
+  const buckets = [
+    { id: "hypovolemic",   label: "Hypovolemic hyponatremia" },
+    { id: "euvolemic",     label: "Euvolemic hyponatremia (e.g., SIADH)" },
+    { id: "hypervolemic",  label: "Hypervolemic hyponatremia (CHF / cirrhosis)" },
+    { id: "all_hypotonic", label: "Common to ALL hypotonic hyponatremia" }
+  ];
+
+  const pool       = document.getElementById("pool");
+  const bucketsEl  = document.getElementById("buckets");
+  const scoreEl    = document.getElementById("score");
+  const fbEl       = document.getElementById("feedback");
+  const winEl      = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct: ${placedItem.textContent}`, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That lab finding does not match that bucket.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

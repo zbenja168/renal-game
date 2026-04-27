@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 7</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 7</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of sixteen labels. Drop each onto its correct slot across clearance equations, renal handling, flow measurements, and drug transport. Wrong drops cost a miss — aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Renal Clearance!</h3>
+      <p>You placed every clearance variable, handling classification, flow formula, and drug transport concept correctly. Clearance is your foundation for all renal pharmacology and physiology questions.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "eq", title: "Clearance Equation", lo: "LO1",
+      slots: [
+        { id: "e1", label: "Variable in the clearance equation: urine concentration of substance X", answer: "Ux" },
+        { id: "e2", label: "Variable in the clearance equation: urine flow rate",                   answer: "V̇" },
+        { id: "e3", label: "Variable in the clearance equation: plasma concentration of substance X", answer: "Px" },
+        { id: "e4", label: "Substance with Cx < GFR: some filtered amount returned to blood",        answer: "Glucose" }
+      ]
+    },
+    {
+      id: "markers", title: "GFR & RPF Markers", lo: "LO2",
+      slots: [
+        { id: "m1", label: "Gold-standard GFR marker: filtered only, not reabsorbed or secreted",   answer: "Inulin" },
+        { id: "m2", label: "Marker used to estimate effective renal plasma flow (~90% extraction)",  answer: "PAH" },
+        { id: "m3", label: "Endogenous GFR surrogate that overestimates true GFR by 10–20%",        answer: "Creatinine" },
+        { id: "m4", label: "Equations adjusting creatinine for age, sex, body size",                answer: "MDRD / CKD-EPI" }
+      ]
+    },
+    {
+      id: "flows", title: "RPF, RBF & Filtration Fraction", lo: "LO3",
+      slots: [
+        { id: "f1", label: "Formula for renal blood flow using plasma flow and hematocrit",         answer: "RPF ÷ (1 − Hct)" },
+        { id: "f2", label: "Normal filtration fraction range in healthy adults",                    answer: "15–20%" },
+        { id: "f3", label: "Clinical condition where FF is elevated due to efferent constriction",  answer: "Heart failure" },
+        { id: "f4", label: "Normal RBF in healthy adults (mL/min range)",                          answer: "1,000–1,200 mL/min" }
+      ]
+    },
+    {
+      id: "drug", title: "Drug Clearance & Tubular Transport", lo: "LO4",
+      slots: [
+        { id: "d1", label: "Transport system that secretes negatively charged drugs like penicillin",  answer: "Organic anion transporters (OATs)" },
+        { id: "d2", label: "Transport system that secretes positively charged drugs like metformin",   answer: "Organic cation transporters (OCTs)" },
+        { id: "d3", label: "Dose reduction strategy: same dose, longer interval",                     answer: "Interval extension" },
+        { id: "d4", label: "Why alkaline urine increases renal elimination of weak acids",            answer: "Ionization traps drug in tubular lumen" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+
+  const ICONS = { eq: "🧮", markers: "🔬", flows: "🩸", drug: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dragSource.textContent;
+        zone.appendChild(p);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${p.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 19</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 19</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of sixteen labels covering clinical presentation, pathophysiology, diagnosis, and management of hypernatremia. Wrong drops count as misses. Aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the Hypernatremia brick!</h3>
+      <p>You correctly placed every clinical, pathophysiologic, diagnostic, and management label. You understand the water deficit behind the high sodium number.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "present", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "p1", label: "Serum sodium threshold defining hypernatremia",                             answer: "> 145 mEq/L" },
+        { id: "p2", label: "Mild symptoms: thirst, fatigue, dry mucous membranes",                     answer: "Dehydration signs" },
+        { id: "p3", label: "Sodium level at which delirium, seizures, and coma can occur",             answer: "> 160 mEq/L" },
+        { id: "p4", label: "Population most at risk because they cannot access water",                  answer: "Elderly and children" }
+      ]
+    },
+    {
+      id: "patho", title: "Pathophysiology", lo: "LO2",
+      slots: [
+        { id: "t1", label: "Type of water loss: from sweating or GI tract (hypotonic fluids lost)",    answer: "Extrarenal water loss" },
+        { id: "t2", label: "Prototypical renal cause of hypernatremia — dilute high-volume urine",     answer: "Diabetes insipidus (DI)" },
+        { id: "t3", label: "DI type where posterior pituitary fails to release ADH",                   answer: "Central DI" },
+        { id: "t4", label: "Drug that causes nephrogenic DI by blocking collecting duct ADH signaling", answer: "Lithium" }
+      ]
+    },
+    {
+      id: "diag", title: "Diagnosis", lo: "LO3",
+      slots: [
+        { id: "d1", label: "Urine osmolality in extrarenal hypernatremia (kidneys compensating)",      answer: "> 600 mOsm/kg" },
+        { id: "d2", label: "Urine osmolality in diabetes insipidus (urine inappropriately dilute)",    answer: "< 300 mOsm/kg" },
+        { id: "d3", label: "Test given after water deprivation to distinguish central from nephro DI", answer: "DDAVP (desmopressin) test" },
+        { id: "d4", label: "Response to DDAVP in central DI (urine concentrates after dose)",         answer: "Urine osmolality rises" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "First step: correct this before the free water deficit in dehydrated patients", answer: "Extracellular volume" },
+        { id: "m2", label: "IV fluid used to provide free water without lysing red blood cells",           answer: "D5W (5% dextrose)" },
+        { id: "m3", label: "Treatment for central DI — ADH analog given intranasally or IV",              answer: "Desmopressin (DDAVP)" },
+        { id: "m4", label: "Maximum sodium correction rate per day to avoid cerebral edema",              answer: "~10 mEq/L per day" }
+      ]
+    }
+  ];
+
+  const pool     = document.getElementById("pool");
+  const board    = document.getElementById("board");
+  const scoreEl  = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl     = document.getElementById("feedback");
+  const winEl    = document.getElementById("winBanner");
+
+  const ICONS = { present: "🌡️", patho: "💦", diag: "🔬", mgmt: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>
