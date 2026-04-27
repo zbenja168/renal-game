@@ -20,16 +20,19 @@
       <h2>Match each indication with the correct drug</h2>
     </div>
     <div class="game-instructions">
-      <strong>Goal:</strong> Flip cards to find matching indication–drug pairs. Three drugs from the brick: conivaptan (IV, V1+V2), tolvaptan (oral, V2), demeclocycline (antibiotic). Six pairs total.
+      <strong>Goal:</strong> Click an item on the left, then click its match on the right. All cards are face-up — no memorization, just match each prompt to its pair.
     </div>
 
     <div class="score-bar">
       <span>Pairs found: <span class="score" id="score">0 / 6</span></span>
-      <span>Flips: <span class="score" id="flips">0</span></span>
+      <span>Tries: <span class="score" id="tries">0</span></span>
       <button class="btn secondary" id="resetBtn">New Game</button>
     </div>
 
-    <div class="match-board" id="board"></div>
+    <div class="match-pairs-board">
+      <div class="match-col" id="leftCol"></div>
+      <div class="match-col" id="rightCol"></div>
+    </div>
 
     <div class="feedback" id="feedback"></div>
 
@@ -56,60 +59,73 @@
     { a: "Chronic mild SIADH — interferes with ADH signaling in collecting duct",  b: "Demeclocycline [1]" },
     { a: "Alternative when vaptans unavailable — antibiotic with ADH antagonism",  b: "Demeclocycline [2]" }
   ];
-
-  const board   = document.getElementById("board");
+  
+  const leftCol = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
   const scoreEl = document.getElementById("score");
-  const flipsEl = document.getElementById("flips");
-  const fbEl    = document.getElementById("feedback");
-  const winEl   = document.getElementById("winBanner");
+  const triesEl = document.getElementById("tries");
+  const fbEl = document.getElementById("feedback");
 
   let firstPick = null;
   let lock = false;
   let matched = 0;
-  let flips   = 0;
+  let tries = 0;
 
   function showFb(msg, kind) {
     fbEl.textContent = msg;
     fbEl.className = "feedback show " + kind;
     clearTimeout(showFb._t);
-    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2200);
   }
 
   function init() {
-    matched = 0; flips = 0; firstPick = null; lock = false;
+    matched = 0; tries = 0; firstPick = null; lock = false;
     Game.setScore(scoreEl, 0, pairs.length);
-    flipsEl.textContent = "0";
+    triesEl.textContent = "0";
     fbEl.classList.remove("show");
-    winEl.classList.remove("show");
-    board.innerHTML = "";
+    document.getElementById("winBanner").classList.remove("show");
+    leftCol.innerHTML = "";
+    rightCol.innerHTML = "";
+    const lefts = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.b, side: "right" })));
+    lefts.forEach(it => makeCard(it, leftCol));
+    rights.forEach(it => makeCard(it, rightCol));
+  }
 
-    const cards = [];
-    pairs.forEach((p, i) => {
-      cards.push({ pairId: i, text: p.a });
-      cards.push({ pairId: i, text: p.b });
-    });
-    Game.shuffle(cards);
-    cards.forEach(c => {
-      const el = document.createElement("div");
-      el.className = "match-card";
-      el.dataset.pairId = c.pairId;
-      el.dataset.text   = c.text;
-      el.textContent    = "?";
-      el.addEventListener("click", () => onPick(el));
-      board.appendChild(el);
-    });
+  function makeCard(it, col) {
+    const c = document.createElement("div");
+    c.className = "match-pair-card";
+    c.dataset.pairId = it.pairId;
+    c.dataset.side = it.side;
+    c.textContent = it.text;
+    c.addEventListener("click", () => onPick(c));
+    col.appendChild(c);
   }
 
   function onPick(card) {
-    if (lock) return;
-    if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
-    flip(card, true);
-    flips++;
-    flipsEl.textContent = flips;
-
-    if (!firstPick) { firstPick = card; return; }
-
+    if (lock || card.classList.contains("matched")) return;
+    if (firstPick === card) {
+      card.classList.remove("selected");
+      firstPick = null;
+      return;
+    }
+    if (!firstPick) {
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    if (firstPick.dataset.side === card.dataset.side) {
+      // Switch selection within the same column
+      firstPick.classList.remove("selected");
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    // Different sides — count as a try and check
+    tries++;
+    triesEl.textContent = tries;
     if (firstPick.dataset.pairId === card.dataset.pairId) {
+      firstPick.classList.remove("selected");
       firstPick.classList.add("matched");
       card.classList.add("matched");
       matched++;
@@ -119,19 +135,15 @@
       if (matched === pairs.length) Game.celebrate("winBanner");
     } else {
       lock = true;
-      showFb("Not a match — keep tracking the cards.", "info");
       const a = firstPick, b = card;
-      setTimeout(() => { flip(a, false); flip(b, false); firstPick = null; lock = false; }, 900);
-    }
-  }
-
-  function flip(card, on) {
-    if (on) {
-      card.classList.add("flipped");
-      card.textContent = card.dataset.text.replace(/ \[\d\]$/, "");
-    } else {
-      card.classList.remove("flipped");
-      card.textContent = "?";
+      a.classList.add("miss"); b.classList.add("miss");
+      showFb("✗ Not a match — try another.", "incorrect");
+      setTimeout(() => {
+        a.classList.remove("miss", "selected");
+        b.classList.remove("miss");
+        firstPick = null;
+        lock = false;
+      }, 700);
     }
   }
 

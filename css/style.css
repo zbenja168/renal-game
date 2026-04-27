@@ -357,7 +357,60 @@ footer {
   75% { transform: translateX(5px); }
 }
 
-/* ====== Match cards ====== */
+/* ====== Two-column matching board (game 3 in every module) ====== */
+.match-pairs-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+.match-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.match-pair-card {
+  background: white;
+  border: 2px solid var(--primary-light);
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--ink);
+  transition: all 0.15s;
+  user-select: none;
+  line-height: 1.4;
+}
+.match-pair-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  transform: translateY(-1px);
+}
+.match-pair-card.selected {
+  border-color: var(--primary);
+  background: var(--bg-2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+.match-pair-card.matched {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #16a34a;
+  color: #14532d;
+  cursor: default;
+  pointer-events: none;
+  font-weight: 600;
+}
+.match-pair-card.miss {
+  border-color: var(--bad);
+  background: var(--bad-light);
+  animation: shake 0.4s;
+}
+@media (max-width: 600px) {
+  .match-pairs-board { grid-template-columns: 1fr; }
+}
+
+/* ====== Old memory-flip cards (kept for any legacy use) ====== */
 .match-board {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
