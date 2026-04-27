@@ -52,10 +52,10 @@
     {
       scenario: "A patient receives a 1-liter infusion of isotonic saline (0.9% NaCl). What happens to the fluid compartments?",
       options: [
-        "ECF increases, ICF unchanged (no change in tonicity, water stays in ECF)",
-        "Both ECF and ICF increase equally",
-        "ICF increases, ECF unchanged",
-        "ECF decreases, ICF increases"
+        "ECF expands, ICF unchanged — isotonic saline adds Na+ and water at the same tonicity as plasma, so no osmotic gradient is created to drive water into cells",
+        "Both ECF and ICF increase equally — the saline distributes evenly across all body water compartments in proportion to their size",
+        "ICF expands, ECF unchanged — the sodium in the saline is pumped into cells by Na+/K+-ATPase, pulling water along into the intracellular space",
+        "ECF decreases and ICF expands — the added solute raises ICF osmolality, drawing ECF water into cells"
       ],
       correct: 0,
       explain: "Isotonic saline has the same tonicity as plasma. It expands only the ECF without driving water into cells. The ICF remains unchanged because there is no osmotic gradient created."
@@ -63,10 +63,10 @@
     {
       scenario: "A patient loses a large amount of isotonic fluid through severe diarrhea (hemorrhage-like loss). What happens?",
       options: [
-        "ECF decreases, ICF unchanged",
-        "Both ECF and ICF decrease equally",
-        "ECF unchanged, ICF decreases",
-        "ECF increases, ICF decreases"
+        "ECF decreases, ICF unchanged — isotonic loss removes Na+ and water at plasma tonicity, creating no osmotic gradient to shift water between compartments",
+        "Both ECF and ICF decrease equally — the body redistributes the fluid deficit by drawing water from both compartments proportionally",
+        "ECF unchanged, ICF decreases — cells compensate by releasing water into the ECF to restore vascular volume, leaving ICF depleted",
+        "ECF rises and ICF falls — the drop in ECF osmolality draws water out of cells into the extracellular space to re-equilibrate"
       ],
       correct: 0,
       explain: "Loss of isotonic fluid reduces ECF volume without creating an osmotic gradient. No water shifts into or out of cells, so ICF remains unchanged — classic isotonic dehydration (e.g., hemorrhage, severe diarrhea)."
@@ -74,10 +74,10 @@
     {
       scenario: "3% hypertonic saline is infused to treat severe symptomatic hyponatremia. What happens to the fluid compartments?",
       options: [
-        "Water shifts from ICF to ECF — ECF increases (tonicity up), ICF decreases (cells shrink)",
-        "Both ECF and ICF increase as saline distributes evenly",
-        "ECF decreases, ICF increases",
-        "No change — the high sodium stays in the ECF without causing shifts"
+        "ECF expands and ICF contracts — the hypertonic Na+ load raises ECF osmolality, drawing water osmotically out of cells until a new equilibrium is reached",
+        "Both ECF and ICF expand equally — the hypertonic saline distributes across all compartments just as isotonic saline does, expanding total body water",
+        "ECF contracts and ICF expands — the added Na+ is rapidly pumped into cells, bringing water with it and expanding the intracellular compartment",
+        "No net fluid shift occurs — sodium remains confined to the ECF and raises osmolality there without creating a gradient large enough to move water across membranes"
       ],
       correct: 0,
       explain: "Hypertonic saline raises ECF effective osmolality. Water moves osmotically from the ICF (lower tonicity) to the ECF (higher tonicity). ECF volume expands and ICF volume contracts — cells shrink. This is used therapeutically to reduce cerebral edema in acute severe hyponatremia."
@@ -85,10 +85,10 @@
     {
       scenario: "A patient with SIADH retains excess free water. What happens to the fluid compartments?",
       options: [
-        "Water distributes into both ECF and ICF — both expand, ECF becomes hypotonic, cells swell",
-        "Only ECF expands (water stays in blood vessels)",
-        "Only ICF expands (water rushes into cells only)",
-        "ECF decreases, ICF increases proportionally"
+        "Both ECF and ICF expand — free water lowers ECF tonicity, driving water into cells along the osmotic gradient until both compartments equilibrate at a lower tonicity",
+        "Only ECF expands — ADH action is confined to the collecting duct vasculature, so retained water remains in the vascular ECF without crossing into cells",
+        "Only ICF expands — free water moves entirely into cells because intracellular osmolality is always higher than ECF osmolality in SIADH",
+        "ECF contracts and ICF expands proportionally — the kidney retains water by reducing ECF volume, which is entirely redistributed into the intracellular space"
       ],
       correct: 0,
       explain: "Excess free water lowers ECF tonicity. Water then shifts down the osmotic gradient into the ICF. Both compartments expand, but cells swell particularly — risking cerebral edema if severe."
@@ -96,10 +96,10 @@
     {
       scenario: "A patient with diabetes insipidus loses excess free water (hypotonic loss). What happens?",
       options: [
-        "ECF becomes hypertonic, water shifts from ICF to ECF — ICF decreases (cellular dehydration), ECF volume changes minimally",
-        "ECF decreases, ICF unchanged",
-        "Both compartments decrease proportionally",
-        "ICF increases as the body compensates"
+        "ECF tonicity rises, drawing water from ICF into ECF — ICF shrinks (cellular dehydration and hypernatremia) while ECF volume is partially defended",
+        "ECF decreases, ICF is unchanged — the lost water comes exclusively from the ECF vascular compartment and cells do not contribute",
+        "Both compartments decrease equally — free water lost from the kidney is drawn proportionally from ICF and ECF in the same 2:1 ratio as normal water distribution",
+        "ICF expands as the body compensates — cells release osmolytes to draw water in and restore intracellular volume despite the ongoing free water loss"
       ],
       correct: 0,
       explain: "Loss of free water raises ECF tonicity (hypernatremia). Water moves osmotically from the ICF to the ECF to re-equilibrate. This results in cellular dehydration (ICF shrinks) — the basis of the symptoms in hypernatremia."
@@ -107,10 +107,10 @@
     {
       scenario: "D5W (5% dextrose in water) is infused. After glucose is metabolized, what is the net effect on compartments?",
       options: [
-        "Net hypotonic effect — water distributes into both ICF and ECF, cells swell slightly",
-        "Isotonic effect — only ECF expands",
-        "Hypertonic effect — water shifts from ICF to ECF",
-        "No net effect on any compartment"
+        "Equivalent to free water — distributes 2/3 into ICF and 1/3 into ECF, mildly diluting osmolality and expanding both compartments",
+        "Isotonic expansion of ECF only — because glucose remains an effective osmole in the ECF even after partial metabolism, the effect mirrors normal saline",
+        "Hypertonic effect on ECF — metabolic byproducts of glucose raise ECF osmolality, drawing water out of cells and shrinking the ICF compartment",
+        "No net compartment change — the calories from dextrose are consumed immediately and the water molecule is excreted by the kidney without distributing into any compartment"
       ],
       correct: 0,
       explain: "D5W is initially isotonic in the bag, but after glucose is rapidly metabolized, it becomes equivalent to free water. Free water distributes into both ICF and ECF (2/3 ICF, 1/3 ECF), causing both compartments to expand and slightly lowering tonicity."

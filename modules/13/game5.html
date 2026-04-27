@@ -173,10 +173,10 @@
     {
       q: "A patient with recurrent calcium oxalate kidney stones asks their physician why they have been prescribed hydrochlorothiazide (HCTZ) for stone prevention. What is the correct explanation?",
       options: [
-        "HCTZ alkalinizes the urine, which dissolves calcium oxalate crystals",
-        "HCTZ blocks the NCC transporter in the DCT, which reduces luminal Na+ and increases calcium reabsorption via NCX, reducing urinary Ca2+ and stone formation",
-        "HCTZ reduces GFR, which decreases the filtered load of calcium",
-        "HCTZ chelates calcium ions in the tubular lumen before they can crystallize"
+        "HCTZ raises urine pH by blocking carbonic anhydrase in the proximal tubule, which alkalinizes urine and dissolves calcium oxalate crystals before they aggregate",
+        "HCTZ blocks NCC in the DCT, lowering intracellular Na+ in tubular cells and enhancing basolateral NCX activity, which drives Ca2+ reabsorption from the tubular lumen into the blood",
+        "HCTZ constricts afferent arterioles, reducing GFR and thereby decreasing the filtered load of calcium reaching the tubule",
+        "HCTZ releases a chelating cofactor that binds free calcium ions in the tubular lumen, preventing them from precipitating as oxalate crystals"
       ],
       correct: 1,
       explain: "By blocking NCC, HCTZ lowers intracellular Na+ in DCT cells. This enhances the Na+/Ca2+ exchanger (NCX) on the basolateral membrane, which drives more Ca2+ from the tubular lumen into the cell and then into the blood. Less Ca2+ in the urine means fewer calcium stones."
@@ -184,10 +184,10 @@
     {
       q: "A patient with nephrogenic diabetes insipidus (NDI) produces 10 liters of dilute urine per day because their kidneys cannot respond to ADH. Why would adding a thiazide diuretic paradoxically REDUCE urine output in this patient?",
       options: [
-        "Thiazides stimulate ADH receptors in the collecting duct",
-        "Thiazides cause volume depletion, which activates RAAS and increases proximal tubule Na+ reabsorption — less fluid reaches the diluting segment, reducing urine output",
-        "Thiazides block aquaporin channels in the collecting duct",
-        "Thiazides directly stimulate the Na+/K+-ATPase to retain more water"
+        "Thiazides bind to V2 ADH receptors in the collecting duct and act as partial agonists, partially restoring water reabsorption even when ADH signaling is impaired",
+        "Thiazides induce mild volume depletion, activating RAAS and increasing proximal tubule Na+ and water reabsorption — so less fluid reaches the collecting duct, cutting urine volume",
+        "Thiazides insert aquaporin-2 channels into the collecting duct apical membrane independent of ADH, directly increasing tubular water permeability",
+        "Thiazides stimulate the basolateral Na+/K+-ATPase in collecting duct principal cells, creating a driving force that retains water across the tubular epithelium"
       ],
       correct: 1,
       explain: "In NDI, the collecting duct is unresponsive to ADH, so water escapes. Adding a thiazide causes mild volume depletion, which activates RAAS and upregulates proximal tubule reabsorption. More Na+ (and water) is reabsorbed proximally, so less fluid reaches the distal tubule/collecting duct, paradoxically reducing urine output."
@@ -195,10 +195,10 @@
     {
       q: "A patient develops a serum Na+ of 118 mEq/L (severe hyponatremia) while on hydrochlorothiazide. What is the specific mechanism by which thiazides cause this unique electrolyte disturbance — which loop diuretics do NOT cause as readily?",
       options: [
-        "Thiazides inhibit the PT Na+ transporter, preventing Na+ retention",
-        "Thiazides block the NCC transporter in the DCT — the diluting segment — making it impossible to generate maximally dilute urine; water is retained",
-        "Thiazides stimulate ADH secretion, causing excessive water retention",
-        "Thiazides increase GFR, flushing Na+ into the urine"
+        "Thiazides inhibit the proximal tubule Na+/H+ exchanger, preventing Na+ retention and causing the kidney to lose large amounts of sodium into the urine",
+        "Thiazides block NCC in the DCT — the kidney's main diluting segment — preventing free water separation from solute and trapping free water when ADH is present",
+        "Thiazides upregulate V2 ADH receptor expression in the collecting duct, increasing aquaporin insertion and causing excessive water reabsorption regardless of serum osmolality",
+        "Thiazides dilate afferent arterioles and raise GFR, flooding the tubule with filtrate that cannot be reabsorbed rapidly enough, diluting serum sodium"
       ],
       correct: 1,
       explain: "The DCT (where NCC sits) is the kidney's diluting segment — the site where Na+ is reabsorbed WITHOUT water, creating dilute tubular fluid. When thiazides block NCC here, the kidney CANNOT dilute urine maximally. If the patient drinks water and ADH is present, free water accumulates → hyponatremia. Loop diuretics don't block the DCT, so they don't impair dilution the same way."
@@ -206,10 +206,10 @@
     {
       q: "A patient with gout and hypertension is started on hydrochlorothiazide. Three weeks later, a uric acid level is checked and found to be elevated. What is the mechanism linking thiazide use to hyperuricemia?",
       options: [
-        "Thiazides directly stimulate uric acid synthesis in the liver",
-        "Thiazides compete with uric acid for the same secretory transporter in the proximal tubule, blocking uric acid excretion",
-        "Thiazides increase renal GFR, but uric acid is reabsorbed more at higher flow rates",
-        "Thiazides stimulate xanthine oxidase activity in the kidney"
+        "Thiazides upregulate xanthine oxidase activity in the liver, increasing de novo uric acid production from purine catabolism and raising serum urate levels",
+        "Thiazides compete with uric acid for the organic acid secretory transporter (OAT) in the proximal tubule, reducing uric acid secretion into the tubular lumen and raising serum levels",
+        "Thiazides raise GFR acutely, increasing filtered uric acid; the higher tubular uric acid concentration then drives enhanced reabsorption via URAT1 in the proximal tubule",
+        "Thiazides block the DCT Na+/Cl- transporter and indirectly stimulate aldosterone, which upregulates a urate reabsorption transporter in the collecting duct"
       ],
       correct: 1,
       explain: "Thiazides and uric acid compete for the same organic acid secretory transporter in the proximal tubule. When thiazides are secreted into the tubule, they reduce the available transporter for uric acid secretion. Less uric acid is excreted → serum uric acid rises → hyperuricemia and possible gout flare. This is why thiazides should be used cautiously in patients with a history of gout."
@@ -217,10 +217,10 @@
     {
       q: "Mutations in the NCC transporter gene (SLC12A3) cause Gitelman syndrome. What would you expect the clinical features of this condition to look like?",
       options: [
-        "Same as having a loop diuretic on board — hypokalemia, metabolic acidosis, hypocalcemia",
-        "Same as having a thiazide on board — hypokalemia, metabolic alkalosis, hypocalciuria, hypomagnesemia",
-        "Hypertension with hyperkalemia because NCC is usually natriuretic",
-        "Hypernatremia and hyperchloremia because NCC retains Na+ and Cl-"
+        "Phenotype identical to a loop diuretic: hypokalemic metabolic alkalosis, hypercalciuria, and hypomagnesemia due to impaired TAL reabsorption",
+        "Phenotype identical to a thiazide: hypokalemic metabolic alkalosis, hypocalciuria, and hypomagnesemia due to loss-of-function of the DCT NCC cotransporter",
+        "Hypertension with hyperkalemia and metabolic acidosis, because NCC normally promotes natriuresis and potassium excretion in the distal tubule",
+        "Hypernatremia with hyperchloremia, because non-functional NCC leaves excess Na+ and Cl- in the tubular lumen to be reabsorbed downstream"
       ],
       correct: 1,
       explain: "Gitelman syndrome is caused by loss-of-function mutations in NCC — the exact transporter that thiazides block. These patients have a phenotype identical to someone chronically taking a thiazide: hypokalemic metabolic alkalosis, hypocalciuria (low urine Ca2+), and hypomagnesemia. The brick notes that 'Gitelman syndrome looks just like a patient taking a thiazide.'"
