@@ -52,12 +52,12 @@
 <script src="../../js/shared.js"></script>
 <script>
   const pairs = [
-    { a: "Autoimmune attack on the pituitary (50% of central DI)",   b: "Central DI [1]" },
-    { a: "Pituitary or CNS tumor (40% of central DI)",               b: "Central DI [2]" },
-    { a: "Head trauma or intracranial surgery",                       b: "Central DI [3]" },
-    { a: "Lithium therapy for bipolar disorder",                      b: "Nephrogenic DI [1]" },
-    { a: "Hypercalcemia impairs collecting duct concentration",       b: "Nephrogenic DI [2]" },
-    { a: "Rare hereditary V2 receptor mutation",                      b: "Nephrogenic DI [3]" }
+    { a: "Autoimmune attack on the pituitary (50% of central DI)",   b: "Central DI" },
+    { a: "Pituitary or CNS tumor (40% of central DI)",               b: "Central DI" },
+    { a: "Head trauma or intracranial surgery",                       b: "Central DI" },
+    { a: "Lithium therapy for bipolar disorder",                      b: "Nephrogenic DI" },
+    { a: "Hypercalcemia impairs collecting duct concentration",       b: "Nephrogenic DI" },
+    { a: "Rare hereditary V2 receptor mutation",                      b: "Nephrogenic DI" }
   ];
   
   const leftCol = document.getElementById("leftCol");
@@ -86,8 +86,8 @@
     document.getElementById("winBanner").classList.remove("show");
     leftCol.innerHTML = "";
     rightCol.innerHTML = "";
-    const lefts = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.a, side: "left" })));
-    const rights = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.b, side: "right" })));
+    const lefts = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
     lefts.forEach(it => makeCard(it, leftCol));
     rights.forEach(it => makeCard(it, rightCol));
   }
@@ -95,7 +95,7 @@
   function makeCard(it, col) {
     const c = document.createElement("div");
     c.className = "match-pair-card";
-    c.dataset.pairId = it.pairId;
+    c.dataset.matchKey = it.matchKey;
     c.dataset.side = it.side;
     c.textContent = it.text;
     c.addEventListener("click", () => onPick(c));
@@ -124,7 +124,7 @@
     // Different sides — count as a try and check
     tries++;
     triesEl.textContent = tries;
-    if (firstPick.dataset.pairId === card.dataset.pairId) {
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
       firstPick.classList.remove("selected");
       firstPick.classList.add("matched");
       card.classList.add("matched");

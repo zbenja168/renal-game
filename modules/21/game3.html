@@ -52,12 +52,12 @@
 <script src="../../js/shared.js"></script>
 <script>
   const pairs = [
-    { a: "Acute inpatient SIADH — given IV, severe symptomatic hyponatremia",     b: "Conivaptan [1]" },
-    { a: "Hypervolemic hyponatremia in CHF — promotes free water excretion",       b: "Tolvaptan [1]" },
-    { a: "Autosomal dominant polycystic kidney disease (ADPKD)",                   b: "Tolvaptan [2]" },
-    { a: "Outpatient SIADH — V2-selective oral therapy",                           b: "Tolvaptan [3]" },
-    { a: "Chronic mild SIADH — interferes with ADH signaling in collecting duct",  b: "Demeclocycline [1]" },
-    { a: "Alternative when vaptans unavailable — antibiotic with ADH antagonism",  b: "Demeclocycline [2]" }
+    { a: "Acute inpatient SIADH — given IV, severe symptomatic hyponatremia",     b: "Conivaptan" },
+    { a: "Hypervolemic hyponatremia in CHF — promotes free water excretion",       b: "Tolvaptan" },
+    { a: "Autosomal dominant polycystic kidney disease (ADPKD)",                   b: "Tolvaptan" },
+    { a: "Outpatient SIADH — V2-selective oral therapy",                           b: "Tolvaptan" },
+    { a: "Chronic mild SIADH — interferes with ADH signaling in collecting duct",  b: "Demeclocycline" },
+    { a: "Alternative when vaptans unavailable — antibiotic with ADH antagonism",  b: "Demeclocycline" }
   ];
   
   const leftCol = document.getElementById("leftCol");
@@ -86,8 +86,8 @@
     document.getElementById("winBanner").classList.remove("show");
     leftCol.innerHTML = "";
     rightCol.innerHTML = "";
-    const lefts = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.a, side: "left" })));
-    const rights = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.b, side: "right" })));
+    const lefts = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
     lefts.forEach(it => makeCard(it, leftCol));
     rights.forEach(it => makeCard(it, rightCol));
   }
@@ -95,7 +95,7 @@
   function makeCard(it, col) {
     const c = document.createElement("div");
     c.className = "match-pair-card";
-    c.dataset.pairId = it.pairId;
+    c.dataset.matchKey = it.matchKey;
     c.dataset.side = it.side;
     c.textContent = it.text;
     c.addEventListener("click", () => onPick(c));
@@ -124,7 +124,7 @@
     // Different sides — count as a try and check
     tries++;
     triesEl.textContent = tries;
-    if (firstPick.dataset.pairId === card.dataset.pairId) {
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
       firstPick.classList.remove("selected");
       firstPick.classList.add("matched");
       card.classList.add("matched");
