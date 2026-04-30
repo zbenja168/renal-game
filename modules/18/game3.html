@@ -86,8 +86,12 @@
     document.getElementById("winBanner").classList.remove("show");
     leftCol.innerHTML = "";
     rightCol.innerHTML = "";
-    const lefts = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.a, side: "left" })));
-    const rights = Game.shuffle(pairs.map((p, i) => ({ pairId: i, text: p.b, side: "right" })));
+    // matchKey = the right-side category text. Several causes share the same
+    // category, so we match by category text instead of pair index — that way
+    // ANY identically-labeled right card is a valid target for any left whose
+    // category matches.
+    const lefts = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
     lefts.forEach(it => makeCard(it, leftCol));
     rights.forEach(it => makeCard(it, rightCol));
   }
@@ -95,7 +99,7 @@
   function makeCard(it, col) {
     const c = document.createElement("div");
     c.className = "match-pair-card";
-    c.dataset.pairId = it.pairId;
+    c.dataset.matchKey = it.matchKey;
     c.dataset.side = it.side;
     c.textContent = it.text;
     c.addEventListener("click", () => onPick(c));
@@ -124,7 +128,7 @@
     // Different sides — count as a try and check
     tries++;
     triesEl.textContent = tries;
-    if (firstPick.dataset.pairId === card.dataset.pairId) {
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
       firstPick.classList.remove("selected");
       firstPick.classList.add("matched");
       card.classList.add("matched");
