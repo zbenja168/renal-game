@@ -618,9 +618,13 @@ footer .reset-link:hover { color: #ef4444; border-bottom-color: #ef4444; }
   margin: 0 auto;
   background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
   border-radius: 16px;
-  padding: 20px;
+  /* No padding — absolute-positioned hotspot div percentages must align 1:1
+     with the SVG viewBox. Visual breathing room comes from the border + the
+     fact that most SVG diagrams are inset from their viewBox edges. */
+  padding: 0;
   border: 3px solid var(--primary-light);
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 .hotspot-canvas svg { width: 100%; height: auto; display: block; }
 .hotspot {

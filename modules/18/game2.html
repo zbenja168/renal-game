@@ -5,6 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tonicity Hotspot — Module 18</title>
 <link rel="stylesheet" href="../../css/style.css">
+<style>
+  /* Click zones live INSIDE the SVG so they share its coordinate space */
+  .tonicity-zone { cursor: pointer; }
+  .tonicity-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .tonicity-zone:hover .zone-bg { filter: brightness(1.04); stroke-width: 3; }
+  .tonicity-zone text { pointer-events: none; user-select: none; }
+
+  .tonicity-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .tonicity-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
 </head>
 <body class="theme-sun">
 
@@ -29,48 +52,55 @@
       <button class="btn secondary" id="resetBtn">Reset</button>
     </div>
 
-    <div id="caseBox" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+    <div id="caseBox" style="background:#f7fbff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
       <strong>Case <span id="caseNum">1</span> of 3:</strong>
       <p id="caseText" style="margin:8px 0 0;"></p>
     </div>
 
     <div class="hotspot-canvas" id="canvas">
       <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg">
-        <!-- Three boxes representing tonicity categories -->
-        <!-- Hypotonic box -->
-        <rect x="20" y="40" width="130" height="180" rx="12" fill="#d4edff" stroke="#4a90d9" stroke-width="2"/>
-        <text x="85" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#1a5fa8">Hypotonic</text>
-        <text x="85" y="65" text-anchor="middle" font-size="11" fill="#1a5fa8">Serum osmolality</text>
-        <text x="85" y="82" text-anchor="middle" font-size="11" fill="#1a5fa8">&lt; 280 mOsm/kg</text>
-        <text x="85" y="110" text-anchor="middle" font-size="10" fill="#444">True hyponatremia</text>
-        <text x="85" y="126" text-anchor="middle" font-size="10" fill="#444">ADH-mediated</text>
-        <text x="85" y="142" text-anchor="middle" font-size="10" fill="#444">water retention</text>
-        <text x="85" y="168" text-anchor="middle" font-size="10" fill="#888">Most morbid subtype</text>
-        <!-- Isotonic box -->
-        <rect x="175" y="40" width="130" height="180" rx="12" fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
-        <text x="240" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#856404">Isotonic</text>
-        <text x="240" y="65" text-anchor="middle" font-size="11" fill="#856404">Serum osmolality</text>
-        <text x="240" y="82" text-anchor="middle" font-size="11" fill="#856404">280–295 mOsm/kg</text>
-        <text x="240" y="110" text-anchor="middle" font-size="10" fill="#444">Pseudohyponatremia</text>
-        <text x="240" y="126" text-anchor="middle" font-size="10" fill="#444">Lab artifact</text>
-        <text x="240" y="142" text-anchor="middle" font-size="10" fill="#444">Hyperlipidemia or</text>
-        <text x="240" y="158" text-anchor="middle" font-size="10" fill="#444">multiple myeloma</text>
-        <text x="240" y="180" text-anchor="middle" font-size="10" fill="#888">No treatment needed</text>
-        <!-- Hypertonic box -->
-        <rect x="330" y="40" width="130" height="180" rx="12" fill="#f8d7da" stroke="#dc3545" stroke-width="2"/>
-        <text x="395" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#842029">Hypertonic</text>
-        <text x="395" y="65" text-anchor="middle" font-size="11" fill="#842029">Serum osmolality</text>
-        <text x="395" y="82" text-anchor="middle" font-size="11" fill="#842029">&gt; 295 mOsm/kg</text>
-        <text x="395" y="110" text-anchor="middle" font-size="10" fill="#444">High glucose pulls</text>
-        <text x="395" y="126" text-anchor="middle" font-size="10" fill="#444">water from cells</text>
-        <text x="395" y="142" text-anchor="middle" font-size="10" fill="#444">diluting sodium</text>
-        <text x="395" y="168" text-anchor="middle" font-size="10" fill="#888">Fix: lower glucose</text>
-      </svg>
 
-      <!-- Clickable hotspot zones over the three boxes -->
-      <div class="hotspot" data-name="Hypotonic" style="left:4%;top:15%;width:27%;height:70%;border-radius:8px;"></div>
-      <div class="hotspot" data-name="Isotonic"  style="left:36%;top:15%;width:27%;height:70%;border-radius:8px;"></div>
-      <div class="hotspot" data-name="Hypertonic" style="left:68%;top:15%;width:27%;height:70%;border-radius:8px;"></div>
+        <!-- Hypotonic -->
+        <g class="tonicity-zone" data-name="Hypotonic">
+          <rect class="zone-bg" x="20" y="40" width="130" height="180" rx="12"
+                fill="#d4edff" stroke="#4a90d9" stroke-width="2"/>
+          <text x="85" y="30"  text-anchor="middle" font-size="13" font-weight="700" fill="#1a5fa8">Hypotonic</text>
+          <text x="85" y="65"  text-anchor="middle" font-size="11" fill="#1a5fa8">Serum osmolality</text>
+          <text x="85" y="82"  text-anchor="middle" font-size="11" fill="#1a5fa8">&lt; 280 mOsm/kg</text>
+          <text x="85" y="110" text-anchor="middle" font-size="10" fill="#444">True hyponatremia</text>
+          <text x="85" y="126" text-anchor="middle" font-size="10" fill="#444">ADH-mediated</text>
+          <text x="85" y="142" text-anchor="middle" font-size="10" fill="#444">water retention</text>
+          <text x="85" y="168" text-anchor="middle" font-size="10" fill="#888">Most morbid subtype</text>
+        </g>
+
+        <!-- Isotonic -->
+        <g class="tonicity-zone" data-name="Isotonic">
+          <rect class="zone-bg" x="175" y="40" width="130" height="180" rx="12"
+                fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+          <text x="240" y="30"  text-anchor="middle" font-size="13" font-weight="700" fill="#856404">Isotonic</text>
+          <text x="240" y="65"  text-anchor="middle" font-size="11" fill="#856404">Serum osmolality</text>
+          <text x="240" y="82"  text-anchor="middle" font-size="11" fill="#856404">280–295 mOsm/kg</text>
+          <text x="240" y="110" text-anchor="middle" font-size="10" fill="#444">Pseudohyponatremia</text>
+          <text x="240" y="126" text-anchor="middle" font-size="10" fill="#444">Lab artifact</text>
+          <text x="240" y="142" text-anchor="middle" font-size="10" fill="#444">Hyperlipidemia or</text>
+          <text x="240" y="158" text-anchor="middle" font-size="10" fill="#444">multiple myeloma</text>
+          <text x="240" y="180" text-anchor="middle" font-size="10" fill="#888">No treatment needed</text>
+        </g>
+
+        <!-- Hypertonic -->
+        <g class="tonicity-zone" data-name="Hypertonic">
+          <rect class="zone-bg" x="330" y="40" width="130" height="180" rx="12"
+                fill="#f8d7da" stroke="#dc3545" stroke-width="2"/>
+          <text x="395" y="30"  text-anchor="middle" font-size="13" font-weight="700" fill="#842029">Hypertonic</text>
+          <text x="395" y="65"  text-anchor="middle" font-size="11" fill="#842029">Serum osmolality</text>
+          <text x="395" y="82"  text-anchor="middle" font-size="11" fill="#842029">&gt; 295 mOsm/kg</text>
+          <text x="395" y="110" text-anchor="middle" font-size="10" fill="#444">High glucose pulls</text>
+          <text x="395" y="126" text-anchor="middle" font-size="10" fill="#444">water from cells</text>
+          <text x="395" y="142" text-anchor="middle" font-size="10" fill="#444">diluting sodium</text>
+          <text x="395" y="168" text-anchor="middle" font-size="10" fill="#888">Fix: lower glucose</text>
+        </g>
+
+      </svg>
     </div>
 
     <div class="feedback" id="feedback"></div>
@@ -108,17 +138,19 @@
     }
   ];
 
-  const canvas   = document.getElementById("canvas");
-  const scoreEl  = document.getElementById("score");
-  const missEl   = document.getElementById("misses");
-  const fbEl     = document.getElementById("feedback");
-  const winEl    = document.getElementById("winBanner");
-  const caseNumEl= document.getElementById("caseNum");
-  const caseText = document.getElementById("caseText");
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".tonicity-zone");
 
   let currentCase = 0;
   let correct = 0;
   let misses = 0;
+  let lock = false;
 
   function showFb(msg, kind) {
     fbEl.textContent = msg;
@@ -131,10 +163,11 @@
     if (currentCase >= cases.length) return;
     caseNumEl.textContent = currentCase + 1;
     caseText.textContent = cases[currentCase].text;
-    canvas.querySelectorAll(".hotspot").forEach(h => {
-      h.classList.remove("found", "miss");
-      h.style.pointerEvents = "auto";
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
     });
+    lock = false;
   }
 
   function init() {
@@ -148,32 +181,32 @@
     loadCase();
   }
 
-  canvas.querySelectorAll(".hotspot").forEach(h => {
-    h.addEventListener("click", e => {
-      e.stopPropagation();
-      if (currentCase >= cases.length) return;
-      const picked = h.dataset.name;
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
       const expected = cases[currentCase].answer;
       const explain = cases[currentCase].explain;
 
       if (picked === expected) {
-        h.classList.add("found");
-        canvas.querySelectorAll(".hotspot").forEach(x => x.style.pointerEvents = "none");
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
         correct++;
         Game.setScore(scoreEl, correct, 3);
         showFb(`✓ Correct! ${explain}`, "correct");
         currentCase++;
         if (currentCase === cases.length) {
-          setTimeout(() => Game.celebrate("winBanner"), 500);
+          setTimeout(() => Game.celebrate("winBanner"), 600);
         } else {
-          setTimeout(loadCase, 2000);
+          setTimeout(loadCase, 2200);
         }
       } else {
         misses++;
         missEl.textContent = misses;
-        h.classList.add("miss");
-        setTimeout(() => h.classList.remove("miss"), 600);
-        showFb(`✗ Not quite. Consider the serum osmolality in this case.`, "incorrect");
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb(`✗ Not quite. Look at the serum osmolality value in this case.`, "incorrect");
       }
     });
   });
