@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Receptor Hotspot — Module 20</title>
 <link rel="stylesheet" href="../../css/style.css">
+<style>
+  .svg-zone { cursor: pointer; }
+  .svg-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .svg-zone:hover .zone-bg { filter: brightness(1.04); stroke-width: 3; }
+  .svg-zone text { pointer-events: none; user-select: none; }
+  .svg-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .svg-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
 </head>
 <body class="theme-sun">
 
@@ -29,35 +48,38 @@
       <button class="btn secondary" id="resetBtn">Reset</button>
     </div>
 
-    <div id="caseBox" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+    <div id="caseBox" style="background:#f7fbff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
       <strong>Effect <span id="caseNum">1</span> of 3:</strong>
       <p id="caseText" style="margin:8px 0 0;"></p>
     </div>
 
     <div class="hotspot-canvas" id="canvas">
       <svg viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg">
-        <!-- V1 receptor box -->
-        <rect x="30" y="30" width="180" height="160" rx="14" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
-        <text x="120" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">V1 Receptor</text>
-        <text x="120" y="60" text-anchor="middle" font-size="11" fill="#92400e">Location:</text>
-        <text x="120" y="76" text-anchor="middle" font-size="11" fill="#444">Vascular smooth muscle</text>
-        <text x="120" y="110" text-anchor="middle" font-size="11" fill="#92400e">Effect:</text>
-        <text x="120" y="126" text-anchor="middle" font-size="11" fill="#444">Vasoconstriction</text>
-        <text x="120" y="142" text-anchor="middle" font-size="11" fill="#444">↑ Blood pressure</text>
-        <text x="120" y="168" text-anchor="middle" font-size="10" fill="#888">Vasopressin binds here</text>
-        <!-- V2 receptor box -->
-        <rect x="270" y="30" width="180" height="160" rx="14" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
-        <text x="360" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#1e3a8a">V2 Receptor</text>
-        <text x="360" y="60" text-anchor="middle" font-size="11" fill="#1e3a8a">Location:</text>
-        <text x="360" y="76" text-anchor="middle" font-size="11" fill="#444">Renal collecting duct</text>
-        <text x="360" y="92" text-anchor="middle" font-size="11" fill="#444">Vascular endothelium</text>
-        <text x="360" y="120" text-anchor="middle" font-size="11" fill="#1e3a8a">Effect:</text>
-        <text x="360" y="136" text-anchor="middle" font-size="11" fill="#444">Aquaporin insertion →</text>
-        <text x="360" y="152" text-anchor="middle" font-size="11" fill="#444">water reabsorption</text>
-        <text x="360" y="168" text-anchor="middle" font-size="10" fill="#888">Desmopressin selective here</text>
+
+        <g class="svg-zone" data-name="V1">
+          <rect class="zone-bg" x="30" y="30" width="180" height="160" rx="14" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
+          <text x="120" y="22"  text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">V1 Receptor</text>
+          <text x="120" y="60"  text-anchor="middle" font-size="11" fill="#92400e">Location:</text>
+          <text x="120" y="76"  text-anchor="middle" font-size="11" fill="#444">Vascular smooth muscle</text>
+          <text x="120" y="110" text-anchor="middle" font-size="11" fill="#92400e">Effect:</text>
+          <text x="120" y="126" text-anchor="middle" font-size="11" fill="#444">Vasoconstriction</text>
+          <text x="120" y="142" text-anchor="middle" font-size="11" fill="#444">↑ Blood pressure</text>
+          <text x="120" y="168" text-anchor="middle" font-size="10" fill="#888">Vasopressin binds here</text>
+        </g>
+
+        <g class="svg-zone" data-name="V2">
+          <rect class="zone-bg" x="270" y="30" width="180" height="160" rx="14" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+          <text x="360" y="22"  text-anchor="middle" font-size="15" font-weight="700" fill="#1e3a8a">V2 Receptor</text>
+          <text x="360" y="60"  text-anchor="middle" font-size="11" fill="#1e3a8a">Location:</text>
+          <text x="360" y="76"  text-anchor="middle" font-size="11" fill="#444">Renal collecting duct</text>
+          <text x="360" y="92"  text-anchor="middle" font-size="11" fill="#444">Vascular endothelium</text>
+          <text x="360" y="120" text-anchor="middle" font-size="11" fill="#1e3a8a">Effect:</text>
+          <text x="360" y="136" text-anchor="middle" font-size="11" fill="#444">Aquaporin insertion →</text>
+          <text x="360" y="152" text-anchor="middle" font-size="11" fill="#444">water reabsorption</text>
+          <text x="360" y="168" text-anchor="middle" font-size="10" fill="#888">Desmopressin selective here</text>
+        </g>
+
       </svg>
-      <div class="hotspot" data-name="V1" style="left:6%;top:14%;width:37%;height:72%;border-radius:8px;"></div>
-      <div class="hotspot" data-name="V2" style="left:56%;top:14%;width:37%;height:72%;border-radius:8px;"></div>
     </div>
 
     <div class="feedback" id="feedback"></div>
@@ -102,10 +124,12 @@
   const winEl     = document.getElementById("winBanner");
   const caseNumEl = document.getElementById("caseNum");
   const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".svg-zone");
 
   let currentCase = 0;
   let correct = 0;
   let misses  = 0;
+  let lock = false;
 
   function showFb(msg, kind) {
     fbEl.textContent = msg;
@@ -118,10 +142,11 @@
     if (currentCase >= effects.length) return;
     caseNumEl.textContent = currentCase + 1;
     caseText.textContent = effects[currentCase].text;
-    canvas.querySelectorAll(".hotspot").forEach(h => {
-      h.classList.remove("found", "miss");
-      h.style.pointerEvents = "auto";
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
     });
+    lock = false;
   }
 
   function init() {
@@ -133,31 +158,31 @@
     loadCase();
   }
 
-  canvas.querySelectorAll(".hotspot").forEach(h => {
-    h.addEventListener("click", e => {
-      e.stopPropagation();
-      if (currentCase >= effects.length) return;
-      const picked   = h.dataset.name;
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= effects.length) return;
+      const picked   = z.dataset.name;
       const expected = effects[currentCase].answer;
       const explain  = effects[currentCase].explain;
 
       if (picked === expected) {
-        h.classList.add("found");
-        canvas.querySelectorAll(".hotspot").forEach(x => x.style.pointerEvents = "none");
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
         correct++;
         Game.setScore(scoreEl, correct, 3);
         showFb(`✓ Correct! ${explain}`, "correct");
         currentCase++;
         if (currentCase === effects.length) {
-          setTimeout(() => Game.celebrate("winBanner"), 500);
+          setTimeout(() => Game.celebrate("winBanner"), 600);
         } else {
           setTimeout(loadCase, 2500);
         }
       } else {
         misses++;
         missEl.textContent = misses;
-        h.classList.add("miss");
-        setTimeout(() => h.classList.remove("miss"), 600);
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
         showFb("✗ Not quite — think about where this effect occurs (kidney vs blood vessel).", "incorrect");
       }
     });

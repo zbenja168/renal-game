@@ -5,6 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Water Loss Hotspot — Module 19</title>
 <link rel="stylesheet" href="../../css/style.css">
+<style>
+  /* Click zones live INSIDE the SVG so they share its coordinate space */
+  .svg-zone { cursor: pointer; }
+  .svg-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .svg-zone:hover .zone-bg { filter: brightness(1.04); stroke-width: 3; }
+  .svg-zone text { pointer-events: none; user-select: none; }
+  .svg-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .svg-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
 </head>
 <body class="theme-sun">
 
@@ -29,46 +49,50 @@
       <button class="btn secondary" id="resetBtn">Reset</button>
     </div>
 
-    <div id="caseBox" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+    <div id="caseBox" style="background:#f7fbff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
       <strong>Case <span id="caseNum">1</span> of 3:</strong>
       <p id="caseText" style="margin:8px 0 0;"></p>
     </div>
 
     <div class="hotspot-canvas" id="canvas">
       <svg viewBox="0 0 480 240" xmlns="http://www.w3.org/2000/svg">
-        <!-- Extrarenal box -->
-        <rect x="20" y="30" width="130" height="180" rx="12" fill="#d1ecf1" stroke="#0c5460" stroke-width="2"/>
-        <text x="85" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#0c5460">Extrarenal</text>
-        <text x="85" y="55" text-anchor="middle" font-size="10" fill="#0c5460">Hypotonic fluid lost</text>
-        <text x="85" y="70" text-anchor="middle" font-size="10" fill="#0c5460">from body</text>
-        <text x="85" y="100" text-anchor="middle" font-size="10" fill="#444">Sweating</text>
-        <text x="85" y="116" text-anchor="middle" font-size="10" fill="#444">GI losses (vomiting,</text>
-        <text x="85" y="130" text-anchor="middle" font-size="10" fill="#444">diarrhea)</text>
-        <text x="85" y="160" text-anchor="middle" font-size="10" fill="#888">Na 40–60 mEq/L</text>
-        <text x="85" y="175" text-anchor="middle" font-size="10" fill="#888">in sweat → hyperNa</text>
-        <!-- DI box -->
-        <rect x="175" y="30" width="130" height="180" rx="12" fill="#fff3cd" stroke="#856404" stroke-width="2"/>
-        <text x="240" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#856404">Renal (DI)</text>
-        <text x="240" y="55" text-anchor="middle" font-size="10" fill="#856404">Kidney excretes</text>
-        <text x="240" y="70" text-anchor="middle" font-size="10" fill="#856404">dilute urine</text>
-        <text x="240" y="100" text-anchor="middle" font-size="10" fill="#444">Aquaporins not</text>
-        <text x="240" y="115" text-anchor="middle" font-size="10" fill="#444">inserted → free</text>
-        <text x="240" y="130" text-anchor="middle" font-size="10" fill="#444">water lost in urine</text>
-        <text x="240" y="160" text-anchor="middle" font-size="10" fill="#888">High urine output,</text>
-        <text x="240" y="175" text-anchor="middle" font-size="10" fill="#888">low urine osmolality</text>
-        <!-- Sodium Intake box -->
-        <rect x="330" y="30" width="130" height="180" rx="12" fill="#f8d7da" stroke="#721c24" stroke-width="2"/>
-        <text x="395" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#721c24">Increased Na Intake</text>
-        <text x="395" y="55" text-anchor="middle" font-size="10" fill="#721c24">Excess sodium</text>
-        <text x="395" y="70" text-anchor="middle" font-size="10" fill="#721c24">administered</text>
-        <text x="395" y="100" text-anchor="middle" font-size="10" fill="#444">Na bicarbonate</text>
-        <text x="395" y="115" text-anchor="middle" font-size="10" fill="#444">ampules (cardiac</text>
-        <text x="395" y="130" text-anchor="middle" font-size="10" fill="#444">arrest resuscitation)</text>
-        <text x="395" y="160" text-anchor="middle" font-size="10" fill="#888">Uncommon cause</text>
+
+        <g class="svg-zone" data-name="Extrarenal">
+          <rect class="zone-bg" x="20" y="30" width="130" height="180" rx="12" fill="#d1ecf1" stroke="#0c5460" stroke-width="2"/>
+          <text x="85" y="22"  text-anchor="middle" font-size="12" font-weight="700" fill="#0c5460">Extrarenal</text>
+          <text x="85" y="55"  text-anchor="middle" font-size="10" fill="#0c5460">Hypotonic fluid lost</text>
+          <text x="85" y="70"  text-anchor="middle" font-size="10" fill="#0c5460">from body</text>
+          <text x="85" y="100" text-anchor="middle" font-size="10" fill="#444">Sweating</text>
+          <text x="85" y="116" text-anchor="middle" font-size="10" fill="#444">GI losses (vomiting,</text>
+          <text x="85" y="130" text-anchor="middle" font-size="10" fill="#444">diarrhea)</text>
+          <text x="85" y="160" text-anchor="middle" font-size="10" fill="#888">Na 40–60 mEq/L</text>
+          <text x="85" y="175" text-anchor="middle" font-size="10" fill="#888">in sweat → hyperNa</text>
+        </g>
+
+        <g class="svg-zone" data-name="Renal (DI)">
+          <rect class="zone-bg" x="175" y="30" width="130" height="180" rx="12" fill="#fff3cd" stroke="#856404" stroke-width="2"/>
+          <text x="240" y="22"  text-anchor="middle" font-size="12" font-weight="700" fill="#856404">Renal (DI)</text>
+          <text x="240" y="55"  text-anchor="middle" font-size="10" fill="#856404">Kidney excretes</text>
+          <text x="240" y="70"  text-anchor="middle" font-size="10" fill="#856404">dilute urine</text>
+          <text x="240" y="100" text-anchor="middle" font-size="10" fill="#444">Aquaporins not</text>
+          <text x="240" y="115" text-anchor="middle" font-size="10" fill="#444">inserted → free</text>
+          <text x="240" y="130" text-anchor="middle" font-size="10" fill="#444">water lost in urine</text>
+          <text x="240" y="160" text-anchor="middle" font-size="10" fill="#888">High urine output,</text>
+          <text x="240" y="175" text-anchor="middle" font-size="10" fill="#888">low urine osmolality</text>
+        </g>
+
+        <g class="svg-zone" data-name="Increased Na Intake">
+          <rect class="zone-bg" x="330" y="30" width="130" height="180" rx="12" fill="#f8d7da" stroke="#721c24" stroke-width="2"/>
+          <text x="395" y="22"  text-anchor="middle" font-size="12" font-weight="700" fill="#721c24">Increased Na Intake</text>
+          <text x="395" y="55"  text-anchor="middle" font-size="10" fill="#721c24">Excess sodium</text>
+          <text x="395" y="70"  text-anchor="middle" font-size="10" fill="#721c24">administered</text>
+          <text x="395" y="100" text-anchor="middle" font-size="10" fill="#444">Na bicarbonate</text>
+          <text x="395" y="115" text-anchor="middle" font-size="10" fill="#444">ampules (cardiac</text>
+          <text x="395" y="130" text-anchor="middle" font-size="10" fill="#444">arrest resuscitation)</text>
+          <text x="395" y="160" text-anchor="middle" font-size="10" fill="#888">Uncommon cause</text>
+        </g>
+
       </svg>
-      <div class="hotspot" data-name="Extrarenal"          style="left:4%;top:12%;width:27%;height:76%;border-radius:8px;"></div>
-      <div class="hotspot" data-name="Renal (DI)"          style="left:36%;top:12%;width:27%;height:76%;border-radius:8px;"></div>
-      <div class="hotspot" data-name="Increased Na Intake" style="left:68%;top:12%;width:27%;height:76%;border-radius:8px;"></div>
     </div>
 
     <div class="feedback" id="feedback"></div>
@@ -113,10 +137,12 @@
   const winEl     = document.getElementById("winBanner");
   const caseNumEl = document.getElementById("caseNum");
   const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".svg-zone");
 
   let currentCase = 0;
   let correct = 0;
   let misses  = 0;
+  let lock = false;
 
   function showFb(msg, kind) {
     fbEl.textContent = msg;
@@ -129,10 +155,11 @@
     if (currentCase >= cases.length) return;
     caseNumEl.textContent = currentCase + 1;
     caseText.textContent = cases[currentCase].text;
-    canvas.querySelectorAll(".hotspot").forEach(h => {
-      h.classList.remove("found", "miss");
-      h.style.pointerEvents = "auto";
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
     });
+    lock = false;
   }
 
   function init() {
@@ -144,31 +171,31 @@
     loadCase();
   }
 
-  canvas.querySelectorAll(".hotspot").forEach(h => {
-    h.addEventListener("click", e => {
-      e.stopPropagation();
-      if (currentCase >= cases.length) return;
-      const picked    = h.dataset.name;
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked    = z.dataset.name;
       const expected  = cases[currentCase].answer;
       const explain   = cases[currentCase].explain;
 
       if (picked === expected) {
-        h.classList.add("found");
-        canvas.querySelectorAll(".hotspot").forEach(x => x.style.pointerEvents = "none");
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
         correct++;
         Game.setScore(scoreEl, correct, 3);
         showFb(`✓ Correct! ${explain}`, "correct");
         currentCase++;
         if (currentCase === cases.length) {
-          setTimeout(() => Game.celebrate("winBanner"), 500);
+          setTimeout(() => Game.celebrate("winBanner"), 600);
         } else {
           setTimeout(loadCase, 2200);
         }
       } else {
         misses++;
         missEl.textContent = misses;
-        h.classList.add("miss");
-        setTimeout(() => h.classList.remove("miss"), 600);
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
         showFb("✗ Not quite — think about the urine output and urine osmolality in this case.", "incorrect");
       }
     });

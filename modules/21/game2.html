@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Drug Selector Hotspot — Module 21</title>
 <link rel="stylesheet" href="../../css/style.css">
+<style>
+  .svg-zone { cursor: pointer; }
+  .svg-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .svg-zone:hover .zone-bg { filter: brightness(1.04); stroke-width: 3; }
+  .svg-zone text { pointer-events: none; user-select: none; }
+  .svg-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .svg-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
 </head>
 <body class="theme-sun">
 
@@ -29,45 +48,49 @@
       <button class="btn secondary" id="resetBtn">Reset</button>
     </div>
 
-    <div id="caseBox" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+    <div id="caseBox" style="background:#f7fbff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
       <strong>Case <span id="caseNum">1</span> of 3:</strong>
       <p id="caseText" style="margin:8px 0 0;"></p>
     </div>
 
     <div class="hotspot-canvas" id="canvas">
       <svg viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg">
-        <!-- Conivaptan box -->
-        <rect x="10" y="30" width="140" height="170" rx="12" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
-        <text x="80" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Conivaptan</text>
-        <text x="80" y="55" text-anchor="middle" font-size="10" fill="#92400e">Route: IV only</text>
-        <text x="80" y="70" text-anchor="middle" font-size="10" fill="#92400e">Receptors: V1 + V2</text>
-        <text x="80" y="95" text-anchor="middle" font-size="10" fill="#444">Inpatient SIADH</text>
-        <text x="80" y="110" text-anchor="middle" font-size="10" fill="#444">Symptomatic / acute</text>
-        <text x="80" y="135" text-anchor="middle" font-size="10" fill="#888">Risk: orthostatic</text>
-        <text x="80" y="150" text-anchor="middle" font-size="10" fill="#888">hypotension (V1)</text>
-        <!-- Tolvaptan box -->
-        <rect x="170" y="30" width="140" height="170" rx="12" fill="#d1fae5" stroke="#065f46" stroke-width="2"/>
-        <text x="240" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Tolvaptan</text>
-        <text x="240" y="55" text-anchor="middle" font-size="10" fill="#065f46">Route: oral</text>
-        <text x="240" y="70" text-anchor="middle" font-size="10" fill="#065f46">Receptor: V2 only</text>
-        <text x="240" y="95" text-anchor="middle" font-size="10" fill="#444">SIADH (outpatient)</text>
-        <text x="240" y="110" text-anchor="middle" font-size="10" fill="#444">CHF hyponatremia</text>
-        <text x="240" y="125" text-anchor="middle" font-size="10" fill="#444">ADPKD</text>
-        <text x="240" y="150" text-anchor="middle" font-size="10" fill="#888">Avoid in liver disease</text>
-        <!-- Demeclocycline box -->
-        <rect x="330" y="30" width="140" height="170" rx="12" fill="#e0e7ff" stroke="#3730a3" stroke-width="2"/>
-        <text x="400" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">Demeclocycline</text>
-        <text x="400" y="55" text-anchor="middle" font-size="10" fill="#3730a3">Route: oral</text>
-        <text x="400" y="70" text-anchor="middle" font-size="10" fill="#3730a3">Antibiotic — mild</text>
-        <text x="400" y="85" text-anchor="middle" font-size="10" fill="#3730a3">ADH antagonist</text>
-        <text x="400" y="110" text-anchor="middle" font-size="10" fill="#444">Chronic SIADH</text>
-        <text x="400" y="125" text-anchor="middle" font-size="10" fill="#444">interferes with AQP</text>
-        <text x="400" y="140" text-anchor="middle" font-size="10" fill="#444">signaling</text>
-        <text x="400" y="165" text-anchor="middle" font-size="10" fill="#888">Not a true vaptan</text>
+
+        <g class="svg-zone" data-name="Conivaptan">
+          <rect class="zone-bg" x="10" y="30" width="140" height="170" rx="12" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
+          <text x="80" y="22"  text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Conivaptan</text>
+          <text x="80" y="55"  text-anchor="middle" font-size="10" fill="#92400e">Route: IV only</text>
+          <text x="80" y="70"  text-anchor="middle" font-size="10" fill="#92400e">Receptors: V1 + V2</text>
+          <text x="80" y="95"  text-anchor="middle" font-size="10" fill="#444">Inpatient SIADH</text>
+          <text x="80" y="110" text-anchor="middle" font-size="10" fill="#444">Symptomatic / acute</text>
+          <text x="80" y="135" text-anchor="middle" font-size="10" fill="#888">Risk: orthostatic</text>
+          <text x="80" y="150" text-anchor="middle" font-size="10" fill="#888">hypotension (V1)</text>
+        </g>
+
+        <g class="svg-zone" data-name="Tolvaptan">
+          <rect class="zone-bg" x="170" y="30" width="140" height="170" rx="12" fill="#d1fae5" stroke="#065f46" stroke-width="2"/>
+          <text x="240" y="22"  text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Tolvaptan</text>
+          <text x="240" y="55"  text-anchor="middle" font-size="10" fill="#065f46">Route: oral</text>
+          <text x="240" y="70"  text-anchor="middle" font-size="10" fill="#065f46">Receptor: V2 only</text>
+          <text x="240" y="95"  text-anchor="middle" font-size="10" fill="#444">SIADH (outpatient)</text>
+          <text x="240" y="110" text-anchor="middle" font-size="10" fill="#444">CHF hyponatremia</text>
+          <text x="240" y="125" text-anchor="middle" font-size="10" fill="#444">ADPKD</text>
+          <text x="240" y="150" text-anchor="middle" font-size="10" fill="#888">Avoid in liver disease</text>
+        </g>
+
+        <g class="svg-zone" data-name="Demeclocycline">
+          <rect class="zone-bg" x="330" y="30" width="140" height="170" rx="12" fill="#e0e7ff" stroke="#3730a3" stroke-width="2"/>
+          <text x="400" y="22"  text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">Demeclocycline</text>
+          <text x="400" y="55"  text-anchor="middle" font-size="10" fill="#3730a3">Route: oral</text>
+          <text x="400" y="70"  text-anchor="middle" font-size="10" fill="#3730a3">Antibiotic — mild</text>
+          <text x="400" y="85"  text-anchor="middle" font-size="10" fill="#3730a3">ADH antagonist</text>
+          <text x="400" y="110" text-anchor="middle" font-size="10" fill="#444">Chronic SIADH</text>
+          <text x="400" y="125" text-anchor="middle" font-size="10" fill="#444">interferes with AQP</text>
+          <text x="400" y="140" text-anchor="middle" font-size="10" fill="#444">signaling</text>
+          <text x="400" y="165" text-anchor="middle" font-size="10" fill="#888">Not a true vaptan</text>
+        </g>
+
       </svg>
-      <div class="hotspot" data-name="Conivaptan"    style="left:2%;top:14%;width:29%;height:77%;border-radius:8px;"></div>
-      <div class="hotspot" data-name="Tolvaptan"     style="left:35%;top:14%;width:29%;height:77%;border-radius:8px;"></div>
-      <div class="hotspot" data-name="Demeclocycline" style="left:68%;top:14%;width:29%;height:77%;border-radius:8px;"></div>
     </div>
 
     <div class="feedback" id="feedback"></div>
@@ -112,10 +135,12 @@
   const winEl     = document.getElementById("winBanner");
   const caseNumEl = document.getElementById("caseNum");
   const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".svg-zone");
 
   let currentCase = 0;
   let correct = 0;
   let misses  = 0;
+  let lock = false;
 
   function showFb(msg, kind) {
     fbEl.textContent = msg;
@@ -128,10 +153,11 @@
     if (currentCase >= cases.length) return;
     caseNumEl.textContent = currentCase + 1;
     caseText.textContent = cases[currentCase].text;
-    canvas.querySelectorAll(".hotspot").forEach(h => {
-      h.classList.remove("found", "miss");
-      h.style.pointerEvents = "auto";
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
     });
+    lock = false;
   }
 
   function init() {
@@ -143,31 +169,31 @@
     loadCase();
   }
 
-  canvas.querySelectorAll(".hotspot").forEach(h => {
-    h.addEventListener("click", e => {
-      e.stopPropagation();
-      if (currentCase >= cases.length) return;
-      const picked   = h.dataset.name;
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked   = z.dataset.name;
       const expected = cases[currentCase].answer;
       const explain  = cases[currentCase].explain;
 
       if (picked === expected) {
-        h.classList.add("found");
-        canvas.querySelectorAll(".hotspot").forEach(x => x.style.pointerEvents = "none");
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
         correct++;
         Game.setScore(scoreEl, correct, 3);
         showFb(`✓ Correct! ${explain}`, "correct");
         currentCase++;
         if (currentCase === cases.length) {
-          setTimeout(() => Game.celebrate("winBanner"), 500);
+          setTimeout(() => Game.celebrate("winBanner"), 600);
         } else {
           setTimeout(loadCase, 2800);
         }
       } else {
         misses++;
         missEl.textContent = misses;
-        h.classList.add("miss");
-        setTimeout(() => h.classList.remove("miss"), 600);
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
         showFb("✗ Not quite — consider the route of administration and setting (inpatient vs outpatient).", "incorrect");
       }
     });
