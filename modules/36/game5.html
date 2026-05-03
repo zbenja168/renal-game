@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dialysis Indications Lab — Module 36</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 36</a></div>
+  <h1>Game 5 — Dialysis Indications Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🏥</div>
+      <h2>Round 1: Sort acute vs. chronic dialysis indications</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Some dialysis indications are specific to acute kidney injury emergencies; others trigger starting dialysis in a patient with chronic ESKD. Drag each indication into the correct bucket.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Indications for dialysis</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing ESKD and KRT concepts. These are new questions — not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Dialysis Indications Lab complete!</h3>
+      <p>You know when to initiate dialysis urgently and when chronic ESKD warrants dialysis. On to the boss round!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ========== ROUND 1: SORTER ========== */
+  const indications = [
+    { id: "i1", label: "Metabolic acidosis with pH <7.1 that cannot be reversed medically",  bucket: "acute" },
+    { id: "i2", label: "Refractory hyperkalemia >6.5 mEq/L unresponsive to medications",    bucket: "acute" },
+    { id: "i3", label: "Intoxication from lithium, methanol, or ethylene glycol",           bucket: "acute" },
+    { id: "i4", label: "Fluid overload refractory to diuretics",                            bucket: "acute" },
+    { id: "i5", label: "Uremic pericarditis or unexplained decline in mental status",       bucket: "chronic" },
+    { id: "i6", label: "Hyperkalemia and metabolic acidosis uncontrolled by drug treatment", bucket: "chronic" },
+    { id: "i7", label: "Volume overload resistant to diuretics and dietary restrictions",    bucket: "chronic" },
+    { id: "i8", label: "Unintentional weight loss or poor appetite from uremia",            bucket: "chronic" }
+  ];
+
+  const buckets = [
+    { id: "acute",   label: "Acute (Urgent) Dialysis Indications — AKI setting" },
+    { id: "chronic", label: "Chronic ESKD — Indications to Start Maintenance Dialysis" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, indications.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(indications.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, indications.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === indications.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Consider whether this indication is for emergency AKI or chronic ESKD dialysis initiation.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ========== ROUND 2: NEW QUIZ QUESTIONS ========== */
+  const questions = [
+    {
+      q: "A patient with ESKD awaiting a deceased donor transplant has been on a waiting list for 4 years. She now has a living donor — her sister is willing to donate a kidney. What is the expected effect of using a living donor rather than waiting for a deceased donor?",
+      options: [
+        "Transplant occurs sooner; often before dialysis is needed",
+        "Lower success rate because living donors are unrelated",
+        "Higher rejection risk because donor is not cadaveric",
+        "Requires longer immunosuppression than deceased donor kidneys"
+      ],
+      correct: 0,
+      explain: "The brick states that with a living donor, 'the transplant takes place soon after they are found to be a suitable candidate. Sometimes, patients are able to get a kidney transplant before even starting dialysis.' Living donation shortens wait time dramatically compared to deceased donor lists."
+    },
+    {
+      q: "During hemodialysis, which solutes move from the BLOOD into the DIALYSATE (rather than the other way around)?",
+      options: [
+        "Bicarbonate and sodium move from blood to dialysate",
+        "Urea, creatinine, and potassium move from blood to dialysate",
+        "Glucose moves from blood to dialysate during each session",
+        "Calcium moves from blood to dialysate in all HD sessions"
+      ],
+      correct: 1,
+      explain: "Per the brick, urea, creatinine, and potassium move from blood into the dialysate along their concentration gradients — the dialysate contains none or low concentrations. Bicarbonate moves in the opposite direction (from dialysate into blood) to correct acidosis."
+    },
+    {
+      q: "A hemodialysis patient develops shoulder and carpal tunnel pain after 8 years on dialysis. Imaging shows deposits in periarticular structures. What complication should be suspected?",
+      options: [
+        "Amyloidosis from β₂-microglobulin not cleared by dialysis",
+        "Hyperparathyroidism causing ectopic calcium deposits",
+        "Oxalate crystal deposition from increased gut absorption",
+        "Gout from hyperuricemia in chronic kidney disease"
+      ],
+      correct: 0,
+      explain: "Dialysis amyloidosis results from accumulation of β₂-microglobulin, which is not efficiently cleared by the hemodialyzer. After 5+ years on dialysis, it deposits in joints, causing carpal tunnel syndrome and shoulder pain. The brick specifically lists this as a complication of hemodialysis."
+    },
+    {
+      q: "A peritoneal dialysis patient develops acute abdominal pain, fever, and cloudy peritoneal effluent. What is the most likely complication and first step in diagnosis?",
+      options: [
+        "Catheter herniation — treat with surgical repositioning",
+        "Bacterial peritonitis — send peritoneal fluid for cell count and culture",
+        "Dialysate leak — measure fluid by CT to find exit site",
+        "Pleural effusion — order chest X-ray for fluid collection"
+      ],
+      correct: 1,
+      explain: "Bacterial peritonitis is the most common serious complication of peritoneal dialysis, most often from Staphylococcus aureus or S. epidermidis contamination of the catheter. Cloudy effluent with abdominal pain and fever requires immediate peritoneal fluid analysis (cell count, culture). Treatment is intraperitoneal antibiotics."
+    },
+    {
+      q: "A 55-year-old transplant recipient develops a rising creatinine 3 years after transplant, despite taking his medications. A biopsy shows C4d staining and donor-specific antibodies. What type of rejection is this?",
+      options: [
+        "Hyperacute rejection — occurring within minutes to hours",
+        "Acute cellular rejection — mediated by T-lymphocytes",
+        "Antibody-mediated (humoral) rejection — donor-specific antibodies",
+        "Chronic rejection — also called calcineurin inhibitor toxicity"
+      ],
+      correct: 2,
+      explain: "C4d complement deposition and donor-specific antibodies (DSA) on biopsy indicate antibody-mediated (humoral) rejection — the immune system has developed antibodies against the donor's HLA antigens. This can occur any time after transplant and is managed with plasmapheresis and high-dose immunosuppression."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

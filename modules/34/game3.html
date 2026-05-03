@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cause &amp; Type Match — Module 34</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 34</a></div>
+  <h1>Game 3 — Cause &amp; Type Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Match each cause to its AKI type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Click an item on the left, then click its matching AKI type on the right. Multiple causes share the same type — that is fine. The equality check uses the category text, so any matching type card is a valid target.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 8</span></span>
+      <span>Tries: <span class="score" id="tries">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-pairs-board">
+      <div class="match-col" id="leftCol"></div>
+      <div class="match-col" id="rightCol"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All causes matched!</h3>
+      <p>Three trunk causes: prerenal (perfusion problem), intrarenal (nephron injury — ATN most common, then AIN and glomerulonephritis), and postrenal (obstruction). The trunk classification drives the entire workup.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // matchKey = the AKI type category. Multiple left-side items can share the
+  // same matchKey (category). The match check uses matchKey equality, so any
+  // right card with the same matchKey is a valid target.
+  const pairs = [
+    { a: "Volume depletion from hemorrhage",            b: "Prerenal AKI" },
+    { a: "NSAIDs (afferent arteriole constriction)",   b: "Prerenal AKI" },
+    { a: "Acute tubular necrosis (ischemia or sepsis)", b: "Intrarenal AKI" },
+    { a: "Aminoglycoside nephrotoxicity",               b: "Intrarenal AKI" },
+    { a: "Acute interstitial nephritis (drugs/infections)", b: "Intrarenal AKI" },
+    { a: "Rapidly progressive glomerulonephritis",      b: "Intrarenal AKI" },
+    { a: "Benign prostatic hyperplasia",                b: "Postrenal AKI" },
+    { a: "Bilateral ureteral stones",                   b: "Postrenal AKI" }
+  ];
+
+  const leftCol  = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
+  const scoreEl  = document.getElementById("score");
+  const triesEl  = document.getElementById("tries");
+  const fbEl     = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let tries = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2200);
+  }
+
+  function init() {
+    matched = 0; tries = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    triesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    leftCol.innerHTML = "";
+    rightCol.innerHTML = "";
+
+    const lefts  = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
+    lefts.forEach(it  => makeCard(it, leftCol));
+    rights.forEach(it => makeCard(it, rightCol));
+  }
+
+  function makeCard(it, col) {
+    const c = document.createElement("div");
+    c.className = "match-pair-card";
+    c.dataset.matchKey = it.matchKey;
+    c.dataset.side = it.side;
+    c.textContent = it.text;
+    c.addEventListener("click", () => onPick(c));
+    col.appendChild(c);
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("matched")) return;
+    if (firstPick === card) {
+      card.classList.remove("selected");
+      firstPick = null;
+      return;
+    }
+    if (!firstPick) {
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    if (firstPick.dataset.side === card.dataset.side) {
+      firstPick.classList.remove("selected");
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    tries++;
+    triesEl.textContent = tries;
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
+      firstPick.classList.remove("selected");
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      const a = firstPick, b = card;
+      a.classList.add("miss"); b.classList.add("miss");
+      showFb("✗ Not a match — re-think which AKI type this cause belongs to.", "incorrect");
+      setTimeout(() => {
+        a.classList.remove("miss", "selected");
+        b.classList.remove("miss");
+        firstPick = null;
+        lock = false;
+      }, 700);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

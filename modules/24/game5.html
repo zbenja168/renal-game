@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disorder Lab — Module 24</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 24</a></div>
+  <h1>Game 5 — Disorder Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Round 1: Sort each finding by direction</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each clinical or lab finding into the correct disorder bucket — Hypercalcemia, Hypocalcemia, Hyperphosphatemia, or Hypophosphatemia.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Findings &amp; causes</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2 quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing renal calcium and phosphate regulation (not the brick's own review questions).
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Disorder Lab complete!</h3>
+      <p>You have mastered calcium and phosphate disorders. Take on the boss in Game 6!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: DISORDER SORTER ===================== */
+  const findings = [
+    { id: "f1", label: "Kidney stones, abdominal pain, impaired cognition",   bin: "hypercalcemia" },
+    { id: "f2", label: "Malignancy-associated — PTHrP secretion",             bin: "hypercalcemia" },
+    { id: "f3", label: "Perioral tingling, Chvostek sign, muscle tetany",     bin: "hypocalcemia" },
+    { id: "f4", label: "CKD with reduced calcitriol production",              bin: "hypocalcemia" },
+    { id: "f5", label: "Vascular calcification in chronic kidney disease",    bin: "hyperphosphatemia" },
+    { id: "f6", label: "Treated with phosphate-binding medications (sevelamer)", bin: "hyperphosphatemia" },
+    { id: "f7", label: "Muscle weakness and impaired diaphragm function",     bin: "hypophosphatemia" },
+    { id: "f8", label: "Proximal tubule dysfunction (renal phosphate wasting)", bin: "hypophosphatemia" }
+  ];
+  const bins = [
+    { id: "hypercalcemia",    label: "Hypercalcemia (high serum Ca²⁺)" },
+    { id: "hypocalcemia",     label: "Hypocalcemia (low serum Ca²⁺)" },
+    { id: "hyperphosphatemia", label: "Hyperphosphatemia (high serum PO₄)" },
+    { id: "hypophosphatemia", label: "Hypophosphatemia (low serum PO₄)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, findings.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(findings.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, findings.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === findings.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Check whether this finding is associated with high or low calcium or phosphate.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ============================================================
+     ROUND 2: NEW questions (not the brick's own review questions)
+     ============================================================ */
+  const questions = [
+    {
+      q: "A patient with hypercalcemia is treated with intravenous isotonic saline. The PRIMARY mechanism by which volume expansion lowers serum calcium is:",
+      options: [
+        "Saline directly binds calcium and reduces its serum concentration",
+        "Volume expansion increases glomerular filtration and reduces proximal tubule reabsorption of calcium",
+        "Saline alkalinizes urine and causes calcium to precipitate in the tubules",
+        "Volume expansion suppresses PTH secretion from the parathyroid gland"
+      ],
+      correct: 1,
+      explain: "Volume expansion increases GFR and reduces proximal tubule sodium (and therefore calcium) reabsorption, increasing urinary calcium excretion. Many hypercalcemia patients are volume depleted because of polyuria, so this also restores GFR."
+    },
+    {
+      q: "In CKD-mineral bone disorder, FGF-23 initially rises as a compensatory response. What is the primary action of FGF-23 in the kidney?",
+      options: [
+        "Stimulates 1α-hydroxylase to increase calcitriol production",
+        "Increases phosphate reabsorption in the proximal tubule",
+        "Decreases phosphate reabsorption in the proximal tubule (phosphaturia)",
+        "Stimulates calcium reabsorption in the distal convoluted tubule"
+      ],
+      correct: 2,
+      explain: "FGF-23 is secreted by osteocytes in response to phosphate retention. It acts on the proximal tubule to downregulate the Na-phosphate cotransporter, increasing urinary phosphate excretion (phosphaturia). It also suppresses 1α-hydroxylase, reducing calcitriol production."
+    },
+    {
+      q: "A patient with stage 5 CKD has serum phosphate of 6.8 mg/dL. The physician prescribes sevelamer. What is sevelamer's mechanism for treating hyperphosphatemia?",
+      options: [
+        "Sevelamer inhibits intestinal sodium-phosphate cotransporters directly",
+        "Sevelamer is a non-calcium-containing phosphate binder that traps phosphate in the GI tract",
+        "Sevelamer stimulates FGF-23 to increase renal phosphate excretion",
+        "Sevelamer chelates phosphate in the blood and allows renal filtration"
+      ],
+      correct: 1,
+      explain: "Sevelamer is a non-calcium phosphate binder. It binds dietary phosphate in the GI tract, forming insoluble complexes that are excreted in the stool. This reduces intestinal phosphate absorption without adding calcium load."
+    },
+    {
+      q: "Bisphosphonates (e.g., alendronate, pamidronate) are used to treat hypercalcemia of malignancy. Their mechanism is:",
+      options: [
+        "Inhibiting PTH release from the parathyroid glands",
+        "Enhancing renal calcium excretion by blocking DCT calcium channels",
+        "Inhibiting osteoclast-mediated bone resorption to reduce calcium release from bone",
+        "Chelating ionized calcium in plasma to lower free calcium immediately"
+      ],
+      correct: 2,
+      explain: "Bisphosphonates inhibit osteoclast activity, reducing bone resorption and the release of calcium into the bloodstream. In malignancy-associated hypercalcemia, tumor-driven bone resorption is a major source of elevated calcium."
+    },
+    {
+      q: "In the thick ascending limb, the calcium-sensing receptor (CaSR) responds to high serum calcium by reducing paracellular calcium reabsorption. Which intermediate step explains HOW CaSR activation reduces calcium transport?",
+      options: [
+        "CaSR directly blocks the TRPV5 channel to prevent calcium entry",
+        "CaSR signals cells to reduce sodium reabsorption, lowering the positive lumen potential needed for paracellular Ca²⁺ flow",
+        "CaSR increases PTH secretion locally, which inhibits calcium transport",
+        "CaSR activates Na+/K+-ATPase to create a more negative lumen potential, blocking calcium"
+      ],
+      correct: 1,
+      explain: "CaSR activation in TAL cells signals reduced Na+ (and K+/Cl−) reabsorption by the NKCC2 cotransporter. This collapses the normally positive luminal potential in the TAL, which is the driving force for paracellular calcium (and magnesium) reabsorption."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

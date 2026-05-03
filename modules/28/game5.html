@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenario Lab — Module 28</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 28</a></div>
+  <h1>Game 5 — Clinical Scenario Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Round 1: Sort each RTA finding to the correct type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each lab or clinical finding to the RTA type it characterises. Use the brick's Table 2 as your guide.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Findings</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh scenarios testing metabolic acidosis concepts — different from the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Clinical Scenario Lab complete!</h3>
+      <p>You can now classify metabolic acidosis, identify RTA types, and plan management. Take on the boss!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1: RTA SORTER ===== */
+  const findings = [
+    { id: "f1", label: "Urine pH > 5.3 despite systemic acidosis",    bin: "type1" },
+    { id: "f2", label: "Serum K⁺ > 5 mEq/L (hyperkalemia)",           bin: "type4" },
+    { id: "f3", label: "Serum K⁺ < 3.5 with urine pH < 5.3",          bin: "type2" },
+    { id: "f4", label: "Fanconi syndrome (glycosuria, phosphaturia)",  bin: "type2" },
+    { id: "f5", label: "Low aldosterone or hypo-aldosteronism",        bin: "type4" },
+    { id: "f6", label: "Kidney stones and hypercalciuria",             bin: "type1" },
+  ];
+  const bins = [
+    { id: "type1", label: "Type 1 (Distal) RTA" },
+    { id: "type2", label: "Type 2 (Proximal) RTA" },
+    { id: "type4", label: "Type 4 (Hyperkalemic) RTA" },
+  ];
+
+  const pool     = document.getElementById("pool");
+  const bucketsEl= document.getElementById("buckets");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, findings.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(findings.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, findings.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === findings.length) showFb("Round 1 done — scroll for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Wrong RTA type for that finding.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: NEW QUIZ ===== */
+  const questions = [
+    {
+      q: "A 23-year-old with anorexia nervosa presents with muscle weakness. Labs: Na⁺ 140, K⁺ 2.6, HCO₃⁻ 14, Cl⁻ 114, urine pH 4.9. Which RTA type does this most likely represent?",
+      options: [
+        "Type 1 (distal) RTA — urine cannot acidify below 5.3",
+        "Type 2 (proximal) RTA — urine acidifies normally once threshold passed",
+        "Type 4 (hyperkalemic) RTA — hyperkalemia inhibits ammoniagenesis",
+        "Mixed type 1 + type 4 RTA"
+      ],
+      correct: 1,
+      explain: "The patient can acidify urine to pH 4.9 (below 5.3), which rules out distal RTA type 1. Low K+ with NAGMA and urine pH <5.3 fits proximal (type 2) RTA, where the distal nephron is intact and can still secrete H+ but the PT cannot reabsorb bicarbonate normally."
+    },
+    {
+      q: "A patient on spironolactone for heart failure develops NAGMA. Which mechanism best explains how an aldosterone antagonist causes type 4 RTA?",
+      options: [
+        "Spironolactone blocks NHE3 in the proximal tubule, impairing HCO₃⁻ reabsorption",
+        "Spironolactone inhibits aldosterone receptors, reducing ammoniagenesis and H⁺ secretion distally",
+        "Spironolactone causes volume overload, diluting serum bicarbonate",
+        "Spironolactone directly blocks carbonic anhydrase in the collecting duct"
+      ],
+      correct: 1,
+      explain: "Spironolactone blocks aldosterone receptors. Aldosterone normally stimulates ammoniagenesis and H+ secretion in the distal nephron. Without aldosterone signaling, ammonium excretion falls and H+ accumulates — causing type 4 (hyperkalemic) RTA with NAGMA."
+    },
+    {
+      q: "In severe DKA, the expected respiratory compensation produces a PaCO₂ of 21 mmHg (using Winter's formula: PaCO₂ ≈ 1.5 × HCO₃⁻ + 8 ± 2). The actual PaCO₂ is 36 mmHg. How do you interpret this?",
+      options: [
+        "Adequate compensation — the formula allows for a wide range",
+        "Concurrent respiratory alkalosis is superimposed on the metabolic acidosis",
+        "The patient has an additional concurrent respiratory acidosis",
+        "Winter's formula does not apply to DKA patients"
+      ],
+      correct: 2,
+      explain: "If HCO₃⁻ = 10, expected PaCO₂ = 1.5 × 10 + 8 = 23 mmHg. An actual PaCO₂ of 36 mmHg is higher than expected, meaning the lungs are not blowing off enough CO₂ — indicating a concurrent respiratory acidosis superimposed on the metabolic acidosis."
+    },
+    {
+      q: "A patient with multiple myeloma develops glycosuria with a normal serum glucose, phosphaturia, and aminoaciduria, alongside NAGMA. What syndrome explains this full constellation?",
+      options: [
+        "Distal RTA (type 1) from myeloma protein deposition in tubules",
+        "Fanconi syndrome from proximal tubule dysfunction (type 2 RTA)",
+        "Type 4 RTA from myeloma-related aldosterone suppression",
+        "AGMA from myeloma-produced organic acids"
+      ],
+      correct: 1,
+      explain: "Fanconi syndrome is complete proximal tubule dysfunction — glucose, phosphate, amino acids, and bicarbonate all escape into the urine because the PT cannot reabsorb them. Multiple myeloma damages PT cells with filtered immunoglobulins, causing a proximal (type 2) RTA with the full Fanconi picture."
+    },
+    {
+      q: "For alcohol poisoning with methanol, fomepizole is the preferred antidote. What is its precise mechanism in metabolic acidosis prevention?",
+      options: [
+        "Fomepizole chelates formic acid before it can acidify the blood",
+        "Fomepizole inhibits alcohol dehydrogenase, blocking methanol conversion to formic acid",
+        "Fomepizole alkalinizes the urine, enhancing formate excretion",
+        "Fomepizole competitively increases bicarbonate reabsorption"
+      ],
+      correct: 1,
+      explain: "Methanol itself causes only mild toxicity, but alcohol dehydrogenase converts it to formaldehyde and then formic acid — the toxic metabolite causing AGMA, blindness, and death. Fomepizole inhibits alcohol dehydrogenase, preventing this conversion and stopping acid accumulation."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

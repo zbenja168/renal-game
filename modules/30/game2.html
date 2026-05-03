@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cause Classifier — Module 30</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .cause-zone { cursor: pointer; }
+  .cause-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .cause-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .cause-zone text { pointer-events: none; user-select: none; }
+  .cause-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .cause-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 30</a></div>
+  <h1>Game 2 — Cause Classifier</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Click the correct mechanism for each cause</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each patient vignette, click whether the cause of respiratory acidosis works by reducing ventilation or by impairing gas exchange. Four cases — four clicks. Misses are counted.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Reduced Ventilation -->
+        <g class="cause-zone" data-name="Reduced Ventilation">
+          <rect class="zone-bg" x="20" y="30" width="200" height="160" rx="12"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="120" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Reduced Ventilation</text>
+          <text x="120" y="60" text-anchor="middle" font-size="11" fill="#1d4ed8">↓ Respiratory rate or</text>
+          <text x="120" y="77" text-anchor="middle" font-size="11" fill="#1d4ed8">↓ Tidal volume</text>
+          <text x="120" y="104" text-anchor="middle" font-size="10" fill="#444">Causes: CNS depression,</text>
+          <text x="120" y="120" text-anchor="middle" font-size="10" fill="#444">respiratory muscle weakness,</text>
+          <text x="120" y="136" text-anchor="middle" font-size="10" fill="#444">upper airway obstruction</text>
+          <text x="120" y="162" text-anchor="middle" font-size="10" fill="#888">CO₂ not exhaled</text>
+        </g>
+
+        <!-- Impaired Gas Exchange -->
+        <g class="cause-zone" data-name="Impaired Gas Exchange">
+          <rect class="zone-bg" x="260" y="30" width="200" height="160" rx="12"
+                fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+          <text x="360" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">Impaired Gas Exchange</text>
+          <text x="360" y="60" text-anchor="middle" font-size="11" fill="#15803d">CO₂ cannot cross</text>
+          <text x="360" y="77" text-anchor="middle" font-size="11" fill="#15803d">the alveolar membrane</text>
+          <text x="360" y="104" text-anchor="middle" font-size="10" fill="#444">Causes: pneumonia,</text>
+          <text x="360" y="120" text-anchor="middle" font-size="10" fill="#444">pulmonary edema, COPD,</text>
+          <text x="360" y="136" text-anchor="middle" font-size="10" fill="#444">pulmonary fibrosis</text>
+          <text x="360" y="162" text-anchor="middle" font-size="10" fill="#888">CO₂ trapped in blood</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four cases classified!</h3>
+      <p>Respiratory acidosis has two root mechanisms: inadequate ventilation (brain, muscle, airway problems) and inadequate gas exchange (lung parenchyma problems). Both raise PaCO₂.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 45-year-old man with a known opioid use disorder is found unresponsive. Respiratory rate is 4 breaths/min. ABG: pH 7.20, PaCO₂ 68 mmHg. What is the primary mechanism of his respiratory acidosis?",
+      answer: "Reduced Ventilation",
+      explain: "Opioids suppress the CNS respiratory drive (brainstem), drastically reducing respiratory rate and tidal volume. This is a classic reduced ventilation mechanism."
+    },
+    {
+      text: "A 70-year-old woman with known COPD presents with worsening shortness of breath over 3 days. ABG: pH 7.31, PaCO₂ 56 mmHg, HCO₃⁻ 28 mEq/L. CXR shows hyperinflation. What mechanism drives her respiratory acidosis?",
+      answer: "Impaired Gas Exchange",
+      explain: "COPD causes CO₂ trapping — air is inhaled but cannot be fully exhaled because of airflow obstruction. CO₂ cannot escape through the damaged alveolar-capillary interface efficiently."
+    },
+    {
+      text: "A 32-year-old woman with myasthenia gravis is admitted for an exacerbation. She has increasingly shallow breathing. ABG: pH 7.28, PaCO₂ 60 mmHg. What is the primary mechanism?",
+      answer: "Reduced Ventilation",
+      explain: "Myasthenia gravis causes respiratory muscle weakness, reducing tidal volume (the amount of air moved per breath). Less ventilation means less CO₂ exhaled, raising PaCO₂."
+    },
+    {
+      text: "A 58-year-old male with pneumococcal pneumonia develops respiratory distress. CXR shows consolidation of two lobes. ABG: pH 7.29, PaCO₂ 52 mmHg. What is the primary mechanism?",
+      answer: "Impaired Gas Exchange",
+      explain: "Pneumonia fills alveoli with fluid and inflammatory cells, converting them to dead space. CO₂ cannot diffuse across the consolidated alveolar membrane into exhaled air, trapping it in the blood."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".cause-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2500);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — think about whether the problem is moving air or exchanging it.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

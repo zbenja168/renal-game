@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Values Lab — Module 26</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 26</a></div>
+  <h1>Game 5 — Lab Values Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Round 1: Sort each syndrome by blood pressure</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each syndrome into the correct blood pressure category bucket. This is a key differentiator among the three disorders.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 3</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Syndromes</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the brick's content — different from the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Lab Values Lab complete!</h3>
+      <p>You can now differentiate Bartter, Gitelman, and Liddle by their transporter, blood pressure, and electrolyte profile. Take on the boss round!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1: BLOOD PRESSURE SORTER ===== */
+  const syndromes = [
+    { id: "bartter",  label: "Bartter syndrome",  bin: "low_normal" },
+    { id: "gitelman", label: "Gitelman syndrome", bin: "low_normal" },
+    { id: "liddle",   label: "Liddle syndrome",   bin: "high" },
+  ];
+  const bins = [
+    { id: "low_normal", label: "Low or normal blood pressure" },
+    { id: "high",       label: "Elevated blood pressure (hypertension)" },
+  ];
+
+  const pool     = document.getElementById("pool");
+  const bucketsEl= document.getElementById("buckets");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, syndromes.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(syndromes.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, syndromes.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === syndromes.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think about which syndrome causes hypertension.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: NEW QUIZ QUESTIONS ===== */
+  const questions = [
+    {
+      q: "A 15-year-old girl has a serum K⁺ of 2.8 mEq/L found incidentally. Her blood pressure is normal, serum Mg²⁺ is low, and urine shows high chloride excretion. Her older sister has the same condition. What is the most likely defective transporter?",
+      options: [
+        "Na⁺/K⁺/2Cl⁻ cotransporter in the loop",
+        "Na⁺/Cl⁻ cotransporter in the distal tubule",
+        "Epithelial sodium channel in the collecting duct",
+        "Na⁺/H⁺ exchanger in the proximal tubule"
+      ],
+      correct: 1,
+      explain: "Normal BP, hypomagnesemia, and autosomal recessive pattern point to Gitelman syndrome, which disrupts the NCC (Na+/Cl- cotransporter) in the distal convoluted tubule — the thiazide-sensitive transporter."
+    },
+    {
+      q: "An infant is born with polyhydramnios. After delivery, he develops severe dehydration, failure to thrive, and profound hypokalemia. Genetic testing confirms an autosomal recessive mutation. Which tubular segment is most affected in this disorder?",
+      options: [
+        "Proximal tubule (NHE3 defect)",
+        "Thick ascending limb (NKCC2 defect)",
+        "Distal convoluted tubule (NCC defect)",
+        "Collecting duct (ENaC gain-of-function)"
+      ],
+      correct: 1,
+      explain: "Severe neonatal presentation with polyhydramnios, autosomal recessive inheritance, and profound salt wasting points to Bartter syndrome — a defect in the NKCC2 (Na+/K+/2Cl-) transporter in the thick ascending limb."
+    },
+    {
+      q: "A 20-year-old male presents with a blood pressure of 165/95 mmHg. He is on no medications. Labs show hypokalemia, metabolic alkalosis, and low serum aldosterone. Genetic testing reveals a gain-of-function mutation in the ENaC beta subunit. Why does excess sodium reabsorption here NOT increase aldosterone?",
+      options: [
+        "ENaC is regulated by cortisol, not aldosterone",
+        "ENaC is constitutively active regardless of aldosterone; sodium reabsorption expands volume, suppressing the RAAS",
+        "Potassium wasting inhibits aldosterone release directly",
+        "Metabolic alkalosis suppresses aldosterone synthesis"
+      ],
+      correct: 1,
+      explain: "In Liddle syndrome, ENaC is constitutively overactive due to a gain-of-function mutation. The resulting sodium retention expands intravascular volume, which suppresses renin and aldosterone via normal RAAS feedback — causing 'pseudohyperaldosteronism' (aldosterone-like effects without high aldosterone)."
+    },
+    {
+      q: "A patient with Gitelman syndrome complains of muscle cramps and weakness. You check electrolytes. Besides hypokalemia, which additional electrolyte abnormality is characteristically low in Gitelman but typically normal in Bartter syndrome?",
+      options: [
+        "Serum sodium",
+        "Serum calcium",
+        "Serum magnesium",
+        "Serum bicarbonate"
+      ],
+      correct: 2,
+      explain: "Gitelman syndrome characteristically causes hypomagnesemia because magnesium reabsorption in the DCT is linked to sodium reabsorption via the NCC. When NCC is defective, magnesium is also lost in the urine. Bartter syndrome does not typically cause hypomagnesemia."
+    },
+    {
+      q: "A child with Bartter syndrome develops recurrent kidney stones on follow-up imaging. Which metabolic consequence of the NKCC2 defect most directly explains this complication?",
+      options: [
+        "Hyperkalemia increasing urinary calcium precipitation",
+        "Metabolic acidosis causing calcium phosphate stone formation",
+        "Hypercalciuria resulting from impaired calcium reabsorption in the loop",
+        "Hypomagnesemia promoting calcium oxalate crystallization"
+      ],
+      correct: 2,
+      explain: "In Bartter syndrome, the NKCC2 defect reduces the positive lumen potential in the thick ascending limb that normally drives passive calcium reabsorption. This leads to hypercalciuria, which can cause kidney stone formation and nephrocalcinosis."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  const winEl         = document.getElementById("winBanner");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

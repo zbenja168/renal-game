@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cause Hotspot — Module 25</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .mg-zone { cursor: pointer; }
+  .mg-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .mg-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .mg-zone text { pointer-events: none; user-select: none; }
+  .mg-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .mg-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 25</a></div>
+  <h1>Game 2 — Cause Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔭</div>
+      <h2>Click the mechanism zone matching each cause of hypomagnesemia</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each cause of hypomagnesemia, click the zone that best describes its mechanism. Four cases — four clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 540 270" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Renal wasting TAL -->
+        <g class="mg-zone" data-name="Renal wasting (TAL)">
+          <rect class="zone-bg" x="10" y="40" width="155" height="200" rx="10"
+                fill="#d4edff" stroke="#4a90d9" stroke-width="2"/>
+          <text x="88" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1a5fa8">Renal Wasting</text>
+          <text x="88" y="44" text-anchor="middle" font-size="10" fill="#1a5fa8">(TAL)</text>
+          <text x="88" y="70" text-anchor="middle" font-size="10" fill="#1a5fa8">Loop diuretics block</text>
+          <text x="88" y="86" text-anchor="middle" font-size="10" fill="#1a5fa8">NKCC2 → collapse</text>
+          <text x="88" y="102" text-anchor="middle" font-size="10" fill="#1a5fa8">positive lumen potential</text>
+          <text x="88" y="130" text-anchor="middle" font-size="10" fill="#444">Furosemide,</text>
+          <text x="88" y="146" text-anchor="middle" font-size="10" fill="#444">bumetanide</text>
+          <text x="88" y="175" text-anchor="middle" font-size="9" fill="#888">Urine Mg²⁺ &gt;50mg/day</text>
+        </g>
+
+        <!-- Renal wasting DCT -->
+        <g class="mg-zone" data-name="Renal wasting (DCT)">
+          <rect class="zone-bg" x="175" y="40" width="155" height="200" rx="10"
+                fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+          <text x="253" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#856404">Renal Wasting</text>
+          <text x="253" y="44" text-anchor="middle" font-size="10" fill="#856404">(DCT)</text>
+          <text x="253" y="70" text-anchor="middle" font-size="10" fill="#856404">TRPM6 channel</text>
+          <text x="253" y="86" text-anchor="middle" font-size="10" fill="#856404">dysfunction or</text>
+          <text x="253" y="102" text-anchor="middle" font-size="10" fill="#856404">impaired DCT reuptake</text>
+          <text x="253" y="130" text-anchor="middle" font-size="10" fill="#444">Cisplatin, cetuximab,</text>
+          <text x="253" y="146" text-anchor="middle" font-size="10" fill="#444">Gitelman disease</text>
+          <text x="253" y="175" text-anchor="middle" font-size="9" fill="#888">Tubular toxicity/defect</text>
+        </g>
+
+        <!-- GI loss -->
+        <g class="mg-zone" data-name="GI loss">
+          <rect class="zone-bg" x="340" y="40" width="155" height="200" rx="10"
+                fill="#f8d7da" stroke="#dc3545" stroke-width="2"/>
+          <text x="418" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#842029">GI Loss</text>
+          <text x="418" y="55" text-anchor="middle" font-size="10" fill="#842029">Reduced GI absorption</text>
+          <text x="418" y="71" text-anchor="middle" font-size="10" fill="#842029">or increased GI losses</text>
+          <text x="418" y="100" text-anchor="middle" font-size="10" fill="#444">Diarrhea, PPI use,</text>
+          <text x="418" y="116" text-anchor="middle" font-size="10" fill="#444">malabsorption,</text>
+          <text x="418" y="132" text-anchor="middle" font-size="10" fill="#444">pancreatitis</text>
+          <text x="418" y="162" text-anchor="middle" font-size="9" fill="#888">Urine Mg²⁺ &lt;25mg/day</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All causes classified!</h3>
+      <p>Hypomagnesemia is classified by urine Mg²⁺: &gt;50 mg/day suggests renal wasting (TAL or DCT), &lt;25 mg/day suggests GI loss. Loop diuretics waste Mg²⁺ via the TAL; cisplatin, cetuximab, and Gitelman disease impair DCT reuptake.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A patient on furosemide for heart failure develops hypomagnesemia. Furosemide blocks NKCC2, collapsing the positive luminal potential in the nephron. Which mechanism zone does this cause belong to?",
+      answer: "Renal wasting (TAL)",
+      explain: "Loop diuretics block NKCC2 in the thick ascending limb, eliminating the positive lumen potential that drives paracellular Mg²⁺ reabsorption. Without this driving force, Mg²⁺ is lost in the urine."
+    },
+    {
+      text: "A patient receiving cisplatin for cancer develops low magnesium levels. Cisplatin directly damages renal tubular cells in the segment responsible for active, transcellular Mg²⁺ fine-tuning. Which mechanism zone?",
+      answer: "Renal wasting (DCT)",
+      explain: "Cisplatin is directly nephrotoxic to the distal convoluted tubule, impairing TRPM6 channel function and reducing active transcellular Mg²⁺ reabsorption. Cetuximab (anti-EGFR) similarly reduces TRPM6 activity in the DCT."
+    },
+    {
+      text: "A patient with chronic diarrhea from Crohn's disease has low serum magnesium. Stool Mg²⁺ losses are high. Urine Mg²⁺ is low (18 mg/day). Which mechanism best explains this?",
+      answer: "GI loss",
+      explain: "Diarrhea accelerates intestinal transit, preventing paracellular magnesium absorption and causing direct fecal losses. A low urinary Mg²⁺ (<25 mg/day) confirms the kidneys are appropriately conserving magnesium — the loss is GI."
+    },
+    {
+      text: "A patient on long-term omeprazole (PPI) for GERD is found to have Mg²⁺ of 1.4 mEq/L. PPIs inhibit TRPM6/7 channels in the intestine, reducing transcellular Mg²⁺ absorption. Which mechanism zone?",
+      answer: "GI loss",
+      explain: "Proton pump inhibitors inhibit gut TRPM6/7 channels, reducing transcellular intestinal Mg²⁺ absorption. This results in GI hypomagnesemia with low urinary Mg²⁺."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".mg-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3500);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 4);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 3200);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — think about where in the body the magnesium is being lost.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

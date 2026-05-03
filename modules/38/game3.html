@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modality Match — Module 38</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 38</a></div>
+  <h1>Game 3 — Modality Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩻</div>
+      <h2>Match each indication to the best imaging modality</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Click an indication on the left, then click the matching modality on the right. Multiple indications share the same modality — that is expected. Match by the best clinical fit.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 8</span></span>
+      <span>Tries: <span class="score" id="tries">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-pairs-board">
+      <div class="match-col" id="leftCol"></div>
+      <div class="match-col" id="rightCol"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All indications matched!</h3>
+      <p>Ultrasound for obstruction, ADPKD, and pregnancy. CT for stones, masses, trauma, and abscesses. Nuclear scan for differential function. MRI for soft-tissue masses when CT is inconclusive or contraindicated.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Suspected kidney stone in a non-pregnant adult",           b: "CT scan" },
+    { a: "Distinguishing solid tumor from cyst in a renal mass",     b: "CT scan" },
+    { a: "Evaluating renal trauma in the ER",                        b: "CT scan" },
+    { a: "Detecting hydronephrosis due to ureteral obstruction",     b: "Renal ultrasound" },
+    { a: "Screening for autosomal dominant polycystic kidney disease", b: "Renal ultrasound" },
+    { a: "Imaging a pregnant patient with flank pain",               b: "Renal ultrasound" },
+    { a: "Measuring comparative function of each kidney before nephrectomy", b: "Nuclear medicine scan" },
+    { a: "Characterizing an indeterminate renal mass when CT is non-diagnostic", b: "MRI" }
+  ];
+
+  const leftCol  = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
+  const scoreEl  = document.getElementById("score");
+  const triesEl  = document.getElementById("tries");
+  const fbEl     = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let tries = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    matched = 0; tries = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    triesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    leftCol.innerHTML = "";
+    rightCol.innerHTML = "";
+
+    const lefts  = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
+    lefts.forEach(it  => makeCard(it, leftCol));
+    rights.forEach(it => makeCard(it, rightCol));
+  }
+
+  function makeCard(it, col) {
+    const c = document.createElement("div");
+    c.className = "match-pair-card";
+    c.dataset.matchKey = it.matchKey;
+    c.dataset.side = it.side;
+    c.textContent = it.text;
+    c.addEventListener("click", () => onPick(c));
+    col.appendChild(c);
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("matched")) return;
+    if (firstPick === card) { card.classList.remove("selected"); firstPick = null; return; }
+    if (!firstPick) { firstPick = card; card.classList.add("selected"); return; }
+    if (firstPick.dataset.side === card.dataset.side) {
+      firstPick.classList.remove("selected");
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    tries++;
+    triesEl.textContent = tries;
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
+      firstPick.classList.remove("selected");
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      const a = firstPick, b = card;
+      a.classList.add("miss"); b.classList.add("miss");
+      showFb("✗ Not a match — try a different pairing.", "incorrect");
+      setTimeout(() => {
+        a.classList.remove("miss", "selected");
+        b.classList.remove("miss");
+        firstPick = null;
+        lock = false;
+      }, 700);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treatment Lab — Module 30</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 30</a></div>
+  <h1>Game 5 — Treatment Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Round 1: Sort each intervention into the correct scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each management option into the correct clinical scenario bucket. Some buckets accept more than one option.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Interventions</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Fresh quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh scenarios drawn from the brick's content. Each tests a different key fact about respiratory acidosis diagnosis or management.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Treatment Lab complete!</h3>
+      <p>Now tackle the boss — Game 6 covers the entire respiratory acidosis brick.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1: SORTER ===== */
+  const interventions = [
+    { id: "n1", label: "Naloxone",                           bin: "opioid" },
+    { id: "n2", label: "Endotracheal intubation",            bin: "severe" },
+    { id: "n3", label: "Bilevel positive airway pressure (BiPAP)", bin: "copd" },
+    { id: "n4", label: "Bronchodilators",                    bin: "copd" },
+    { id: "n5", label: "Treat underlying lung infection",    bin: "pneumonia" },
+    { id: "n6", label: "Supplemental oxygen",                bin: "severe" }
+  ];
+
+  const bins = [
+    { id: "opioid",    label: "Opioid-induced respiratory depression" },
+    { id: "copd",      label: "COPD exacerbation with ongoing acidosis" },
+    { id: "pneumonia", label: "Pneumonia-driven respiratory acidosis" },
+    { id: "severe",    label: "Markedly decreased O₂ or impending respiratory failure" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, interventions.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(interventions.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, interventions.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === interventions.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That intervention belongs in a different scenario.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: QUIZ (fresh questions — NOT verbatim from brick review) ===== */
+  const questions = [
+    {
+      q: "A patient with chronic respiratory acidosis has a PaCO₂ of 60 mmHg (up from a baseline of 40 mmHg). If fully compensated, what would you expect the serum bicarbonate to be approximately?",
+      options: ["22 mEq/L (unchanged from normal)", "24–26 mEq/L (minimal rise)", "28–30 mEq/L (moderate rise matching chronic compensation)", "35–40 mEq/L (overcorrected)"],
+      correct: 2,
+      explain: "Chronic renal compensation raises HCO₃⁻ by 3–4 mEq/L per 10 mmHg increase in PaCO₂. A 20 mmHg rise → approximately 6–8 mEq/L increase from the normal 24, giving roughly 30–32 mEq/L."
+    },
+    {
+      q: "A patient develops worsening respiratory acidosis despite maximum bronchodilator therapy for a COPD flare. Which next step most directly addresses the retained CO₂?",
+      options: ["Add IV sodium bicarbonate to raise blood pH", "Initiate bilevel positive airway pressure (BiPAP) to increase tidal volume", "Order a chest CT scan to evaluate for pulmonary embolism", "Start loop diuretics to reduce pulmonary edema"],
+      correct: 1,
+      explain: "BiPAP (bilevel positive airway pressure) provides inspiratory support that increases tidal volume and assists CO₂ exhalation. Sodium bicarbonate raises pH transiently but worsens CO₂ retention. The underlying problem is inadequate ventilation."
+    },
+    {
+      q: "In the CSF, elevated CO₂ causes cerebral vasodilation, which increases intracranial pressure. Which symptom of respiratory acidosis is most directly explained by this mechanism?",
+      options: ["Pursed-lip breathing pattern", "Pinpoint pupils on physical exam", "Altered mental status and confusion", "Decreased respiratory rate"],
+      correct: 2,
+      explain: "High CO₂ in the CSF causes cerebral vasodilation and increased intracranial blood flow, altering neuronal function. This explains altered mental status, confusion, and eventually coma in severe respiratory acidosis."
+    },
+    {
+      q: "A patient with chronic COPD-related respiratory acidosis is more clinically stable than a patient with an acute opioid overdose who has the same PaCO₂. What is the most likely reason?",
+      options: ["COPD patients have stronger chest muscles", "Renal bicarbonate retention over time partially buffers the pH in chronic disease", "Naloxone is already active in COPD patients", "Chronic COPD patients breathe faster, so CO₂ is lower"],
+      correct: 1,
+      explain: "In chronic respiratory acidosis, the kidneys have had days to retain bicarbonate, raising HCO₃⁻ and partially normalizing pH. Acute overdose has no time for this renal compensation, so pH plummets more severely."
+    },
+    {
+      q: "A clinician orders an arterial blood gas for a patient with suspected respiratory acidosis. Which single result is most definitively required to confirm the diagnosis?",
+      options: ["Low serum bicarbonate on metabolic panel", "Elevated PaCO₂ on arterial blood gas with low pH", "Decreased pulse oximetry (SpO₂) below 94%", "Elevated serum lactate indicating anaerobic metabolism"],
+      correct: 1,
+      explain: "Respiratory acidosis is defined by elevated PaCO₂ (hypercapnia) with a corresponding low pH. Pulse oximetry measures oxygenation, not CO₂. Lactate indicates metabolic, not respiratory, acidosis. Bicarbonate may be elevated in chronic forms."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

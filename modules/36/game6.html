@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 36</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 36</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label across all four learning objectives for End-Stage Kidney Disease and Kidney Replacement Therapy.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of 16 labels. Drop each onto the correct slot covering ESKD, kidney transplantation, hemodialysis, peritoneal dialysis, and post-transplant management. Wrong drops add a miss. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered ESKD and Kidney Replacement Therapy!</h3>
+      <p>You placed every label correctly. You now command ESKD definitions, the three KRT modalities, transplant technique and immunosuppression, HD and PD mechanisms, venous access options, and dialysis complications.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "eskd", title: "ESKD & Transplant", lo: "LO1–2",
+      slots: [
+        { id: "e1", label: "Preferred KRT — lower mortality and higher quality of life than any dialysis modality", answer: "Kidney transplantation" },
+        { id: "e2", label: "Transplanted kidney is placed here, not the native renal fossa",                        answer: "Pelvis (iliac fossa)" },
+        { id: "e3", label: "Transplanted kidney's blood supply is anastomosed to this artery",                     answer: "Common iliac artery" },
+        { id: "e4", label: "Drug class that forms the backbone of post-transplant immunosuppression — tacrolimus type", answer: "Calcineurin inhibitor" }
+      ]
+    },
+    {
+      id: "hd", title: "Hemodialysis", lo: "LO3",
+      slots: [
+        { id: "h1", label: "Mechanism by which HD removes solutes — solutes move along concentration gradients across a membrane", answer: "Diffusion" },
+        { id: "h2", label: "Preferred permanent venous access for HD — surgically created artery-vein connection in the arm",        answer: "AV fistula" },
+        { id: "h3", label: "Anticoagulant infused during HD to prevent clotting in the circuit",                                   answer: "Heparin" },
+        { id: "h4", label: "Complication: β₂-microglobulin deposits in joints after years on dialysis",                           answer: "Dialysis amyloidosis" }
+      ]
+    },
+    {
+      id: "pd", title: "Peritoneal Dialysis", lo: "LO3",
+      slots: [
+        { id: "p1", label: "Biological membrane used as the natural dialysis filter in peritoneal dialysis",         answer: "Peritoneum" },
+        { id: "p2", label: "Fluid instilled into the abdominal cavity during each peritoneal dialysis exchange",     answer: "Peritoneal dialysate" },
+        { id: "p3", label: "Most common pathogen causing PD-related peritonitis",                                    answer: "Staphylococcus aureus" },
+        { id: "p4", label: "Device that automates overnight peritoneal dialysis exchanges while patient sleeps",      answer: "PD cycler" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Transplant Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "Lab test checked daily after transplant to detect early rejection",                      answer: "Serum creatinine" },
+        { id: "m2", label: "Test that definitively diagnoses rejection type — required when creatinine rises",        answer: "Kidney biopsy" },
+        { id: "m3", label: "Malignancy risk in transplant recipients compared to general population",                answer: "Three times higher" },
+        { id: "m4", label: "Antiproliferative immunosuppressant used with calcineurin inhibitors and prednisone",    answer: "Mycophenolate" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  const ICONS = { eskd: "🫘", hd: "💉", pd: "🌊", mgmt: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

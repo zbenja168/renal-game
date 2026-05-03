@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proteinuria Test Sorter — Module 37</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 37</a></div>
+  <h1>Game 4 — Proteinuria Test Sorter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Drag each statement into the correct proteinuria test bucket</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four proteinuria tests are used in the kidney workup. Each statement below describes a property or best use of one test. Drag it to the right bucket. Some buckets accept multiple statements.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 10</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Statements about proteinuria tests</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Proteinuria sorted!</h3>
+      <p>UA catches overt proteinuria but misses Bence Jones protein. ACR is the go-to for early diabetic kidney disease screening. UPCR detects all proteins. The 24-hour collection is the gold standard but cumbersome.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "i1",  label: "Detects albumin via reagent strip — can miss small quantities",         bucket: "ua" },
+    { id: "i2",  label: "Uses a single voided sample; corrects for urine concentration",           bucket: "upcr" },
+    { id: "i3",  label: "Detects Bence Jones (light-chain) protein from myeloma",                 bucket: "upcr" },
+    { id: "i4",  label: "Most sensitive for early diabetic albuminuria",                           bucket: "acr" },
+    { id: "i5",  label: "Single void sample; specifically measures albumin:creatinine",            bucket: "acr" },
+    { id: "i6",  label: "Gold standard total protein quantification over 24 hours",                bucket: "24h" },
+    { id: "i7",  label: "Cumbersome to perform; patients must collect all urine in a day",         bucket: "24h" },
+    { id: "i8",  label: "Patients with multiple myeloma may have elevated UPCR but normal ACR",   bucket: "upcr" },
+    { id: "i9",  label: "Performed from turbidimetry on a single voided sample",                   bucket: "acr" },
+    { id: "i10", label: "Part of the basic urine dipstick panel; reported as negative/trace/1+/2+", bucket: "ua" }
+  ];
+
+  const buckets = [
+    { id: "ua",   label: "Urinalysis (UA) dipstick" },
+    { id: "upcr", label: "Urine Protein-to-Creatinine Ratio (UPCR)" },
+    { id: "acr",  label: "Urine Albumin-to-Creatinine Ratio (ACR)" },
+    { id: "24h",  label: "24-hour Urine Protein Collection" }
+  ];
+
+  const pool       = document.getElementById("pool");
+  const bucketsEl  = document.getElementById("buckets");
+  const scoreEl    = document.getElementById("score");
+  const fbEl       = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Wrong test bucket — think about what that statement describes.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

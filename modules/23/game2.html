@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECG Progression Hotspot — Module 23</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .hk-zone { cursor: pointer; }
+  .hk-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .hk-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .hk-zone text { pointer-events: none; user-select: none; }
+  .hk-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .hk-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 23</a></div>
+  <h1>Game 2 — ECG Progression Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">📉</div>
+      <h2>Click the ECG finding that matches each clue</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Hyperkalemia causes a progressive sequence of ECG changes. For each clue, click the matching ECG zone. Four cases — four clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 540 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Peaked T waves -->
+        <g class="hk-zone" data-name="Peaked T waves">
+          <rect class="zone-bg" x="10" y="40" width="120" height="200" rx="10"
+                fill="#d4edff" stroke="#4a90d9" stroke-width="2"/>
+          <text x="70" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#1a5fa8">Peaked T waves</text>
+          <text x="70" y="65" text-anchor="middle" font-size="10" fill="#1a5fa8">Tall, narrow, symmetric</text>
+          <text x="70" y="81" text-anchor="middle" font-size="10" fill="#1a5fa8">T waves</text>
+          <text x="70" y="108" text-anchor="middle" font-size="10" fill="#444">Earliest ECG sign</text>
+          <text x="70" y="124" text-anchor="middle" font-size="10" fill="#444">K+ ~5.5–6.0 mEq/L</text>
+          <text x="70" y="152" text-anchor="middle" font-size="9" fill="#888">Hyperexcitability phase</text>
+        </g>
+
+        <!-- Wide QRS -->
+        <g class="hk-zone" data-name="Wide QRS complex">
+          <rect class="zone-bg" x="140" y="40" width="120" height="200" rx="10"
+                fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+          <text x="200" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#856404">Wide QRS</text>
+          <text x="200" y="65" text-anchor="middle" font-size="10" fill="#856404">QRS duration</text>
+          <text x="200" y="81" text-anchor="middle" font-size="10" fill="#856404">&gt;0.12 s (3 small boxes)</text>
+          <text x="200" y="108" text-anchor="middle" font-size="10" fill="#444">Moderate-severe</text>
+          <text x="200" y="124" text-anchor="middle" font-size="10" fill="#444">Na+ channel inactivation</text>
+          <text x="200" y="152" text-anchor="middle" font-size="9" fill="#888">Slowed conduction</text>
+        </g>
+
+        <!-- Loss of P wave -->
+        <g class="hk-zone" data-name="Loss of P wave">
+          <rect class="zone-bg" x="270" y="40" width="120" height="200" rx="10"
+                fill="#f8d7da" stroke="#dc3545" stroke-width="2"/>
+          <text x="330" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#842029">Loss of P wave</text>
+          <text x="330" y="65" text-anchor="middle" font-size="10" fill="#842029">Atrial standstill —</text>
+          <text x="330" y="81" text-anchor="middle" font-size="10" fill="#842029">P waves disappear</text>
+          <text x="330" y="108" text-anchor="middle" font-size="10" fill="#444">Severe hyperkalemia</text>
+          <text x="330" y="124" text-anchor="middle" font-size="10" fill="#444">K+ &gt;7.0 mEq/L</text>
+          <text x="330" y="152" text-anchor="middle" font-size="9" fill="#888">Atria non-functional</text>
+        </g>
+
+        <!-- Sine wave / fatal -->
+        <g class="hk-zone" data-name="Sine wave pattern">
+          <rect class="zone-bg" x="400" y="40" width="120" height="200" rx="10"
+                fill="#f0d0ff" stroke="#7c3aed" stroke-width="2"/>
+          <text x="460" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#5b21b6">Sine wave pattern</text>
+          <text x="460" y="65" text-anchor="middle" font-size="10" fill="#5b21b6">QRS &amp; T merge —</text>
+          <text x="460" y="81" text-anchor="middle" font-size="10" fill="#5b21b6">sinusoidal tracing</text>
+          <text x="460" y="108" text-anchor="middle" font-size="10" fill="#444">Pre-terminal</text>
+          <text x="460" y="124" text-anchor="middle" font-size="10" fill="#444">K+ &gt;8 mEq/L</text>
+          <text x="460" y="152" text-anchor="middle" font-size="9" fill="#888">Imminent cardiac arrest</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 ECG progression mastered!</h3>
+      <p>Hyperkalemia causes peaked T waves → wide QRS → loss of P waves → sine wave pattern → ventricular fibrillation. Any K+ &gt;5.5 mEq/L with symptoms warrants an immediate ECG.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A patient with K+ of 5.8 mEq/L has an ECG showing tall, narrow, symmetric T waves — the earliest ECG sign of hyperkalemia. Which finding is this?",
+      answer: "Peaked T waves",
+      explain: "Peaked T waves are the earliest ECG change in hyperkalemia. They appear tall, narrow, and symmetric as the K+ rises above approximately 5.5 mEq/L."
+    },
+    {
+      text: "A CKD patient with K+ 7.2 mEq/L has an ECG where the QRS complex measures 0.14 seconds — wider than normal. Slowed conduction through the ventricles is responsible. Which finding is this?",
+      answer: "Wide QRS complex",
+      explain: "Widened QRS (>0.12 s) appears in severe hyperkalemia. High extracellular K+ partially depolarizes cells, inactivating sodium channels and slowing ventricular conduction."
+    },
+    {
+      text: "A patient with K+ of 7.5 mEq/L has an ECG with no visible P waves. The rhythm is slow and irregular with wide complexes. Atrial standstill has occurred. Which finding is this?",
+      answer: "Loss of P wave",
+      explain: "Loss of P waves (atrial standstill) occurs in severe hyperkalemia typically at K+ >7 mEq/L. The atria become electrically silent, leaving only an idioventricular rhythm."
+    },
+    {
+      text: "A dialysis patient who missed three sessions has K+ of 8.5 mEq/L. The ECG shows QRS and T wave merging into a smooth oscillating pattern. This is a pre-terminal finding. Which ECG pattern is this?",
+      answer: "Sine wave pattern",
+      explain: "A sine wave pattern is a pre-terminal ECG finding in extreme hyperkalemia (K+ >8 mEq/L). QRS widens so much it merges with the T wave. Ventricular fibrillation and cardiac arrest are imminent without emergent treatment."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".hk-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 4);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — consider the severity and what is happening to conduction.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build the HCO₃⁻ Reclamation Steps — Module 27</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 27</a></div>
+  <h1>Game 1 — Build the HCO₃⁻ Reclamation Steps</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔄</div>
+      <h2>Drag each step to its correct position in the reclamation sequence</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The proximal tubule reclaims bicarbonate via a CO₂ shuttle — not by directly transporting HCO₃⁻. Place each step in order from first to last.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Steps (drag these)</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Reclamation sequence complete!</h3>
+      <p>HCO₃⁻ is filtered → H⁺ secreted via NHE3 → H⁺ + HCO₃⁻ → H₂CO₃ (catalyzed by brush-border CA) → CO₂ + H₂O → CO₂ diffuses into cell → intracellular CA regenerates HCO₃⁻ → NBCe1 exports HCO₃⁻ to blood. Net: reclamation without adding new base.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "s1", label: "Step 1 — first event in the lumen",        answer: "HCO₃⁻ is filtered into the tubular lumen" },
+    { id: "s2", label: "Step 2 — ion secreted in exchange for Na⁺", answer: "H⁺ is pumped into the lumen via NHE3" },
+    { id: "s3", label: "Step 3 — luminal reaction (brush-border CA)", answer: "H⁺ + HCO₃⁻ → H₂CO₃ → CO₂ + H₂O" },
+    { id: "s4", label: "Step 4 — how CO₂ re-enters the cell",       answer: "CO₂ freely diffuses into the tubular cell" },
+    { id: "s5", label: "Step 5 — intracellular conversion",         answer: "Intracellular CA converts CO₂ → H₂CO₃ → H⁺ + HCO₃⁻" },
+    { id: "s6", label: "Step 6 — exit from cell to blood",          answer: "NBCe1 cotransporter exports HCO₃⁻ into blood" },
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const answers = Game.shuffle(slots.map(s => s.answer).slice());
+    answers.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.label === zone.dataset.answer) {
+        zone.innerHTML = "";
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.dataset.label;
+        zone.appendChild(pi);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Not right for that step — think about the sequence of events.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

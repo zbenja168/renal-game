@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dialysis Criteria Lab — Module 34</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 34</a></div>
+  <h1>Game 5 — Dialysis Criteria Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🏥</div>
+      <h2>Round 1: Sort the AEIOU dialysis indications</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each clinical finding into the correct AEIOU letter bucket. The AEIOU mnemonic captures the five indications for urgent dialysis in AKI.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 5</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Clinical findings</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing AKI concepts from the brick. These are new questions — different angles from those in the brick's review section.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Dialysis Criteria Lab complete!</h3>
+      <p>You now know when to pull the trigger on dialysis (AEIOU) and can apply AKI concepts to new clinical scenarios. On to the boss round!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ========== ROUND 1: AEIOU SORTER ========== */
+  const findings = [
+    { id: "f1", label: "Metabolic acidosis with pH below 7.1",              bin: "A" },
+    { id: "f2", label: "Severe hyperkalemia above 6.5 mEq/L",              bin: "E" },
+    { id: "f3", label: "Ingestion of methanol or ethylene glycol",         bin: "I" },
+    { id: "f4", label: "Fluid overload refractory to diuretics",           bin: "O" },
+    { id: "f5", label: "Uremic pericarditis or encephalopathy",            bin: "U" }
+  ];
+
+  const bins = [
+    { id: "A", label: "A — Acidosis (metabolic, pH <7.1)" },
+    { id: "E", label: "E — Electrolytes (severe hyperkalemia)" },
+    { id: "I", label: "I — Intoxications (lithium, methanol, etc.)" },
+    { id: "O", label: "O — Overload (fluid, refractory to diuresis)" },
+    { id: "U", label: "U — Uremia (pericarditis, encephalopathy)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, findings.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(findings.slice()).forEach(f => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = f.bin;
+      el.textContent = f.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, findings.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === findings.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-check which AEIOU letter this finding belongs to.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ========== ROUND 2: NEW QUIZ QUESTIONS ========== */
+  // All new questions — different from brick's verbatim review questions.
+  const questions = [
+    {
+      q: "An elderly woman with vomiting for 3 days has creatinine 3.1 mg/dL. Urinalysis is completely normal. Her FENa is 0.4%. You give 1 L of normal saline and her creatinine improves to 1.3 mg/dL over 24 hours. What does this response confirm?",
+      options: [
+        "Intrarenal AKI from acute tubular necrosis",
+        "Prerenal AKI from volume depletion",
+        "Postrenal AKI from ureteral obstruction",
+        "Intrarenal AKI from glomerulonephritis"
+      ],
+      correct: 1,
+      explain: "A saline challenge that improves creatinine is both diagnostic and therapeutic for prerenal AKI from volume depletion. The normal urinalysis and FENa <1% also support this. The brick explicitly states that 'another diagnostic test for prerenal AKI from volume depletion is actually a treatment with normal saline.'"
+    },
+    {
+      q: "A patient on NSAIDs develops AKI. The mechanism is constriction of which vessel, leading to reduced glomerular filtration pressure?",
+      options: [
+        "Efferent arteriole (NSAIDs block angiotensin II effect)",
+        "Afferent arteriole (NSAIDs block vasodilatory prostaglandins)",
+        "Peritubular capillary (NSAIDs cause tubular ischemia)",
+        "Renal vein (NSAIDs increase venous pressure)"
+      ],
+      correct: 1,
+      explain: "NSAIDs block prostaglandins, which normally dilate the afferent arteriole. Without this vasodilatory effect, the afferent arteriole constricts, reducing blood flow into the glomerulus and dropping the GFR. This is a prerenal mechanism."
+    },
+    {
+      q: "A patient with rhabdomyolysis has myoglobinuria. Which AKI type and subtype does this most likely represent?",
+      options: [
+        "Prerenal AKI from hypotension",
+        "Postrenal AKI from cast obstruction",
+        "Intrarenal AKI — acute tubular necrosis from nephrotoxins",
+        "Intrarenal AKI — acute interstitial nephritis"
+      ],
+      correct: 2,
+      explain: "Myoglobin released from damaged muscle is directly nephrotoxic to the renal tubular epithelial cells. This causes ATN — intrarenal AKI from nephrotoxin exposure. Per the brick, 'almost anything can cause ATN,' including myoglobin from muscle breakdown."
+    },
+    {
+      q: "On urinalysis, a patient with AKI has WBC casts and eosinophils seen on Hansel or Wright stain. Which diagnosis should be suspected?",
+      options: [
+        "Acute tubular necrosis from ischemia",
+        "Postrenal obstruction from nephrolithiasis",
+        "Acute interstitial nephritis from drug exposure",
+        "Rapidly progressive glomerulonephritis"
+      ],
+      correct: 2,
+      explain: "WBCs, WBC casts, and eosinophils in the urine sediment are the hallmark of acute interstitial nephritis (AIN). AIN is triggered by a hypersensitivity immune reaction, most commonly to drugs or infections, causing inflammation in the renal interstitium."
+    },
+    {
+      q: "A patient in the ICU has AKI with oliguria (urine output 380 mL/day) and non-oliguric AKI. Urine output of less than which threshold defines oliguria in AKI?",
+      options: [
+        "Less than 400 mL/day (oliguria) and less than 100 mL/day (anuria)",
+        "Less than 600 mL/day (oliguria) and less than 200 mL/day (anuria)",
+        "Less than 300 mL/day (oliguria) and less than 50 mL/day (anuria)",
+        "Less than 500 mL/day (oliguria) and less than 150 mL/day (anuria)"
+      ],
+      correct: 0,
+      explain: "Per the brick: oliguria is urine output less than 500 mL/day (or <0.5 mL/kg/hr for 6-12 hours). Anuria is <100 mL/day. The brick classifies non-oliguric as UOP >500 mL/day, oliguria as 100-500 mL/day, and anuria as <100 mL/day."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) {
+      Game.celebrate("winBanner");
+    }
+  }
+</script>
+</body>
+</html>

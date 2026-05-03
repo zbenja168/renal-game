@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treatment Lab — Module 33</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 33</a></div>
+  <h1>Game 5 — Treatment Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💉</div>
+      <h2>Round 1: Sort each management step by target</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each management step to the correct treatment target in Fanconi syndrome.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Management steps</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Fresh quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing Fanconi syndrome from new angles — not from the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Treatment Lab complete!</h3>
+      <p>Now tackle the boss — Game 6 ties the entire Fanconi syndrome brick together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1: SORTER ===== */
+  const steps = [
+    { id: "s1", label: "Oral sodium bicarbonate and potassium citrate",      bin: "acidosis" },
+    { id: "s2", label: "Oral phosphate supplementation",                     bin: "bone" },
+    { id: "s3", label: "Vitamin D (1,25-dihydroxyvitamin D) supplementation", bin: "bone" },
+    { id: "s4", label: "Stop the offending drug (e.g., cisplatin, tenofovir)", bin: "cause" },
+    { id: "s5", label: "Treat the underlying disease (e.g., multiple myeloma)", bin: "cause" },
+    { id: "s6", label: "Thiazide diuretic (helps reduce urinary bicarbonate wasting)", bin: "acidosis" }
+  ];
+
+  const bins = [
+    { id: "cause",   label: "Removing / treating the underlying cause" },
+    { id: "acidosis", label: "Correcting the metabolic acidosis" },
+    { id: "bone",    label: "Treating bone disease (phosphate wasting)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, steps.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = ""; bucketsEl.innerHTML = "";
+
+    Game.shuffle(steps.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item"; el.draggable = true;
+      el.dataset.bin = n.bin; el.textContent = n.label;
+      attachDrag(el); pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone); bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault(); zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const ph = zone.querySelector(".label"); if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed"; pi.textContent = dragSource.textContent;
+        zone.appendChild(pi); dragSource.remove(); placed++;
+        Game.setScore(scoreEl, placed, steps.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === steps.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That step targets a different problem.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: QUIZ (fresh — NOT brick review questions) ===== */
+  const questions = [
+    {
+      q: "A child with Fanconi syndrome has glucosuria on routine urinalysis, but her fasting serum glucose is 82 mg/dL (normal). Why does glucosuria occur in Fanconi syndrome even with a normal serum glucose?",
+      options: ["Her kidneys filter too much glucose for the normal tubule to handle", "The proximal tubule cannot reabsorb glucose at normal filtered loads due to PT dysfunction", "SGLT-2 inhibitors in her diet are blocking glucose reabsorption", "Her glomerular filtration rate is too high"],
+      correct: 1,
+      explain: "In Fanconi syndrome, the proximal tubule's reabsorptive capacity for all solutes — including glucose — is impaired. Even at normal serum glucose concentrations, the PT fails to reabsorb the filtered glucose, causing glucosuria."
+    },
+    {
+      q: "A patient with Fanconi syndrome is found to have a urinary anion gap consistent with proximal (type 2) renal tubular acidosis. Why does the normal anion gap metabolic acidosis develop in this condition?",
+      options: ["Excess chloride is retained to compensate for bicarbonate loss", "The PT cannot reabsorb filtered bicarbonate, so HCO₃⁻ is excreted in the urine", "The distal tubule loses its ability to excrete hydrogen ions", "Ammonia production is impaired in the distal nephron"],
+      correct: 1,
+      explain: "In Fanconi syndrome, the PT cannot reabsorb filtered bicarbonate — it spills into the urine. This is the definition of proximal (type 2) renal tubular acidosis. The result is normal anion gap metabolic acidosis."
+    },
+    {
+      q: "A 6-year-old with Wilson disease develops bowing of the legs, bone pain, and waddling gait. His serum phosphate is low. What is the mechanism linking Wilson disease to this skeletal complication?",
+      options: ["Excess copper directly dissolves bone calcium", "Wilson disease causes PT dysfunction (Fanconi syndrome) leading to phosphate wasting and rickets", "Copper toxicity impairs vitamin D synthesis in the liver", "Copper replaces calcium in the hydroxyapatite crystal lattice"],
+      correct: 1,
+      explain: "Wilson disease (copper accumulation) damages the proximal tubule, causing Fanconi syndrome. Phosphaturia from PT dysfunction leads to hypophosphatemia, which impairs bone mineralization, producing rickets in children."
+    },
+    {
+      q: "A 54-year-old woman on cisplatin chemotherapy develops Fanconi syndrome. Kidney function improves slightly after completing treatment, but tubular dysfunction persists. What property of cisplatin explains this?",
+      options: ["Cisplatin is slowly excreted by the liver, prolonging its renal exposure", "The toxic effects of cisplatin on renal tubule cells may be irreversible", "Cisplatin activates RAAS, causing permanent electrolyte imbalances", "Cisplatin depletes aldosterone, permanently reducing sodium reabsorption"],
+      correct: 1,
+      explain: "Per the brick: 'The toxic effects of cisplatin and ifosfamide may be irreversible.' This means Fanconi syndrome caused by these drugs may not fully resolve even after stopping therapy, unlike tenofovir-related cases."
+    },
+    {
+      q: "An adult patient with acquired Fanconi syndrome (from multiple myeloma) has persistent hypophosphatemia despite adequate oral intake. What is the appropriate bone-targeted treatment?",
+      options: ["Intravenous calcium gluconate to correct bone mineral stores", "Oral phosphate supplementation plus vitamin D (1,25-dihydroxyvitamin D)", "High-dose IV bicarbonate to correct the metabolic acidosis first", "Calcitonin to reduce bone resorption and preserve phosphate"],
+      correct: 1,
+      explain: "Per the brick, bone disease in Fanconi syndrome is treated with oral phosphate supplementation and 1,25-dihydroxyvitamin D supplementation to correct the hypophosphatemia and impaired bone mineralization."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

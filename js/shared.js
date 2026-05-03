@@ -5,7 +5,7 @@
 window.Game = (function () {
   const STORAGE_KEY = "renalBricks_v1";
   const GAMES_PER_MODULE = 6;
-  const TOTAL_MODULES = 21;
+  const TOTAL_MODULES = 39;
   const COLORS = ["#fb7185", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#f97316"];
 
   /* ---------- progress storage ---------- */
@@ -133,14 +133,16 @@ window.Game = (function () {
   }
 
   function enhanceMainIndex() {
-    // Wait briefly so the inline script that populates the grid can run first.
+    // Wait briefly so the inline script that populates the grid(s) can run first.
     function decorate() {
-      const grid = document.getElementById("moduleGrid");
-      if (!grid || grid.children.length === 0) { setTimeout(decorate, 30); return; }
-      const cards = grid.querySelectorAll(".module-card");
+      const cards = document.querySelectorAll(".module-card");
+      if (cards.length === 0) { setTimeout(decorate, 30); return; }
       let totalDone = 0;
-      cards.forEach((card, idx) => {
-        const modNum = idx + 1;
+      cards.forEach(card => {
+        // Module number from data attribute (set by main index render). Falls
+        // back to DOM order for backward compatibility.
+        const modNum = parseInt(card.dataset.moduleNum, 10) || 0;
+        if (!modNum) return;
         const prog = moduleProgress(modNum);
         totalDone += prog.done;
         // Always show progress bar (visually indicates "not started" too)
@@ -207,8 +209,8 @@ window.Game = (function () {
       if (pg.game) markGameAlreadyCompleted(pg.module, pg.game);
       else enhanceModuleHub(pg.module);
     } else {
-      // root index (or any page with #moduleGrid)
-      if (document.getElementById("moduleGrid")) enhanceMainIndex();
+      // root index — any page with one or more .module-grid elements
+      if (document.querySelector(".module-grid")) enhanceMainIndex();
     }
   }
 

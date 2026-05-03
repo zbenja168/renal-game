@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 37</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 37</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place all 16 labels across GFR estimation, dipstick findings, microscopy, and proteinuria. Aim for zero misses.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool, sixteen labels. Drop each onto its correct slot across all four sections. Wrong drops increment the misses counter — aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Renal Laboratory Tests!</h3>
+      <p>GFR, dipstick, microscopy, and proteinuria — you placed every piece correctly. Your renal lab knowledge is solid.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "gfr", title: "GFR Estimation", lo: "LO1",
+      slots: [
+        { id: "g1", label: "Most accurate current eGFR equation; uses SCr, age, sex",      answer: "CKD-EPI equation" },
+        { id: "g2", label: "Normal GFR in a young healthy adult (mL/min/1.73 m²)",          answer: "120–130" },
+        { id: "g3", label: "Used to track GFR trends; stable because muscle mass is stable", answer: "Serum creatinine (SCr)" },
+        { id: "g4", label: "Surrogate marker of uremia; affected by protein intake and catabolism", answer: "Blood urea nitrogen (BUN)" }
+      ]
+    },
+    {
+      id: "dip", title: "Urine Dipstick", lo: "LO2",
+      slots: [
+        { id: "d1", label: "Dipstick pad that detects WBCs via their enzyme",                answer: "Leukocyte esterase" },
+        { id: "d2", label: "Pad that detects gram-negative bacteriuria (E. coli converts substrate)", answer: "Nitrites" },
+        { id: "d3", label: "Pad positive in DKA and starvation due to fat catabolism",       answer: "Ketones" },
+        { id: "d4", label: "Pad positive in liver/biliary disease (conjugated form filtered)", answer: "Bilirubin" }
+      ]
+    },
+    {
+      id: "micro", title: "Urine Microscopy", lo: "LO2",
+      slots: [
+        { id: "m1", label: "Cast pathognomonic for glomerulonephritis",                     answer: "RBC cast" },
+        { id: "m2", label: "Granular cast seen in acute tubular necrosis",                  answer: "Muddy-brown granular cast" },
+        { id: "m3", label: "Hexagonal, radiolucent — pathognomonic for cystinuria",         answer: "Cystine crystal" },
+        { id: "m4", label: "Coffin-lid shape; seen with chronic urinary infection",          answer: "Struvite crystal" }
+      ]
+    },
+    {
+      id: "prot", title: "Proteinuria Tests", lo: "LO2",
+      slots: [
+        { id: "p1", label: "Single-void; detects all proteins; picks up Bence Jones",        answer: "UPCR" },
+        { id: "p2", label: "Single-void; most sensitive for early diabetic albuminuria",      answer: "ACR" },
+        { id: "p3", label: "Rapid dipstick; misses small albumin and light chains",           answer: "Urine dipstick protein pad" },
+        { id: "p4", label: "Gold standard total protein; requires full day's urine",          answer: "24-hour urine collection" }
+      ]
+    }
+  ];
+
+  const pool     = document.getElementById("pool");
+  const board    = document.getElementById("board");
+  const scoreEl  = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl     = document.getElementById("feedback");
+
+  const ICONS = { gfr: "📊", dip: "💧", micro: "🔬", prot: "🩺" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb("✓ " + pi.textContent, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb("✗ " + dragSource.textContent + " doesn't fit there.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

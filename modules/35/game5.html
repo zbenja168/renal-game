@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bone Disease Lab — Module 35</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 35</a></div>
+  <h1>Game 5 — Bone Disease Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🦴</div>
+      <h2>Round 1: Sequence the CKD mineral-bone disease cascade</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each step in the CKD mineral bone disease (MBD) cascade into the correct sequence from the initial trigger to the final bone consequence. Steps are numbered 1 through 5.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 5</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Cascade steps (drag to sequence)</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing CKD concepts from the brick. These are new questions — not the brick's verbatim review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Bone Disease Lab complete!</h3>
+      <p>You understand the CKD-MBD cascade and can apply CKD knowledge to clinical scenarios. Time for the boss round!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ========== ROUND 1: SEQUENCE ========== */
+  const steps = [
+    { id: "st1", label: "Step 1: Kidneys retain phosphate → hyperphosphatemia",      answer: "Step 1" },
+    { id: "st2", label: "Step 2: FGF-23 rises to excrete phosphate; inhibits 1α-hydroxylase", answer: "Step 2" },
+    { id: "st3", label: "Step 3: Reduced 1α-hydroxylase → less active vitamin D (calcitriol)", answer: "Step 3" },
+    { id: "st4", label: "Step 4: Low calcitriol → hypocalcemia → PTH rises",         answer: "Step 4" },
+    { id: "st5", label: "Step 5: High PTH causes bone resorption → renal osteodystrophy", answer: "Step 5" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, steps.length);
+    fbEl.classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    // Shuffle the step descriptions as draggable pieces
+    const shuffledLabels = Game.shuffle(steps.map(s => ({ label: s.label, answer: s.answer })));
+    shuffledLabels.forEach(item => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.answer = item.answer;
+      p.textContent = item.label;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    // Render sequence slots in correct order
+    steps.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.answer}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.answer === zone.dataset.answer) {
+        zone.innerHTML = "";
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, steps.length);
+        showFb("✓ Correct sequence step.", "correct");
+        if (placed === steps.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That step doesn't belong here in the cascade sequence.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ========== ROUND 2: NEW QUIZ QUESTIONS ========== */
+  const questions = [
+    {
+      q: "A 55-year-old woman with CKD G3b has an eGFR of 38 mL/min/1.73m² and an ACR of 250 mg/g. Her nephrologist wants to slow progression. Which drug class has the strongest evidence for reducing CKD progression AND cardiovascular events in this setting?",
+      options: [
+        "Loop diuretics (furosemide) to reduce fluid overload",
+        "SGLT2 inhibitors to reduce CKD progression and CV events",
+        "Calcium channel blockers to lower blood pressure alone",
+        "Phosphate binders to prevent mineral bone disease"
+      ],
+      correct: 1,
+      explain: "Per the brick, SGLT2 inhibitors reduce CKD progression and cardiovascular events and are used to slow CKD progression. They have emerged as a key disease-modifying agent in CKD, especially with diabetic nephropathy."
+    },
+    {
+      q: "In a CKD patient with severe anemia, erythropoiesis-stimulating agents (ESAs) are prescribed. Why are ESAs needed in CKD specifically?",
+      options: [
+        "CKD destroys red blood cells through hemolysis",
+        "CKD impairs iron absorption from the gastrointestinal tract",
+        "Failing kidneys produce less erythropoietin (EPO), reducing red blood cell production",
+        "CKD causes bone marrow suppression by accumulating toxins"
+      ],
+      correct: 2,
+      explain: "The kidney produces erythropoietin, which stimulates the bone marrow to produce red blood cells. In CKD, reduced EPO production leads to anemia. Recombinant EPO (erythropoiesis-stimulating agents) replaces this missing signal. Iron deficiency often co-exists and must also be treated."
+    },
+    {
+      q: "A CKD patient has labs: phosphorus 6.2 mg/dL, calcium 8.1 mg/dL, PTH 290 pg/mL. Which of the following best explains the elevated PTH?",
+      options: [
+        "Primary hyperparathyroidism from a parathyroid adenoma",
+        "Secondary hyperparathyroidism from low calcitriol and retained phosphate",
+        "Tertiary hyperparathyroidism after failed kidney transplant",
+        "Hypercalcemia stimulating excess PTH secretion"
+      ],
+      correct: 1,
+      explain: "In CKD, phosphate retention and reduced 1-alpha-hydroxylase activity (less calcitriol) lead to hypocalcemia, which stimulates the parathyroid glands to release excess PTH — secondary hyperparathyroidism. This is managed with calcitriol supplementation and phosphate binders."
+    },
+    {
+      q: "Which eGFR threshold triggers referral to a nephrologist for pre-dialysis planning, per the brick?",
+      options: [
+        "eGFR below 60 mL/min/1.73m²",
+        "eGFR below 45 mL/min/1.73m²",
+        "eGFR below 30 mL/min/1.73m²",
+        "eGFR below 20 mL/min/1.73m²"
+      ],
+      correct: 3,
+      explain: "Per the brick, indications for starting dialysis preparations and nephrology referral include eGFR approaching 20 mL/min/1.73m². The brick states referral should happen when eGFR is <20 and there are signs of uremia or the CKD is rapidly progressing."
+    },
+    {
+      q: "A patient with CKD has an ACR of 450 mg/g and eGFR of 52 mL/min/1.73m². Using the CKD heatmap combining G-stage and albuminuria, how would this patient's ESKD risk be characterized?",
+      options: [
+        "Green (low risk) — eGFR is above 45 and moderately elevated albuminuria",
+        "Yellow (moderately increased risk) — stage G3a with high albuminuria",
+        "Orange (high risk) — eGFR G3a with very high albuminuria (A3 category)",
+        "Red (very high risk) — eGFR G3a with A3 places in the red zone"
+      ],
+      correct: 3,
+      explain: "eGFR 52 = G3a. ACR 450 mg/g = A3 (very high, >300 mg/g). On the CKD heatmap, combining G3a and A3 falls in the red (very high) risk zone. The CKD heatmap combines eGFR and albuminuria to show risk of ESKD at 2 and 5 years."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

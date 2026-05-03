@@ -104,7 +104,25 @@ site/
 - `Game.confetti(count)` — confetti only
 
 ## Module hub (`modules/NN/index.html`) pattern
-Use `body class="theme-royal"` and 6 `.game-card` links with `data-color="coral|sun|crimson|teal|grape|royal"` matching each game's theme.
+Use `body class="theme-royal"` and 6 `.game-card` links with `data-color="coral|sun|crimson|teal|grape|royal"` matching each game's theme. Also include `<script src="../../js/shared.js"></script>` before `</body>` so progress decoration runs.
+
+## ⚠️ HARD-WON LESSONS (failures from week 1 — do NOT repeat)
+
+### Matching games (game3): never use [N] suffix to fake-uniquify duplicates
+If multiple causes/items map to the same right-side category (e.g., 3 things → "Hypervolemic", 3 → "Euvolemic"), DO NOT write `b: "Hypervolemic [1]"`, `b: "Hypervolemic [2]"` etc. — that looks ridiculous to the user. Instead:
+- Keep `b` values as the clean category name (duplicates are fine in the array)
+- In the JS, set `c.dataset.matchKey = it.matchKey` where `matchKey = p.b` (the category text)
+- The equality check is `firstPick.dataset.matchKey === card.dataset.matchKey`
+- See `modules/18/game3.html` and `modules/20/game3.html` for the working pattern
+
+### Hotspot games (game2 typically): put click zones INSIDE the SVG, not as overlay divs
+Do NOT use `<div class="hotspot" style="left:X%;top:Y%">` overlays positioned over an `<svg>`. They drift out of alignment because of how percentages and SVG scaling interact. Instead, wrap each clickable region in `<g class="svg-zone" data-name="X">` inside the SVG and add a `<rect class="zone-bg" ...>` plus any text/labels inside the group. Page-local CSS controls hover/found/miss state on `.svg-zone`. See `modules/18/game2.html` and `modules/19/game2.html` for the working pattern with the local `<style>` block, the `<g class="svg-zone">` markup, and JS that listens on `.svg-zone` clicks.
+
+### Quiz questions (game5 round 2): balance option lengths
+The CORRECT answer must NOT be visibly longer than the distractors — that's "longest-answer bias" and lets students game the quiz. All four options should be within ~30% length of each other. Write distractors with comparable clinical specificity / mechanism detail. Plausibly wrong, never obviously wrong.
+
+### Game 5 quiz: NEW questions only
+Do NOT copy or paraphrase the brick's own review questions. Write fresh scenarios that test the same concepts from different angles.
 
 ## After your modules are done
 Update `index.html` (root) to mark your modules as `ready: true` with the right `games` count and a short title (use the brick title without the `Brick Exchange "` prefix).

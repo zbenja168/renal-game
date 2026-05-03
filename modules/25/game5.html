@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulation Lab — Module 25</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 25</a></div>
+  <h1>Game 5 — Regulation Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Round 1: Sort each regulator by its effect on renal Mg²⁺</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each factor into the correct bin — does it increase Mg²⁺ reabsorption (retain) or decrease it (waste)?
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Regulators</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the brick's content (not the brick's own review questions) testing magnesium homeostasis concepts.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Regulation Lab complete!</h3>
+      <p>You have mastered magnesium homeostasis. Take on the boss in Game 6!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: REGULATOR SORTER ===================== */
+  const regulators = [
+    { id: "r1", label: "PTH — promotes Mg²⁺ retention in TAL",               bin: "retain" },
+    { id: "r2", label: "EGF — stimulates TRPM6 activity in DCT",              bin: "retain" },
+    { id: "r3", label: "High serum Mg²⁺ or Ca²⁺ — CaSR activation",          bin: "waste" },
+    { id: "r4", label: "Loop diuretics — collapse TAL lumen potential",       bin: "waste" },
+    { id: "r5", label: "Cisplatin — tubular toxicity to DCT TRPM6",           bin: "waste" },
+    { id: "r6", label: "Volume depletion — proximal reabsorption increases",  bin: "retain" },
+    { id: "r7", label: "Metabolic alkalosis — reduces TRPM6 activity",        bin: "waste" },
+    { id: "r8", label: "Insulin — promotes intracellular Mg²⁺ uptake",        bin: "retain" }
+  ];
+  const bins = [
+    { id: "retain", label: "Increases Mg²⁺ Reabsorption (retain)" },
+    { id: "waste",  label: "Decreases Mg²⁺ Reabsorption (waste)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, regulators.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(regulators.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, regulators.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === regulators.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Check whether this factor promotes Mg²⁺ retention or loss.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ============================================================
+     ROUND 2: NEW questions (not the brick's own review questions)
+     ============================================================ */
+  const questions = [
+    {
+      q: "A patient with hypokalemia of 2.8 mEq/L fails to respond to 3 days of oral potassium supplementation. Serum Mg²⁺ is 1.0 mEq/L. Why does hypomagnesemia cause refractory hypokalemia?",
+      options: [
+        "Low Mg²⁺ reduces aldosterone secretion, increasing renal K⁺ excretion",
+        "Mg²⁺ normally inhibits ROMK channels; without Mg²⁺, ROMK stays open and secretes excess K⁺",
+        "Low Mg²⁺ acidifies the blood, shifting K⁺ into cells",
+        "Low Mg²⁺ blocks the Na+/K+-ATPase, reducing K⁺ entry into cells"
+      ],
+      correct: 1,
+      explain: "Magnesium normally blocks ROMK potassium channels in the distal nephron from inside the cell. Without sufficient Mg²⁺, these channels remain open, secreting K⁺ continuously into the urine. Potassium cannot be repleted until magnesium is corrected first."
+    },
+    {
+      q: "A patient with Mg²⁺ of 0.8 mEq/L (normal 1.7–2.1 mEq/L) also has Ca²⁺ of 7.6 mg/dL (low). Replacing only calcium fails to normalize serum Ca²⁺. Which mechanism explains hypocalcemia from hypomagnesemia?",
+      options: [
+        "Low Mg²⁺ inhibits intestinal calcium absorption via TRPV6 channels",
+        "Low Mg²⁺ reduces PTH secretion from parathyroid glands and causes PTH resistance",
+        "Low Mg²⁺ increases renal calcium excretion by activating the CaSR",
+        "Low Mg²⁺ directly chelates calcium ions in the extracellular space"
+      ],
+      correct: 1,
+      explain: "Magnesium is required for normal PTH secretion from parathyroid gland cells. Severely low Mg²⁺ reduces PTH release and also causes peripheral PTH resistance. As a result, hypocalcemia cannot be corrected until magnesium is repleted."
+    },
+    {
+      q: "A patient with normal kidney function has serum Mg²⁺ of 5.0 mEq/L after receiving IV magnesium sulfate for eclampsia. The most concerning toxicity at this level and beyond is:",
+      options: [
+        "Acute kidney injury from magnesium precipitation in tubules",
+        "Hyperglycemia from magnesium inhibiting insulin secretion",
+        "Loss of deep tendon reflexes, respiratory depression, and cardiac arrest",
+        "Hemolysis from magnesium-induced red cell fragility"
+      ],
+      correct: 2,
+      explain: "Hypermagnesemia causes progressive neuromuscular blockade — first loss of deep tendon reflexes, then respiratory muscle paralysis, and finally cardiac arrest. Reflex monitoring is used during magnesium infusions for eclampsia; dialysis is the definitive treatment."
+    },
+    {
+      q: "A patient with stage 4 CKD (eGFR 22 mL/min/1.73 m²) on a PPI develops Mg²⁺ of 1.1 mEq/L. Which management strategy best reflects mechanism-based care for this patient?",
+      options: [
+        "Give high-dose oral magnesium oxide and continue the PPI",
+        "Stop the PPI, replace magnesium cautiously with ECG monitoring, then replete K⁺ and Ca²⁺ as needed",
+        "Give rapid IV magnesium boluses to normalize the level quickly",
+        "Start dialysis immediately to remove the PPI effect on tubules"
+      ],
+      correct: 1,
+      explain: "The PPI is contributing to GI Mg²⁺ malabsorption by inhibiting gut TRPM6/7. Stopping it removes the ongoing cause. In CKD, the kidneys cannot excrete excess magnesium efficiently, so replacement must be cautious with ECG and reflex monitoring to avoid hypermagnesemia."
+    },
+    {
+      q: "The normal serum magnesium level in adults is approximately:",
+      options: [
+        "0.5–1.0 mEq/L",
+        "1.7–2.1 mEq/L",
+        "3.5–5.0 mEq/L",
+        "5.0–7.0 mEq/L"
+      ],
+      correct: 1,
+      explain: "Normal serum Mg²⁺ is approximately 1.7–2.1 mEq/L (or 0.7–1.0 mmol/L). Approximately 99% of the body's magnesium is stored inside cells and bone — serum Mg²⁺ may be normal even when total body stores are depleted."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

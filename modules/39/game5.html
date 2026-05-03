@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hematuria Lab — Module 39</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 39</a></div>
+  <h1>Game 5 — Hematuria Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧬</div>
+      <h2>Round 1: Sort each cause as Intrarenal vs. Extrarenal hematuria</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each cause into the correct bin — is bleeding happening inside the kidney (intrarenal) or outside it (extrarenal / postrenal)?
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Causes of hematuria</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply your hematuria knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing hematuria diagnosis and management — written differently from the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Hematuria Lab complete!</h3>
+      <p>You sorted causes and navigated five clinical challenges. Head to the boss round to master the whole brick!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1 ===== */
+  const causes = [
+    { id: "c1", label: "IgA nephropathy with acanthocytes on microscopy",    bin: "intra" },
+    { id: "c2", label: "Pyelonephritis with WBC casts in the tubules",        bin: "intra" },
+    { id: "c3", label: "Papillary necrosis from analgesic overuse",           bin: "intra" },
+    { id: "c4", label: "Ureteral stone passing through the ureter",           bin: "extra" },
+    { id: "c5", label: "Bladder cancer identified on cystoscopy",             bin: "extra" },
+    { id: "c6", label: "Trauma to the urethra from a bicycle fall",           bin: "extra" }
+  ];
+  const bins = [
+    { id: "intra", label: "Intrarenal (within the kidney)" },
+    { id: "extra", label: "Extrarenal / Postrenal (outside the kidney)" }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl   = document.getElementById("score");
+  const fbEl      = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, causes.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(causes.slice()).forEach(c => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = c.bin;
+      el.textContent = c.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, causes.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === causes.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think: is this disease process inside the kidney or distal to it?", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: NEW QUIZ ===== */
+  const questions = [
+    {
+      q: "A 19-year-old male develops gross hematuria 2 days after a sore throat. Urine microscopy shows dysmorphic RBCs. His blood pressure is 145/90 mmHg. Which diagnosis is most consistent with these findings?",
+      options: [
+        "Urinary tract infection from Streptococcal contamination",
+        "IgA nephropathy triggered by mucosal infection",
+        "Nephrolithiasis causing hematuria in a young athlete",
+        "Bladder cancer presenting unusually early in life"
+      ],
+      correct: 1,
+      explain: "IgA nephropathy (Berger's disease) classically presents with synpharyngitic gross hematuria — hematuria appearing 1-3 days after upper respiratory infection. Dysmorphic RBCs confirm glomerular origin. Postinfectious GN typically appears 1-3 weeks later."
+    },
+    {
+      q: "A patient has hematuria with a urine culture growing gram-negative rods. After appropriate antibiotics are completed, repeat UA still shows hematuria. What is the most appropriate next step?",
+      options: [
+        "Extend the antibiotic course until hematuria resolves",
+        "Reassure the patient — hematuria after UTI is always benign",
+        "Reevaluate for other causes of hematuria after the UTI is treated",
+        "Order kidney biopsy immediately to rule out glomerulonephritis"
+      ],
+      correct: 2,
+      explain: "When hematuria persists after a treated UTI, it must be re-evaluated — the infection may have been coincidental and another pathology (stone, tumor, glomerulitis) may be responsible. The brick states that hematuria should be reevaluated after treatment completion."
+    },
+    {
+      q: "A 68-year-old male smoker presents with painless gross hematuria and no evidence of infection. Urine cytology shows atypical cells. Ultrasound is unremarkable. What is the appropriate next diagnostic step?",
+      options: [
+        "Repeat urinalysis in 3 months and monitor",
+        "Start empirical antibiotics and reassess",
+        "Perform cystoscopy to evaluate the bladder directly",
+        "Order a radionuclide scan to assess bladder perfusion"
+      ],
+      correct: 2,
+      explain: "In an older male smoker with painless gross hematuria and atypical cytology, bladder cancer must be excluded. Cystoscopy allows direct visualization of the bladder and biopsy if needed. Ultrasound alone is insufficient to rule out bladder cancer."
+    },
+    {
+      q: "A 12-year-old girl has microscopic hematuria found incidentally on a school physical exam. She has no symptoms, her blood pressure is normal, and her serum creatinine is normal. Urine microscopy shows 5-6 RBCs/HPF of normal morphology, no casts, no protein. What is the most appropriate management?",
+      answer: 0,
+      options: [
+        "Routine follow-up without urgent invasive workup given isolated asymptomatic finding",
+        "Immediate kidney biopsy to diagnose early glomerular disease",
+        "Emergency ultrasound to exclude renal carcinoma",
+        "Begin prophylactic antibiotics to prevent progression to UTI"
+      ],
+      correct: 0,
+      explain: "Isolated asymptomatic microscopic hematuria with normal blood pressure, normal creatinine, normal morphology RBCs, and no proteinuria is a common incidental finding. It does not require immediate invasive workup. Routine follow-up and monitoring for development of hypertension or declining eGFR is appropriate."
+    },
+    {
+      q: "A patient with hematuria is found to have a serum creatinine of 3.5 mg/dL. Urine shows dysmorphic RBCs and 3+ proteinuria. What does the elevated creatinine most likely indicate in this context?",
+      options: [
+        "Postrenal obstruction from bilateral ureteral stones",
+        "Intrarenal glomerular disease causing nephron damage",
+        "Myoglobinuria from exercise-induced rhabdomyolysis",
+        "Pseudohematuria from hemoglobin pigment in serum"
+      ],
+      correct: 1,
+      explain: "Dysmorphic RBCs, heavy proteinuria, and elevated creatinine together indicate glomerulonephritis as the source of hematuria. Elevated creatinine suggests significant reduction in nephron function. Bilateral obstruction is possible but less likely without hydronephrosis. Rhabdomyolysis would not produce dysmorphic RBCs or proteinuria."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

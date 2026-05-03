@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 33</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 33</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>Boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Sixteen labels covering the presentation, pathophysiology, diagnosis, and management of Fanconi syndrome. Drop each onto its correct slot. Wrong drops cost a miss. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Fanconi Syndrome!</h3>
+      <p>You can describe the presentation, explain the PT defect, interpret the labs, and outline the management. Excellent work.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "present", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "p1", label: "Common complaint in children with hereditary Fanconi syndrome: excessive urination",
+          answer: "Polyuria and polydipsia" },
+        { id: "p2", label: "Skeletal deformity in children from phosphate wasting: bowing of legs",
+          answer: "Rickets" },
+        { id: "p3", label: "Bone disease in adults from phosphate wasting: painful, soft bones",
+          answer: "Osteomalacia / osteopenia" },
+        { id: "p4", label: "In adult acquired Fanconi syndrome, this is sometimes the first clue — abnormal glucose in urine",
+          answer: "Glucosuria with normal serum glucose" }
+      ]
+    },
+    {
+      id: "patho", title: "Pathophysiology", lo: "LO2",
+      slots: [
+        { id: "q1", label: "Nephron segment where the generalized reabsorption defect occurs",
+          answer: "Proximal tubule (PT)" },
+        { id: "q2", label: "Most common hereditary cause of Fanconi syndrome in children (lysosomal storage)",
+          answer: "Cystinosis" },
+        { id: "q3", label: "Acquired cause of Fanconi syndrome from abnormal plasma cell proliferation with light chain toxicity",
+          answer: "Multiple myeloma" },
+        { id: "q4", label: "HIV drug associated with acquired Fanconi syndrome",
+          answer: "Tenofovir" }
+      ]
+    },
+    {
+      id: "diag", title: "Diagnosis", lo: "LO3",
+      slots: [
+        { id: "d1", label: "Acid-base disturbance caused by PT bicarbonate wasting in Fanconi syndrome",
+          answer: "Proximal (type 2) renal tubular acidosis" },
+        { id: "d2", label: "Low serum phosphate resulting from phosphate wasting in the urine",
+          answer: "Hypophosphatemia" },
+        { id: "d3", label: "Low serum potassium from RAAS activation and distal potassium secretion",
+          answer: "Hypokalemia" },
+        { id: "d4", label: "Toxic heavy metals that cause acquired Fanconi syndrome (three examples)",
+          answer: "Lead, mercury, and cadmium" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "First principle of Fanconi syndrome management: stop the injurious agent or treat the underlying disease",
+          answer: "Remove / treat the underlying cause" },
+        { id: "m2", label: "Oral supplement used to correct the metabolic acidosis",
+          answer: "Sodium bicarbonate (oral)" },
+        { id: "m3", label: "Supplement given for bone disease — replaces the phosphate lost in urine",
+          answer: "Oral phosphate supplementation" },
+        { id: "m4", label: "Active form of vitamin D given alongside phosphate to improve bone mineralization",
+          answer: "1,25-dihydroxyvitamin D (calcitriol)" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+
+  const ICONS = { present: "🩺", patho: "🔬", diag: "🧫", mgmt: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+  let placed = 0, misses = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = ""; board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item"; el.draggable = true;
+      el.dataset.slotId = it.slotId; el.textContent = it.text;
+      attachDrag(el); pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id]||"•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone); list.appendChild(row);
+      });
+      card.appendChild(list); board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault(); zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const ph = zone.querySelector(".label"); if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed"; pi.textContent = dragSource.textContent;
+        zone.appendChild(pi); zone.classList.add("correct");
+        dragSource.remove(); placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb("✓ " + pi.textContent, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++; missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb("✗ " + dragSource.textContent + " doesn't fit there.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

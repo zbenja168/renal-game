@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cause Hotspot — Module 35</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .ckd-zone { cursor: pointer; }
+  .ckd-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .ckd-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .ckd-zone text { pointer-events: none; user-select: none; }
+
+  .ckd-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .ckd-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 35</a></div>
+  <h1>Game 2 — Cause Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🏥</div>
+      <h2>Click the correct CKD cause for each clinical description</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Read each vignette and click the disease category that best explains the patient's CKD. Three cases — three clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Diabetic Kidney Disease -->
+        <g class="ckd-zone" data-name="Diabetic Kidney Disease">
+          <rect class="zone-bg" x="10" y="40" width="160" height="220" rx="12"
+                fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+          <text x="90" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Diabetic Kidney</text>
+          <text x="90" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Disease</text>
+          <text x="90" y="70" text-anchor="middle" font-size="10" fill="#78350f">Most common cause</text>
+          <text x="90" y="86" text-anchor="middle" font-size="10" fill="#78350f">of CKD in US</text>
+          <text x="90" y="106" text-anchor="middle" font-size="10" fill="#444">25–50% of DM patients</text>
+          <text x="90" y="122" text-anchor="middle" font-size="10" fill="#444">Glomerular capillary</text>
+          <text x="90" y="138" text-anchor="middle" font-size="10" fill="#444">tuff damage</text>
+          <text x="90" y="158" text-anchor="middle" font-size="10" fill="#444">Starts as albuminuria</text>
+          <text x="90" y="174" text-anchor="middle" font-size="10" fill="#444">then GFR decline</text>
+          <text x="90" y="198" text-anchor="middle" font-size="10" fill="#888">Diabetic nephropathy</text>
+        </g>
+
+        <!-- Hypertensive Nephrosclerosis -->
+        <g class="ckd-zone" data-name="Hypertensive Nephrosclerosis">
+          <rect class="zone-bg" x="195" y="40" width="170" height="220" rx="12"
+                fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+          <text x="280" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Hypertensive</text>
+          <text x="280" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Nephrosclerosis</text>
+          <text x="280" y="70" text-anchor="middle" font-size="10" fill="#7f1d1d">Chronic HTN → CKD</text>
+          <text x="280" y="86" text-anchor="middle" font-size="10" fill="#7f1d1d">Small vessel disease</text>
+          <text x="280" y="106" text-anchor="middle" font-size="10" fill="#444">Hyaline arteriosclerosis</text>
+          <text x="280" y="122" text-anchor="middle" font-size="10" fill="#444">Lumen narrows</text>
+          <text x="280" y="138" text-anchor="middle" font-size="10" fill="#444">Less blood to nephrons</text>
+          <text x="280" y="158" text-anchor="middle" font-size="10" fill="#444">Progressive interstitial</text>
+          <text x="280" y="174" text-anchor="middle" font-size="10" fill="#444">fibrosis over time</text>
+          <text x="280" y="198" text-anchor="middle" font-size="10" fill="#888">Rare to cause ESRD alone</text>
+        </g>
+
+        <!-- ADPKD -->
+        <g class="ckd-zone" data-name="ADPKD">
+          <rect class="zone-bg" x="385" y="40" width="165" height="220" rx="12"
+                fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+          <text x="468" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">ADPKD</text>
+          <text x="468" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">(Polycystic Kidney)</text>
+          <text x="468" y="70" text-anchor="middle" font-size="10" fill="#3b0764">Autosomal dominant</text>
+          <text x="468" y="86" text-anchor="middle" font-size="10" fill="#3b0764">Hereditary cause</text>
+          <text x="468" y="106" text-anchor="middle" font-size="10" fill="#444">Cysts distort kidney</text>
+          <text x="468" y="122" text-anchor="middle" font-size="10" fill="#444">structure on imaging</text>
+          <text x="468" y="142" text-anchor="middle" font-size="10" fill="#444">GFR declines as</text>
+          <text x="468" y="158" text-anchor="middle" font-size="10" fill="#444">cysts expand</text>
+          <text x="468" y="178" text-anchor="middle" font-size="10" fill="#444">May have hematuria</text>
+          <text x="468" y="198" text-anchor="middle" font-size="10" fill="#888">Family history key</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three CKD causes identified!</h3>
+      <p>Diabetic nephropathy is the most common cause of CKD in the US. Hypertensive nephrosclerosis follows. Hereditary causes like ADPKD are important — look for bilateral enlarged kidneys on imaging and a positive family history.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 58-year-old man with a 20-year history of type 2 diabetes presents for routine follow-up. His eGFR is 42 mL/min/1.73m² and albumin-to-creatinine ratio is 220 mg/g. He has had progressively worsening proteinuria over the past 5 years. Eye exam shows background diabetic retinopathy. What is the most likely cause of his CKD?",
+      answer: "Diabetic Kidney Disease",
+      explain: "Progressive proteinuria in the setting of long-standing type 2 diabetes, declining GFR, and diabetic retinopathy (which co-occurs with diabetic nephropathy) all point to diabetic kidney disease. It is the most common cause of CKD in the United States, affecting 25–50% of DM patients."
+    },
+    {
+      text: "A 64-year-old woman with a 30-year history of uncontrolled hypertension is found to have an eGFR of 38 mL/min/1.73m². Renal biopsy shows thickened arteriolar walls with homogeneous eosinophilic material, consistent with hyaline deposits. There is interstitial fibrosis and tubular atrophy. What is the most likely CKD cause?",
+      answer: "Hypertensive Nephrosclerosis",
+      explain: "Hyaline arteriosclerosis from longstanding hypertension causes thickening of the arteriolar walls, narrowing the lumen and reducing blood supply to nephrons. This results in progressive interstitial fibrosis and CKD — hypertensive nephrosclerosis."
+    },
+    {
+      text: "A 42-year-old woman has bilateral enlarged kidneys on CT scan with multiple cysts replacing the normal parenchyma. Her father required dialysis at age 55. She has intermittent hematuria and flank discomfort. eGFR is 51 mL/min/1.73m². What is the most likely cause of her CKD?",
+      answer: "ADPKD",
+      explain: "Bilateral enlarged kidneys with multiple cysts on CT, combined with a positive family history of kidney failure, are the hallmarks of autosomal dominant polycystic kidney disease (ADPKD). It is the most important hereditary cause of CKD leading to ESKD."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".ckd-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 3200);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb(`✗ Look at the history, imaging, and lab clues again.`, "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -5,6 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Renal Bricks — Interactive Study Games</title>
 <link rel="stylesheet" href="css/style.css">
+<style>
+  .week-header {
+    margin-top: 36px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .week-header:first-of-type { margin-top: 8px; }
+  .week-header h2 {
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .week-header .week-sub {
+    font-size: 0.92rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+</style>
 </head>
 <body>
 
@@ -14,10 +39,21 @@
 </header>
 
 <main class="container">
-  <h2 style="margin-bottom: 6px; font-size: 1.4rem;">Week 1 Modules</h2>
-  <p style="color: #5a6473; margin-bottom: 4px;">All 21 bricks. Each module has 6 short games covering its learning objectives, capped by a comprehensive boss round.</p>
 
-  <div class="module-grid" id="moduleGrid"></div>
+  <div class="week-header">
+    <h2>Week 1 · Foundations</h2>
+    <span class="week-sub">Anatomy · Physiology · Diuretics · Sodium &amp; water balance</span>
+  </div>
+  <p style="color: #5a6473; margin-bottom: 4px;">21 bricks. Each module has 6 short games covering its learning objectives, capped by a comprehensive boss round.</p>
+  <div class="module-grid" id="moduleGridWk1"></div>
+
+  <div class="week-header">
+    <h2>Week 2 · Clinical Applications</h2>
+    <span class="week-sub">Electrolyte disorders · Acid-base · AKI/CKD/ESRD · Labs &amp; imaging</span>
+  </div>
+  <p style="color: #5a6473; margin-bottom: 4px;">18 bricks. Builds on week 1 with disease states, diagnostics, and management.</p>
+  <div class="module-grid" id="moduleGridWk2"></div>
+
 </main>
 
 <footer>
@@ -27,34 +63,56 @@
 <script src="js/shared.js"></script>
 <script>
   const modules = [
-    { num: 1,  title: "Anatomy of the Urinary System",                              games: 6, ready: true },
-    { num: 2,  title: "Development of the Urinary System",                          games: 6, ready: true },
-    { num: 3,  title: "Congenital Disorders of the Kidney",                         games: 6, ready: true },
-    { num: 4,  title: "Histology of the Renal Corpuscle and Renal Tubular System",  games: 6, ready: true },
-    { num: 5,  title: "Glomerular Function",                                        games: 6, ready: true },
-    { num: 6,  title: "Glomerular Filtration Rate (GFR)",                           games: 6, ready: true },
-    { num: 7,  title: "Renal Clearance",                                            games: 6, ready: true },
-    { num: 8,  title: "Regulation of Renal Blood Flow",                             games: 6, ready: true },
-    { num: 9,  title: "Nephron Segmental Physiology",                               games: 6, ready: true },
-    { num: 10, title: "Sodium Homeostasis",                                         games: 6, ready: true },
-    { num: 11, title: "Potassium Homeostasis",                                      games: 6, ready: true },
-    { num: 12, title: "Loop Diuretics",                                             games: 6, ready: true },
-    { num: 13, title: "Thiazide Diuretics",                                         games: 6, ready: true },
-    { num: 14, title: "Osmotic Diuretics",                                          games: 6, ready: true },
-    { num: 15, title: "Potassium-Sparing Diuretics",                                games: 6, ready: true },
-    { num: 16, title: "Composition of Body Fluids and Compartments",                games: 6, ready: true },
-    { num: 17, title: "Water Regulation",                                           games: 6, ready: true },
-    { num: 18, title: "Hyponatremia",                                               games: 6, ready: true },
-    { num: 19, title: "Hypernatremia",                                              games: 6, ready: true },
-    { num: 20, title: "Antidiuretic Hormone Agonists",                              games: 6, ready: true },
-    { num: 21, title: "Antidiuretic Hormone Receptor Antagonists",                  games: 6, ready: true }
+    // ===== WEEK 1: Foundations =====
+    { num: 1,  week: 1, title: "Anatomy of the Urinary System",                              games: 6, ready: true },
+    { num: 2,  week: 1, title: "Development of the Urinary System",                          games: 6, ready: true },
+    { num: 3,  week: 1, title: "Congenital Disorders of the Kidney",                         games: 6, ready: true },
+    { num: 4,  week: 1, title: "Histology of the Renal Corpuscle and Renal Tubular System",  games: 6, ready: true },
+    { num: 5,  week: 1, title: "Glomerular Function",                                        games: 6, ready: true },
+    { num: 6,  week: 1, title: "Glomerular Filtration Rate (GFR)",                           games: 6, ready: true },
+    { num: 7,  week: 1, title: "Renal Clearance",                                            games: 6, ready: true },
+    { num: 8,  week: 1, title: "Regulation of Renal Blood Flow",                             games: 6, ready: true },
+    { num: 9,  week: 1, title: "Nephron Segmental Physiology",                               games: 6, ready: true },
+    { num: 10, week: 1, title: "Sodium Homeostasis",                                         games: 6, ready: true },
+    { num: 11, week: 1, title: "Potassium Homeostasis",                                      games: 6, ready: true },
+    { num: 12, week: 1, title: "Loop Diuretics",                                             games: 6, ready: true },
+    { num: 13, week: 1, title: "Thiazide Diuretics",                                         games: 6, ready: true },
+    { num: 14, week: 1, title: "Osmotic Diuretics",                                          games: 6, ready: true },
+    { num: 15, week: 1, title: "Potassium-Sparing Diuretics",                                games: 6, ready: true },
+    { num: 16, week: 1, title: "Composition of Body Fluids and Compartments",                games: 6, ready: true },
+    { num: 17, week: 1, title: "Water Regulation",                                           games: 6, ready: true },
+    { num: 18, week: 1, title: "Hyponatremia",                                               games: 6, ready: true },
+    { num: 19, week: 1, title: "Hypernatremia",                                              games: 6, ready: true },
+    { num: 20, week: 1, title: "Antidiuretic Hormone Agonists",                              games: 6, ready: true },
+    { num: 21, week: 1, title: "Antidiuretic Hormone Receptor Antagonists",                  games: 6, ready: true },
+    // ===== WEEK 2: Clinical Applications =====
+    { num: 22, week: 2, title: "Hypokalemia",                                                games: 6, ready: true },
+    { num: 23, week: 2, title: "Hyperkalemia",                                               games: 6, ready: true },
+    { num: 24, week: 2, title: "Renal Calcium and Phosphate Regulation",                     games: 6, ready: true },
+    { num: 25, week: 2, title: "Magnesium Homeostasis",                                      games: 6, ready: true },
+    { num: 26, week: 2, title: "Hereditary Renal Transport Disorders",                       games: 6, ready: true },
+    { num: 27, week: 2, title: "Mechanisms of Acid-Base Transport",                          games: 6, ready: true },
+    { num: 28, week: 2, title: "Metabolic Acidosis",                                         games: 6, ready: true },
+    { num: 29, week: 2, title: "Metabolic Alkalosis",                                        games: 6, ready: true },
+    { num: 30, week: 2, title: "Respiratory Acidosis",                                       games: 6, ready: true },
+    { num: 31, week: 2, title: "Respiratory Alkalosis",                                      games: 6, ready: true },
+    { num: 32, week: 2, title: "Carbonic Anhydrase Inhibitors",                              games: 6, ready: true },
+    { num: 33, week: 2, title: "Fanconi Syndrome",                                           games: 6, ready: true },
+    { num: 34, week: 2, title: "Acute Kidney Injury",                                        games: 6, ready: true },
+    { num: 35, week: 2, title: "Chronic Kidney Disease",                                     games: 6, ready: true },
+    { num: 36, week: 2, title: "End-Stage Kidney Disease and Kidney Replacement Therapy",    games: 6, ready: true },
+    { num: 37, week: 2, title: "Renal Laboratory Tests",                                     games: 6, ready: true },
+    { num: 38, week: 2, title: "Renal Imaging",                                              games: 6, ready: true },
+    { num: 39, week: 2, title: "Hematuria",                                                  games: 6, ready: true }
   ];
 
-  const grid = document.getElementById("moduleGrid");
+  const grid1 = document.getElementById("moduleGridWk1");
+  const grid2 = document.getElementById("moduleGridWk2");
   modules.forEach(m => {
     const numStr = String(m.num).padStart(2, "0");
     const card = document.createElement(m.ready ? "a" : "div");
     card.className = "module-card" + (m.ready ? "" : " disabled");
+    card.dataset.moduleNum = m.num;
     if (m.ready) card.href = `modules/${numStr}/index.html`;
     card.innerHTML = `
       <span class="badge ${m.ready ? "ready" : "soon"}">${m.ready ? "Ready" : "Soon"}</span>
@@ -62,7 +120,7 @@
       <h3>${m.title}</h3>
       <div class="meta">${m.ready ? `${m.games} games` : "Coming soon"}</div>
     `;
-    grid.appendChild(card);
+    (m.week === 2 ? grid2 : grid1).appendChild(card);
   });
 </script>
 

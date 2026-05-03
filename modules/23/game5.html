@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mechanism Lab — Module 23</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 23</a></div>
+  <h1>Game 5 — Mechanism Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Round 1: Sort each drug by K+ action class</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each drug into the correct K+ action class — Membrane Stabilizer, K+ Shifter (into cells), or K+ Remover (out of body).
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drugs / interventions</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing hyperkalemia concepts from the brick (not the brick's own review questions).
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Mechanism Lab complete!</h3>
+      <p>You have mastered the mechanisms and management of hyperkalemia. Take on the boss in Game 6!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: DRUG SORTER ===================== */
+  const drugs = [
+    { id: "d1", label: "Calcium gluconate",          bin: "stabilize" },
+    { id: "d2", label: "Insulin with dextrose",      bin: "shift" },
+    { id: "d3", label: "Nebulized albuterol",        bin: "shift" },
+    { id: "d4", label: "Furosemide (loop diuretic)", bin: "remove" },
+    { id: "d5", label: "Patiromer (GI K+ binder)",  bin: "remove" },
+    { id: "d6", label: "Hemodialysis",               bin: "remove" }
+  ];
+  const bins = [
+    { id: "stabilize", label: "Membrane Stabilizer (protects heart)" },
+    { id: "shift",     label: "K+ Shifter (moves K+ into cells)" },
+    { id: "remove",    label: "K+ Remover (eliminates K+ from body)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, drugs.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(drugs.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, drugs.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === drugs.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think whether this drug moves, protects, or eliminates K+.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ============================================================
+     ROUND 2: NEW questions — not the brick's own review questions
+     ============================================================ */
+  const questions = [
+    {
+      q: "A crush-injury patient arrives with K+ 6.8 mEq/L and peaked T waves on ECG. The FIRST drug to give is:",
+      options: [
+        "Insulin with dextrose — shifts K+ into cells within 10–20 minutes",
+        "IV calcium gluconate — stabilizes cardiac membranes within 2–5 minutes",
+        "Furosemide — increases renal K+ excretion over several hours",
+        "Patiromer — binds K+ in the GI tract within 7 hours"
+      ],
+      correct: 1,
+      explain: "When ECG changes are present, IV calcium gluconate is given first because it stabilizes the cardiac membrane within 2–5 minutes, buying time for K+ removal therapies. It does not lower the serum K+ level but prevents fatal arrhythmias."
+    },
+    {
+      q: "A physician gives a patient with hyperkalemia insulin and dextrose. Why must glucose be co-administered with the insulin?",
+      options: [
+        "Glucose activates ROMK channels to secrete K+ into the urine",
+        "Glucose alkalinizes the blood, shifting K+ into cells",
+        "Glucose prevents hypoglycemia from insulin-driven glucose uptake",
+        "Glucose stimulates aldosterone release to excrete K+"
+      ],
+      correct: 2,
+      explain: "Insulin shifts K+ into cells by activating the Na+/K+-ATPase. Glucose is co-administered to prevent hypoglycemia because the insulin will drive glucose into cells along with K+, dropping blood sugar."
+    },
+    {
+      q: "A patient with end-stage renal disease develops K+ of 7.3 mEq/L with a wide QRS. She is anuric. Which treatment can definitively eliminate K+ from her body?",
+      options: [
+        "Loop diuretics — require residual urine output to work",
+        "Hemodialysis — removes K+ directly from blood regardless of urine output",
+        "Albuterol — shifts K+ into cells temporarily without removing it",
+        "Calcium gluconate — lowers the serum K+ concentration"
+      ],
+      correct: 1,
+      explain: "Hemodialysis is the definitive treatment for life-threatening hyperkalemia in anuric patients with end-stage kidney disease. Loop diuretics require urine production. Albuterol and calcium gluconate do not eliminate K+ from the body."
+    },
+    {
+      q: "A patient with type 4 renal tubular acidosis (hypoaldosteronism) has chronic hyperkalemia. The primary defect driving K+ retention is:",
+      options: [
+        "Excess aldosterone stimulating K+ secretion in the collecting duct",
+        "Deficient aldosterone reducing K+ secretion in the collecting duct",
+        "Insulin resistance causing K+ to shift from cells into plasma",
+        "Impaired GFR blocking filtration of potassium at the glomerulus"
+      ],
+      correct: 1,
+      explain: "Type 4 RTA involves hypoaldosteronism (or aldosterone resistance). Aldosterone normally stimulates K+ secretion in the collecting duct; its absence leads to K+ retention and hyperkalemia. This is the most common form of RTA seen in clinical practice."
+    },
+    {
+      q: "A lab returns K+ of 6.5 mEq/L on a sample that the nurse notes was difficult to draw and required repeated fist-clenching. The most important next step before treating is:",
+      options: [
+        "Give calcium gluconate immediately while repeating the sample",
+        "Repeat the K+ measurement after a properly collected, non-hemolyzed sample",
+        "Begin insulin and dextrose infusion to shift K+ into cells",
+        "Order an ECG and schedule dialysis in the next 2 hours"
+      ],
+      correct: 1,
+      explain: "Pseudohyperkalemia from hemolysis (red cell K+ leakage) or prolonged fist-clenching is common. Before treating, confirm with a properly drawn, non-hemolyzed sample. Labs should always mark samples as hemolyzed when detected."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

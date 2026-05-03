@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build the Mg²⁺ Pathway — Module 25</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 25</a></div>
+  <h1>Game 1 — Build the Mg²⁺ Pathway</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧱</div>
+      <h2>Drag each magnesium fact to the correct location</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Magnesium is absorbed in the GI tract and reabsorbed in two key nephron segments. Drag each fact into the correct bucket: GI Absorption, Thick Ascending Limb (TAL), or Distal Convoluted Tubule (DCT).
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Magnesium facts</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Mg²⁺ pathway complete!</h3>
+      <p>Magnesium is absorbed in the ileum via paracellular solvent drag and TRPM6/7 channels. The thick ascending limb reabsorbs ~70% of filtered Mg²⁺ paracellularly, driven by the positive lumen potential from NKCC2. The DCT fine-tunes Mg²⁺ via active TRPM6-dependent transcellular transport.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "m1",  label: "Primary site of Mg²⁺ absorption from dietary intake",              bucket: "gi" },
+    { id: "m2",  label: "Paracellular solvent drag pathway (passive) for Mg²⁺ absorption",  bucket: "gi" },
+    { id: "m3",  label: "TRPM6/7 channel — transcellular Mg²⁺ absorption pathway",          bucket: "gi" },
+    { id: "m4",  label: "~70% of filtered Mg²⁺ is reabsorbed here — bulk paracellular",     bucket: "tal" },
+    { id: "m5",  label: "Positive lumen potential (from NKCC2) drives paracellular Mg²⁺",   bucket: "tal" },
+    { id: "m6",  label: "Loop diuretics impair Mg²⁺ reabsorption by disrupting this segment", bucket: "tal" },
+    { id: "m7",  label: "Fine-tuning segment: 10–20% of filtered Mg²⁺ reabsorbed here",    bucket: "dct" },
+    { id: "m8",  label: "TRPM6 channel on apical membrane — transcellular active transport", bucket: "dct" },
+    { id: "m9",  label: "EGF and PTH promote Mg²⁺ retention primarily in this segment",     bucket: "dct" }
+  ];
+
+  const buckets = [
+    { id: "gi",  label: "GI Absorption (ileum)" },
+    { id: "tal", label: "Thick Ascending Limb (TAL)" },
+    { id: "dct", label: "Distal Convoluted Tubule (DCT)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct!`, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That fact belongs to a different location in the Mg²⁺ pathway.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

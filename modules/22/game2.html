@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECG Hotspot — Module 22</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .ecg-zone { cursor: pointer; }
+  .ecg-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .ecg-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .ecg-zone text { pointer-events: none; user-select: none; }
+  .ecg-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .ecg-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 22</a></div>
+  <h1>Game 2 — ECG Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">📈</div>
+      <h2>Click the ECG zone that matches each clinical clue</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each description, click the correct ECG finding zone on the diagram. Four cases — four clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- U Wave zone -->
+        <g class="ecg-zone" data-name="U wave">
+          <rect class="zone-bg" x="10" y="40" width="115" height="190" rx="10"
+                fill="#d4edff" stroke="#4a90d9" stroke-width="2"/>
+          <text x="68" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#1a5fa8">U wave</text>
+          <text x="68" y="68" text-anchor="middle" font-size="10" fill="#1a5fa8">Positive deflection</text>
+          <text x="68" y="84" text-anchor="middle" font-size="10" fill="#1a5fa8">after T wave</text>
+          <text x="68" y="112" text-anchor="middle" font-size="10" fill="#444">Mild–moderate</text>
+          <text x="68" y="128" text-anchor="middle" font-size="10" fill="#444">hypokalemia</text>
+          <text x="68" y="155" text-anchor="middle" font-size="9" fill="#888">K+ 2.5–3.5 mEq/L</text>
+        </g>
+
+        <!-- Shallow T waves zone -->
+        <g class="ecg-zone" data-name="Shallow T wave">
+          <rect class="zone-bg" x="135" y="40" width="115" height="190" rx="10"
+                fill="#fff3cd" stroke="#e0a800" stroke-width="2"/>
+          <text x="193" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#856404">Shallow T wave</text>
+          <text x="193" y="68" text-anchor="middle" font-size="10" fill="#856404">Flattened or</text>
+          <text x="193" y="84" text-anchor="middle" font-size="10" fill="#856404">inverted T wave</text>
+          <text x="193" y="112" text-anchor="middle" font-size="10" fill="#444">Early sign of</text>
+          <text x="193" y="128" text-anchor="middle" font-size="10" fill="#444">hypokalemia</text>
+          <text x="193" y="155" text-anchor="middle" font-size="9" fill="#888">Repolarization delay</text>
+        </g>
+
+        <!-- Ventricular tachycardia zone -->
+        <g class="ecg-zone" data-name="Ventricular tachycardia">
+          <rect class="zone-bg" x="260" y="40" width="115" height="190" rx="10"
+                fill="#f8d7da" stroke="#dc3545" stroke-width="2"/>
+          <text x="318" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#842029">V-tach</text>
+          <text x="318" y="68" text-anchor="middle" font-size="10" fill="#842029">Ventricular</text>
+          <text x="318" y="84" text-anchor="middle" font-size="10" fill="#842029">tachycardia</text>
+          <text x="318" y="112" text-anchor="middle" font-size="10" fill="#444">Severe hypokalemia</text>
+          <text x="318" y="128" text-anchor="middle" font-size="10" fill="#444">K+ &lt;2.5 mEq/L</text>
+          <text x="318" y="155" text-anchor="middle" font-size="9" fill="#888">Life-threatening</text>
+        </g>
+
+        <!-- ST depression zone -->
+        <g class="ecg-zone" data-name="ST depression">
+          <rect class="zone-bg" x="385" y="40" width="115" height="190" rx="10"
+                fill="#e2d9f3" stroke="#6f42c1" stroke-width="2"/>
+          <text x="443" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#4a0080">ST depression</text>
+          <text x="443" y="68" text-anchor="middle" font-size="10" fill="#4a0080">ST segment</text>
+          <text x="443" y="84" text-anchor="middle" font-size="10" fill="#4a0080">downsloping</text>
+          <text x="443" y="112" text-anchor="middle" font-size="10" fill="#444">Associated with</text>
+          <text x="443" y="128" text-anchor="middle" font-size="10" fill="#444">moderate-severe</text>
+          <text x="443" y="144" text-anchor="middle" font-size="10" fill="#444">hypokalemia</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 ECG mastered!</h3>
+      <p>Hypokalemia causes shallow T waves, prominent U waves, ST depression, and — in severe cases — ventricular arrhythmias. The ECG is a critical tool for assessing severity and urgency of treatment.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A patient with K+ of 3.0 mEq/L has a subtle extra positive deflection after each T wave. This classic hypokalemia finding represents what ECG change?",
+      answer: "U wave",
+      explain: "U waves are the hallmark ECG finding of hypokalemia. They appear as a positive deflection following the T wave and become more prominent as K+ falls below 3.5 mEq/L."
+    },
+    {
+      text: "On a screening ECG, the T waves appear lower in amplitude than normal and are barely visible. The potassium comes back at 3.2 mEq/L. Which ECG finding is this?",
+      answer: "Shallow T wave",
+      explain: "Flattened or shallow T waves are an early ECG sign of hypokalemia reflecting impaired cardiac repolarization."
+    },
+    {
+      text: "A patient with K+ of 2.1 mEq/L develops a rapid wide-complex tachycardia that is hemodynamically unstable. This dangerous rhythm represents which ECG finding?",
+      answer: "Ventricular tachycardia",
+      explain: "Severe hypokalemia (K+ < 2.5 mEq/L) can precipitate supraventricular and ventricular tachycardias, including ventricular tachycardia. This is life-threatening and demands urgent potassium repletion."
+    },
+    {
+      text: "A 52-year-old on furosemide has K+ of 2.8 mEq/L. The ECG shows the baseline between the S wave and T wave is below the isoelectric line. Which finding is this?",
+      answer: "ST depression",
+      explain: "ST segment depression is seen in moderate-to-severe hypokalemia and reflects abnormal repolarization. It may precede more dangerous arrhythmias."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".ecg-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 4);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — re-read the clue and consider the severity level.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

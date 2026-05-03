@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anion Gap Hotspot — Module 28</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .ag-zone { cursor: pointer; }
+  .ag-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .ag-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .ag-zone text { pointer-events: none; user-select: none; }
+  .ag-zone.found .zone-bg { stroke: #16a34a; stroke-width: 4; filter: drop-shadow(0 0 8px rgba(22,163,74,0.5)); }
+  .ag-zone.miss .zone-bg { stroke: #dc2626; stroke-width: 4; animation: shakeAG 0.4s; }
+  @keyframes shakeAG { 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 28</a></div>
+  <h1>Game 2 — Anion Gap Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔍</div>
+      <h2>Click the correct anion gap category for each case</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four cases — four clicks. For each patient scenario, click AGMA (anion gap) or NAGMA (normal anion gap) to classify their metabolic acidosis. Misses count.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbea;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 240" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- AGMA -->
+        <g class="ag-zone" data-name="AGMA">
+          <rect class="zone-bg" x="20" y="30" width="200" height="180" rx="12"
+                fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+          <text x="120" y="18" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">AGMA</text>
+          <text x="120" y="58" text-anchor="middle" font-size="11" fill="#991b1b">Anion Gap &gt; 12 mEq/L</text>
+          <text x="120" y="80" text-anchor="middle" font-size="10" fill="#374151">Unmeasured anions</text>
+          <text x="120" y="96" text-anchor="middle" font-size="10" fill="#374151">accumulate</text>
+          <text x="120" y="120" text-anchor="middle" font-size="10" fill="#374151">MUDPILES: Methanol,</text>
+          <text x="120" y="136" text-anchor="middle" font-size="10" fill="#374151">Uremia, DKA, Propylene</text>
+          <text x="120" y="152" text-anchor="middle" font-size="10" fill="#374151">glycol, INH/Iron,</text>
+          <text x="120" y="168" text-anchor="middle" font-size="10" fill="#374151">Lactic acid, EtOH glycol,</text>
+          <text x="120" y="184" text-anchor="middle" font-size="10" fill="#374151">Salicylates</text>
+        </g>
+
+        <!-- NAGMA -->
+        <g class="ag-zone" data-name="NAGMA">
+          <rect class="zone-bg" x="260" y="30" width="200" height="180" rx="12"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="360" y="18" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">NAGMA</text>
+          <text x="360" y="58" text-anchor="middle" font-size="11" fill="#1e3a8a">Anion Gap 4–12 mEq/L</text>
+          <text x="360" y="80" text-anchor="middle" font-size="10" fill="#374151">HCO₃⁻ lost or kidney</text>
+          <text x="360" y="96" text-anchor="middle" font-size="10" fill="#374151">fails to excrete H⁺</text>
+          <text x="360" y="120" text-anchor="middle" font-size="10" fill="#374151">Causes: Diarrhea,</text>
+          <text x="360" y="136" text-anchor="middle" font-size="10" fill="#374151">CKD (early), Distal</text>
+          <text x="360" y="152" text-anchor="middle" font-size="10" fill="#374151">RTA (type 1), Proximal</text>
+          <text x="360" y="168" text-anchor="middle" font-size="10" fill="#374151">RTA (type 2),</text>
+          <text x="360" y="184" text-anchor="middle" font-size="10" fill="#374151">Hyperkalemic RTA (type 4)</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four cases classified!</h3>
+      <p>Anion gap = Na⁺ − (Cl⁻ + HCO₃⁻); normal 4–12 mEq/L. Elevated = unmeasured acid anions displacing HCO₃⁻. Normal = HCO₃⁻ lost (diarrhea) or H⁺ retained (RTA, CKD).</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 16-year-old with type 1 diabetes presents with confusion and Kussmaul breathing. Serum Na⁺ 138, Cl⁻ 98, HCO₃⁻ 10 mEq/L. Urine is positive for ketones. Calculate the anion gap and classify.",
+      answer: "AGMA",
+      explain: "AG = 138 − (98 + 10) = 30 mEq/L — well above 12. DKA produces beta-hydroxybutyrate and acetoacetate, unmeasured anions that replace HCO₃⁻ and widen the anion gap. This is a classic AGMA."
+    },
+    {
+      text: "A 45-year-old with Sjögren syndrome has a serum K⁺ of 2.8 mEq/L, HCO₃⁻ of 13 mEq/L, Na⁺ 140, Cl⁻ 115, and urine pH persistently >5.5. What type of metabolic acidosis is this?",
+      answer: "NAGMA",
+      explain: "AG = 140 − (115 + 13) = 12 mEq/L — within normal range. Sjögren syndrome causes distal RTA (type 1), impaired H⁺ secretion, with HCO₃⁻ wasting replaced by Cl⁻. This is a NAGMA (hyperchloremic acidosis)."
+    },
+    {
+      text: "A construction worker is found confused near industrial solvents. Serum Na⁺ 140, Cl⁻ 101, HCO₃⁻ 12 mEq/L, serum ethanol undetectable but osmolar gap is 18 mOsm/kg. Most likely diagnosis?",
+      answer: "AGMA",
+      explain: "AG = 140 − (101 + 12) = 27 mEq/L. An elevated osmolar gap with AGMA and no ethanol suggests methanol or ethylene glycol ingestion — both converted to toxic organic acids. This is AGMA requiring fomepizole."
+    },
+    {
+      text: "A 55-year-old with type 2 diabetes has serum K⁺ 5.6, HCO₃⁻ 19, Na⁺ 138, Cl⁻ 108, urine pH 5.1, and low aldosterone. What is the anion gap category?",
+      answer: "NAGMA",
+      explain: "AG = 138 − (108 + 19) = 11 mEq/L — normal. Hyperkalemia with low aldosterone causing NAGMA is classic type 4 (hyperkalemic) RTA, commonly seen in diabetic kidney disease with hyporeninism."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".ag-zone");
+
+  let currentCase = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      if (z.dataset.name === cases[currentCase].answer) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 4);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) { setTimeout(() => Game.celebrate("winBanner"), 600); }
+        else { setTimeout(loadCase, 2800); }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Calculate: Na⁺ − (Cl⁻ + HCO₃⁻). Is it > 12?", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

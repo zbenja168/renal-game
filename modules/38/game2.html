@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modality Hotspot — Module 38</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .mod-zone { cursor: pointer; }
+  .mod-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .mod-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .mod-zone text { pointer-events: none; user-select: none; }
+  .mod-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .mod-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 38</a></div>
+  <h1>Game 2 — Modality Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">📡</div>
+      <h2>Click the best imaging modality for each clinical case</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four patient scenarios. For each, click the modality zone that is the best choice. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 230" xmlns="http://www.w3.org/2000/svg">
+
+        <g class="mod-zone" data-name="Ultrasound">
+          <rect class="zone-bg" x="10" y="30" width="105" height="185" rx="12" fill="#d4edff" stroke="#4a90d9" stroke-width="2"/>
+          <text x="62" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#1a5fa8">Ultrasound</text>
+          <text x="62" y="62" text-anchor="middle" font-size="10" fill="#1a5fa8">No radiation</text>
+          <text x="62" y="78" text-anchor="middle" font-size="10" fill="#444">Size, structure</text>
+          <text x="62" y="94" text-anchor="middle" font-size="10" fill="#444">Cysts, stones</text>
+          <text x="62" y="110" text-anchor="middle" font-size="10" fill="#444">Obstruction</text>
+          <text x="62" y="130" text-anchor="middle" font-size="10" fill="#888">First-line</text>
+          <text x="62" y="146" text-anchor="middle" font-size="10" fill="#888">Pregnancy safe</text>
+          <text x="62" y="162" text-anchor="middle" font-size="10" fill="#888">ADPKD cysts</text>
+        </g>
+
+        <g class="mod-zone" data-name="CT">
+          <rect class="zone-bg" x="125" y="30" width="105" height="185" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="177" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">CT Scan</text>
+          <text x="177" y="62" text-anchor="middle" font-size="10" fill="#92400e">Radiation used</text>
+          <text x="177" y="78" text-anchor="middle" font-size="10" fill="#444">Stones (best)</text>
+          <text x="177" y="94" text-anchor="middle" font-size="10" fill="#444">Masses / tumors</text>
+          <text x="177" y="110" text-anchor="middle" font-size="10" fill="#444">Trauma</text>
+          <text x="177" y="126" text-anchor="middle" font-size="10" fill="#444">Abscesses</text>
+          <text x="177" y="146" text-anchor="middle" font-size="10" fill="#888">Non-contrast</text>
+          <text x="177" y="162" text-anchor="middle" font-size="10" fill="#888">= nephrolithiasis</text>
+        </g>
+
+        <g class="mod-zone" data-name="Nuclear Scan">
+          <rect class="zone-bg" x="240" y="30" width="105" height="185" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+          <text x="292" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Nuclear</text>
+          <text x="292" y="28" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Scan</text>
+          <text x="292" y="62" text-anchor="middle" font-size="10" fill="#14532d">Radioisotope</text>
+          <text x="292" y="78" text-anchor="middle" font-size="10" fill="#444">Split function</text>
+          <text x="292" y="94" text-anchor="middle" font-size="10" fill="#444">Left vs right</text>
+          <text x="292" y="110" text-anchor="middle" font-size="10" fill="#444">kidney GFR</text>
+          <text x="292" y="136" text-anchor="middle" font-size="10" fill="#888">Before</text>
+          <text x="292" y="152" text-anchor="middle" font-size="10" fill="#888">nephrectomy</text>
+        </g>
+
+        <g class="mod-zone" data-name="MRI">
+          <rect class="zone-bg" x="355" y="30" width="115" height="185" rx="12" fill="#fdf4ff" stroke="#a21caf" stroke-width="2"/>
+          <text x="412" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#701a75">MRI</text>
+          <text x="412" y="58" text-anchor="middle" font-size="10" fill="#701a75">Soft-tissue</text>
+          <text x="412" y="74" text-anchor="middle" font-size="10" fill="#444">contrast</text>
+          <text x="412" y="90" text-anchor="middle" font-size="10" fill="#444">Indeterminate</text>
+          <text x="412" y="106" text-anchor="middle" font-size="10" fill="#444">renal masses</text>
+          <text x="412" y="122" text-anchor="middle" font-size="10" fill="#444">CT contraindicated</text>
+          <text x="412" y="148" text-anchor="middle" font-size="10" fill="#888">Angiomyolipoma</text>
+          <text x="412" y="164" text-anchor="middle" font-size="10" fill="#888">benign fat lesion</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four cases solved!</h3>
+      <p>Ultrasound = first-line, no radiation. Non-contrast CT = stone of choice. Nuclear scan = split renal function before nephrectomy. MRI = best soft-tissue contrast for indeterminate or CT-contraindicated masses.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 10-year-old girl has right flank pain and hematuria. Her creatinine is at the upper limit of normal. She is not pregnant. Her parents ask about radiation. Which imaging modality is preferred as a first-line evaluation that avoids radiation?",
+      answer: "Ultrasound",
+      explain: "Ultrasound is the preferred first-line modality in children and pregnant patients because it avoids radiation. It can detect obstruction (hydronephrosis), cysts, and large stones."
+    },
+    {
+      text: "A 43-year-old non-pregnant woman has sudden-onset right flank pain radiating to the groin. Urine HCG is negative. You suspect nephrolithiasis. Which modality detects even small stones with the most precision, including their location and any obstruction?",
+      answer: "CT",
+      explain: "Non-contrast CT is the test of choice for nephrolithiasis — it detects even small stones, shows their exact location, and identifies obstruction. It is more sensitive than ultrasound for small stones."
+    },
+    {
+      text: "A 58-year-old woman with a large renal cell carcinoma of the right kidney will undergo nephrectomy. The surgeon needs to know how much function the LEFT kidney provides before removing the right. Which study provides this split function information?",
+      answer: "Nuclear Scan",
+      explain: "Radionuclide (nuclear medicine) scans measure comparative function of each kidney by following injected radioisotope through the renal vasculature and into the ultrafiltrate. This gives 'split function' — vital before nephrectomy to confirm the remaining kidney is not nonfunctional."
+    },
+    {
+      text: "A 34-year-old man has a 3 cm right renal mass on CT that appears to have some fat content but is otherwise indeterminate. CT with contrast is non-diagnostic. Which modality provides the best soft-tissue characterization to differentiate angiomyolipoma from renal cell carcinoma?",
+      answer: "MRI",
+      explain: "MRI provides high-resolution soft-tissue contrast and is excellent for evaluating indeterminate renal masses, especially when CT is non-diagnostic. A T1 MRI can characterize fat-containing lesions like angiomyolipoma and distinguish them from malignant masses."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".mod-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found", "miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 4);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 3000);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not the best choice here — re-read the clinical details.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

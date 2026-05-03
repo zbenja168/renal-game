@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build the Hematuria Workup — Module 39</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 39</a></div>
+  <h1>Game 1 — Build the Hematuria Workup</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩸</div>
+      <h2>Drag each workup step into its correct slot</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The hematuria evaluation follows a logical sequence. Each slot below describes a step or key finding at a stage of the workup. Place each label in the right slot.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Workup steps</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Workup sequence built!</h3>
+      <p>History → physical exam → urinalysis → dipstick → microscopy → serum creatinine → radiology (US or CT) → biopsy or cystoscopy if needed. Each step narrows the differential.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "s1", label: "First branch point: determines if urine color is from RBCs vs. other pigments", answer: "Urine dipstick (heme pad)" },
+    { id: "s2", label: "Defines hematuria — more than this many RBCs per high-power field in centrifuged urine", answer: ">3 RBCs per HPF" },
+    { id: "s3", label: "Microscopy finding pointing to glomerular origin (dysmorphic RBCs or this structure)", answer: "RBC cast" },
+    { id: "s4", label: "Lab that assesses overall kidney function; elevated value suggests intrarenal or bilateral obstruction", answer: "Serum creatinine / eGFR" },
+    { id: "s5", label: "Best first-line imaging for detecting stones, cysts, and obstruction without radiation", answer: "Renal ultrasound" },
+    { id: "s6", label: "Preferred imaging when stone analysis and precise localization are needed", answer: "CT scan" },
+    { id: "s7", label: "Procedure to directly visualize the bladder; used when imaging is negative and bladder cancer is suspected", answer: "Cystoscopy" },
+    { id: "s8", label: "Tissue sampling performed when glomerular disease is strongly suspected based on above findings", answer: "Kidney biopsy" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", el.dataset.label); });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (zone.classList.contains("correct")) return;
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dropped;
+        zone.appendChild(pi);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb("✓ Correct — " + dropped + " placed.", "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Think about which step in the workup that clue describes.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

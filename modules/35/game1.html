@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build the CKD Stages — Module 35</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 35</a></div>
+  <h1>Game 1 — Build the CKD Stages</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧱</div>
+      <h2>Drag each eGFR range into the correct CKD G-stage</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> CKD is staged G1 through G5 based on the eGFR (estimated glomerular filtration rate). Drag each eGFR label into the correct stage slot. The stages go from near-normal function down to kidney failure.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 5</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>eGFR ranges (mL/min/1.73 m²)</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 CKD staging complete!</h3>
+      <p>G1 ≥90 (damage with normal GFR), G2 60–89 (mild), G3a 45–59 and G3b 30–44 (moderate), G4 15–29 (severe), G5 &lt;15 (kidney failure requiring replacement therapy). Lower eGFR = higher ESKD risk.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "s1", label: "G1 — Kidney damage with near-normal or increased filtration", answer: "eGFR ≥90" },
+    { id: "s2", label: "G2 — Mildly decreased kidney function",                       answer: "eGFR 60–89" },
+    { id: "s3", label: "G3a — Mildly-to-moderately decreased function",               answer: "eGFR 45–59" },
+    { id: "s4", label: "G3b — Moderately-to-severely decreased function",             answer: "eGFR 30–44" },
+    { id: "s5", label: "G4 — Severely decreased kidney function",                     answer: "eGFR 15–29" }
+  ];
+
+  // G5 (<15) is kidney failure / ESKD — covered separately in module 36,
+  // so we include 5 stages here as labeled in the brick's GFR staging.
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  const winEl    = document.getElementById("winBanner");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.slotId = s.id;
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", el.dataset.label);
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (zone.classList.contains("correct")) return;
+
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dropped;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb(`✓ Correct — ${dropped} belongs to this stage.`, "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That eGFR range doesn't match this stage.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

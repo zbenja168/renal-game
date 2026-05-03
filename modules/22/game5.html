@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symptom Lab — Module 22</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 22</a></div>
+  <h1>Game 5 — Symptom Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Round 1: Sort symptoms by when they appear</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each sign or symptom into the correct severity bin. "Mild" = symptoms typically absent or nonspecific; "Moderate" = symptoms appear but non-cardiac; "Severe" = cardiac or life-threatening manifestations.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 7</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Signs &amp; symptoms</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: NEW clinical scenario quiz -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawn from the brick's content (not the brick's own review questions). Each tests a distinct key fact about hypokalemia.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Symptom Lab complete!</h3>
+      <p>You have mastered the clinical presentation and key facts of hypokalemia. Take on the boss in Game 6!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===================== ROUND 1: SYMPTOM SORTER ===================== */
+  const symptoms = [
+    { id: "s1", label: "Usually no symptoms (K+ 3.0–3.5 mEq/L range)", bin: "mild" },
+    { id: "s2", label: "Fatigue and mild weakness",                       bin: "mild" },
+    { id: "s3", label: "Muscle cramps",                                   bin: "moderate" },
+    { id: "s4", label: "Constipation / ileus",                            bin: "moderate" },
+    { id: "s5", label: "Palpitations (cardiac arrhythmias)",              bin: "severe" },
+    { id: "s6", label: "Rhabdomyolysis (muscle cell breakdown)",          bin: "severe" },
+    { id: "s7", label: "Cardiac arrest from fatal arrhythmia",            bin: "severe" }
+  ];
+  const bins = [
+    { id: "mild",     label: "Mild hypokalemia (3.0–3.5 mEq/L)" },
+    { id: "moderate", label: "Moderate hypokalemia (~2.5–3.0 mEq/L)" },
+    { id: "severe",   label: "Severe hypokalemia (<2.5 mEq/L)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, symptoms.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(symptoms.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const expected = dragSource.dataset.bin;
+      const target = zone.dataset.binId;
+      if (expected === target) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, symptoms.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === symptoms.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Check the severity threshold for this sign.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ============================================================
+     ROUND 2: NEW questions — not the brick's own review questions
+     ============================================================ */
+  const questions = [
+    {
+      q: "A hospitalized patient has a potassium level of 3.3 mEq/L. The physician decides to monitor rather than treat immediately. At what serum K+ level do most patients first develop overt symptoms such as muscle cramps?",
+      options: [
+        "Below 3.5 mEq/L",
+        "Below 3.0 mEq/L",
+        "Below 2.5 mEq/L",
+        "Below 2.0 mEq/L"
+      ],
+      correct: 1,
+      explain: "Symptoms of hypokalemia typically do not appear until the serum K+ falls below 3.0 mEq/L. At 3.0–3.5 mEq/L, patients are generally asymptomatic. Rapid falls cause more symptoms than gradual falls at the same level."
+    },
+    {
+      q: "A patient with primary hyperaldosteronism is found to have hypokalemia. What is the primary mechanism by which elevated aldosterone causes renal potassium wasting?",
+      options: [
+        "Aldosterone blocks Na+/K+-ATPase in the proximal tubule",
+        "Aldosterone increases potassium secretion in the cortical collecting duct",
+        "Aldosterone reduces potassium absorption in the loop of Henle",
+        "Aldosterone shifts potassium from extracellular to intracellular space"
+      ],
+      correct: 1,
+      explain: "Aldosterone stimulates potassium secretion (and sodium reabsorption) in the cortical collecting duct. Hyperaldosteronism drives excess K+ into the urine, causing renal potassium wasting and hypokalemia."
+    },
+    {
+      q: "A 24-hour urine potassium collection returns at 32 mEq/day. A spot urine potassium is 35 mEq/L. Which of these results suggests renal K+ loss as the cause of hypokalemia?",
+      options: [
+        "24h urine >25–30 mEq/day suggests renal loss; spot urine >30 mEq/L suggests renal loss",
+        "24h urine >10 mEq/day suggests renal loss; spot urine >15 mEq/L suggests renal loss",
+        "24h urine >50 mEq/day suggests renal loss; spot urine >50 mEq/L suggests renal loss",
+        "These urine tests cannot distinguish renal from GI potassium losses"
+      ],
+      correct: 0,
+      explain: "Per the brick: 24-hour urinary K+ >25–30 mEq/day suggests renal K+ loss. On a spot urine, a K+/creatinine ratio >13 mEq/g or spot urine K+ >30 mEq/L also points to renal wasting."
+    },
+    {
+      q: "A patient has hypokalemia that proves difficult to correct despite adequate potassium supplementation. Magnesium level is 1.2 mEq/L (low). Why does hypomagnesemia cause refractory hypokalemia?",
+      options: [
+        "Magnesium inhibits potassium secretion via ROMK channels in the distal nephron",
+        "Magnesium reduces aldosterone secretion, increasing renal K+ excretion",
+        "Magnesium enhances insulin release, shifting K+ into cells",
+        "Magnesium competes with potassium at the Na+/K+-ATPase pump"
+      ],
+      correct: 0,
+      explain: "Magnesium inhibits potassium secretion through ROMK channels in the distal convoluted tubule. Without sufficient magnesium, ROMK channels are disinhibited and secrete excess K+ into the urine. Magnesium must be corrected first for K+ repletion to succeed."
+    },
+    {
+      q: "A patient on a thiazide diuretic develops hypokalemia with a concurrent metabolic alkalosis. Which potassium supplement is the most appropriate first choice and why?",
+      options: [
+        "Potassium citrate, because it provides alkali to correct the acidosis",
+        "Potassium chloride, because chloride co-repletes the concurrent metabolic alkalosis",
+        "Potassium phosphate, because thiazides always co-deplete phosphate",
+        "Potassium bicarbonate, because bicarbonate restores the serum pH most rapidly"
+      ],
+      correct: 1,
+      explain: "Potassium chloride (KCl) is the default replacement for most hypokalemia because chloride co-repletes the metabolic alkalosis and chloride depletion commonly coexists with diuretic or vomiting-induced hypokalemia."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

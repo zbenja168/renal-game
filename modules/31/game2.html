@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypoxic or Not? — Module 31</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .alk-zone { cursor: pointer; }
+  .alk-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .alk-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .alk-zone text { pointer-events: none; user-select: none; }
+  .alk-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .alk-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100%{ transform: translateX(0); }
+    25%{ transform: translateX(-4px); }
+    75%{ transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 31</a></div>
+  <h1>Game 2 — Hypoxic or Not?</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🌡️</div>
+      <h2>Click the correct cause category for each scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each patient vignette, click whether the hyperventilation is driven by hypoxemia (low PO₂) or by a non-hypoxic stimulus (normal PO₂). Four cases — four clicks. Misses count.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Low PO2 / Hypoxic -->
+        <g class="alk-zone" data-name="Hypoxic hyperventilation">
+          <rect class="zone-bg" x="20" y="30" width="200" height="160" rx="12"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="120" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Hypoxic Hyperventilation</text>
+          <text x="120" y="60" text-anchor="middle" font-size="11" fill="#92400e">↓ PO₂ detected by</text>
+          <text x="120" y="77" text-anchor="middle" font-size="11" fill="#92400e">carotid &amp; aortic bodies</text>
+          <text x="120" y="104" text-anchor="middle" font-size="10" fill="#444">High altitude, CHF,</text>
+          <text x="120" y="120" text-anchor="middle" font-size="10" fill="#444">pneumonia, ARDS,</text>
+          <text x="120" y="136" text-anchor="middle" font-size="10" fill="#444">pulmonary embolism</text>
+          <text x="120" y="162" text-anchor="middle" font-size="10" fill="#888">Low PO₂ triggers RR ↑</text>
+        </g>
+
+        <!-- Normal PO2 / Non-hypoxic -->
+        <g class="alk-zone" data-name="Non-hypoxic hyperventilation">
+          <rect class="zone-bg" x="260" y="30" width="200" height="160" rx="12"
+                fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+          <text x="360" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#075985">Non-hypoxic Hyperventilation</text>
+          <text x="360" y="60" text-anchor="middle" font-size="11" fill="#075985">Normal PO₂; CNS or</text>
+          <text x="360" y="77" text-anchor="middle" font-size="11" fill="#075985">metabolic stimulus</text>
+          <text x="360" y="104" text-anchor="middle" font-size="10" fill="#444">Panic attack, anxiety,</text>
+          <text x="360" y="120" text-anchor="middle" font-size="10" fill="#444">aspirin overdose, sepsis,</text>
+          <text x="360" y="136" text-anchor="middle" font-size="10" fill="#444">pregnancy, cirrhosis</text>
+          <text x="360" y="162" text-anchor="middle" font-size="10" fill="#888">Brain/hormone stimulus</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four cases classified!</h3>
+      <p>Hypoxic: PO₂ is low, chemoreceptors fire, raising RR. Non-hypoxic: PO₂ is normal but CNS, hormones, or systemic illness directly stimulate the respiratory center.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 27-year-old man climbs to a high-altitude trekking base camp at 4,500 m. Within 12 hours he develops headache, nausea, and rapid breathing. Arterial blood gas shows pH 7.51, PaCO₂ 28 mmHg, PaO₂ 55 mmHg. What category drives his hyperventilation?",
+      answer: "Hypoxic hyperventilation",
+      explain: "At high altitude, inspired oxygen fraction is lower, causing hypoxemia. Low PaO₂ stimulates the carotid and aortic chemoreceptors, triggering hyperventilation and respiratory alkalosis."
+    },
+    {
+      text: "A 24-year-old woman presents with sudden-onset rapid breathing, tingling in her hands, and a feeling of impending doom at a shopping mall. She has no medical history. Pulse oximetry is 99%. ABG: pH 7.53, PaCO₂ 25 mmHg, PaO₂ 100 mmHg. What drives her hyperventilation?",
+      answer: "Non-hypoxic hyperventilation",
+      explain: "This is a panic attack — the most common overall cause of respiratory alkalosis. PO₂ is normal; the CNS is directly stimulating the respiratory center due to anxiety."
+    },
+    {
+      text: "A 35-year-old pregnant woman at 28 weeks gestation has a routine blood gas showing pH 7.47, PaCO₂ 30 mmHg, and PaO₂ 98 mmHg. She denies symptoms. What is the mechanism?",
+      answer: "Non-hypoxic hyperventilation",
+      explain: "Pregnancy raises progesterone levels, which causes bronchodilation and increased tidal volume, resulting in a mild chronic respiratory alkalosis. PO₂ is normal — this is a hormone-driven stimulus."
+    },
+    {
+      text: "A 60-year-old male with known congestive heart failure presents with progressive shortness of breath. He has crackles at the lung bases, pitting edema, and SpO₂ is 87% on room air. ABG shows pH 7.49, PaCO₂ 30 mmHg. What drives his hyperventilation?",
+      answer: "Hypoxic hyperventilation",
+      explain: "CHF causes pulmonary edema, which impairs oxygen diffusion (V/Q mismatch) and leads to hypoxemia. Low PaO₂ drives hyperventilation via chemoreceptor stimulation."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".alk-zone");
+
+  let currentCase = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadCase, 2500);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Check the PaO₂ — is oxygen low or normal in this case?", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

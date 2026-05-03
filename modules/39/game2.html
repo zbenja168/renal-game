@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Urine Hotspot — Module 39</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .red-zone { cursor: pointer; }
+  .red-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .red-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .red-zone text { pointer-events: none; user-select: none; }
+  .red-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .red-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 39</a></div>
+  <h1>Game 2 — Red Urine Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔴</div>
+      <h2>The urine is red — click the correct cause zone</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four cases of red or discolored urine. For each, click the zone that best explains the color. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 540 230" xmlns="http://www.w3.org/2000/svg">
+
+        <g class="red-zone" data-name="True hematuria (RBCs)">
+          <rect class="zone-bg" x="10" y="30" width="120" height="185" rx="12" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+          <text x="70" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">True</text>
+          <text x="70" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">Hematuria</text>
+          <text x="70" y="65" text-anchor="middle" font-size="10" fill="#991b1b">&gt;3 RBCs/HPF</text>
+          <text x="70" y="85" text-anchor="middle" font-size="10" fill="#444">Dipstick +</text>
+          <text x="70" y="100" text-anchor="middle" font-size="10" fill="#444">RBCs on</text>
+          <text x="70" y="115" text-anchor="middle" font-size="10" fill="#444">microscopy</text>
+          <text x="70" y="145" text-anchor="middle" font-size="9" fill="#888">Stones, tumor,</text>
+          <text x="70" y="160" text-anchor="middle" font-size="9" fill="#888">glomerulitis</text>
+        </g>
+
+        <g class="red-zone" data-name="Myoglobinuria">
+          <rect class="zone-bg" x="140" y="30" width="120" height="185" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="200" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Myoglobinuria</text>
+          <text x="200" y="65" text-anchor="middle" font-size="10" fill="#92400e">Dipstick +</text>
+          <text x="200" y="80" text-anchor="middle" font-size="10" fill="#444">No RBCs</text>
+          <text x="200" y="95" text-anchor="middle" font-size="10" fill="#444">on microscopy</text>
+          <text x="200" y="120" text-anchor="middle" font-size="9" fill="#888">Rhabdomyolysis,</text>
+          <text x="200" y="135" text-anchor="middle" font-size="9" fill="#888">muscle breakdown</text>
+          <text x="200" y="155" text-anchor="middle" font-size="9" fill="#888">Red-brown urine</text>
+        </g>
+
+        <g class="red-zone" data-name="Drug or food pigment">
+          <rect class="zone-bg" x="270" y="30" width="120" height="185" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+          <text x="330" y="12" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Drug / Food</text>
+          <text x="330" y="25" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Pigment</text>
+          <text x="330" y="65" text-anchor="middle" font-size="10" fill="#14532d">Dipstick —</text>
+          <text x="330" y="80" text-anchor="middle" font-size="10" fill="#444">No RBCs</text>
+          <text x="330" y="95" text-anchor="middle" font-size="10" fill="#444">Colored</text>
+          <text x="330" y="110" text-anchor="middle" font-size="10" fill="#444">compounds</text>
+          <text x="330" y="135" text-anchor="middle" font-size="9" fill="#888">Rifampin, beets,</text>
+          <text x="330" y="150" text-anchor="middle" font-size="9" fill="#888">phenazopyridine</text>
+        </g>
+
+        <g class="red-zone" data-name="Hemoglobinuria">
+          <rect class="zone-bg" x="400" y="30" width="130" height="185" rx="12" fill="#fdf4ff" stroke="#a21caf" stroke-width="2"/>
+          <text x="465" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="#701a75">Hemoglobinuria</text>
+          <text x="465" y="65" text-anchor="middle" font-size="10" fill="#701a75">Dipstick +</text>
+          <text x="465" y="80" text-anchor="middle" font-size="10" fill="#444">No RBCs</text>
+          <text x="465" y="95" text-anchor="middle" font-size="10" fill="#444">Free hemoglobin</text>
+          <text x="465" y="115" text-anchor="middle" font-size="9" fill="#888">Hemolysis,</text>
+          <text x="465" y="130" text-anchor="middle" font-size="9" fill="#888">ABO transfusion</text>
+          <text x="465" y="150" text-anchor="middle" font-size="9" fill="#888">reaction</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four cases cracked!</h3>
+      <p>True hematuria = RBCs on microscopy. Myoglobinuria = heme+ dipstick with no RBCs (rhabdomyolysis). Drug/food pigments = heme-negative, no RBCs. Hemoglobinuria = heme+ with no RBCs (hemolysis). The dipstick + microscopy combination is the key to telling them apart.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 52-year-old male has red urine and right flank pain. Urine dipstick is positive for blood. Urine microscopy shows >10 RBCs per high-power field, including some with irregular shapes. What is the correct category for his urine discoloration?",
+      answer: "True hematuria (RBCs)",
+      explain: "Hematuria is defined as >3 RBCs per HPF on a centrifuged urine specimen. A positive dipstick and RBCs on microscopy confirm true hematuria. The dysmorphic RBCs suggest a glomerular origin."
+    },
+    {
+      text: "A 25-year-old male runner collapses after a marathon. His urine is brown-red. Urine dipstick is positive for heme. Urine microscopy shows NO red blood cells. Serum creatinine is mildly elevated. What is the most likely explanation?",
+      answer: "Myoglobinuria",
+      explain: "Exercise-induced rhabdomyolysis releases myoglobin from damaged muscle cells. Myoglobin cross-reacts with the dipstick heme pad, producing a positive result even though there are no RBCs. The absence of RBCs on microscopy is the key clue."
+    },
+    {
+      text: "A patient on TB therapy notices orange-red urine the morning after starting a new medication. Urine dipstick is negative for blood. Microscopy shows no RBCs, WBCs, or casts. He feels completely well. What explains his urine color?",
+      answer: "Drug or food pigment",
+      explain: "Rifampin (rifampicin), used for tuberculosis, turns urine, sweat, and tears orange-red. The dipstick is heme-negative and microscopy is normal — confirming this is a drug pigment and not true hematuria."
+    },
+    {
+      text: "A 24-year-old woman develops pink urine 1 hour after receiving a blood transfusion. She is hypotensive and has back pain. Urine dipstick is positive for blood. Microscopy shows few RBCs but diffuse pink tint. What category of red urine is this?",
+      answer: "Hemoglobinuria",
+      explain: "ABO transfusion reactions cause intravascular hemolysis, releasing free hemoglobin into the plasma. Free hemoglobin is filtered by the kidney and appears in the urine, causing a heme-positive dipstick with few or no intact RBCs on microscopy."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".red-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found", "miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 4);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 3000);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — check the dipstick and microscopy clues.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

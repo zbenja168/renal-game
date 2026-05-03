@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 30</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 30</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>Boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of labels — sixteen of them. Drop each onto the correct slot covering presentation, pathophysiology, diagnosis, and management. Wrong drops cost a miss tally. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Respiratory Acidosis!</h3>
+      <p>You know the presentation, the pathophysiology, how to read the ABG, and how to manage it. You are ready for the real exam.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "present", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "p1", label: "The three main symptom categories: mental status, breathing, and underlying disease symptoms",
+          answer: "Altered mental status, dyspnea, symptoms of underlying disease" },
+        { id: "p2", label: "Exam finding caused by CNS depression — response to verbal stimulus is absent",
+          answer: "Unresponsiveness" },
+        { id: "p3", label: "Pupillary finding classically seen with opioid-induced respiratory depression",
+          answer: "Pinpoint pupils" },
+        { id: "p4", label: "Breathing pattern that may be seen on exam in COPD-related respiratory acidosis",
+          answer: "Pursed-lip breathing" }
+      ]
+    },
+    {
+      id: "patho", title: "Pathophysiology", lo: "LO2",
+      slots: [
+        { id: "q1", label: "Primary direction of change in PaCO₂ in respiratory acidosis",
+          answer: "PaCO₂ rises above 40 mmHg" },
+        { id: "q2", label: "Consequence for blood pH when CO₂ accumulates",
+          answer: "pH falls below 7.35" },
+        { id: "q3", label: "Cause category: opioid overdose, head trauma, obesity hypoventilation",
+          answer: "Reduced respiratory drive" },
+        { id: "q4", label: "Cause category: pneumonia, pulmonary edema, COPD, pulmonary fibrosis",
+          answer: "Impaired gas exchange" }
+      ]
+    },
+    {
+      id: "diag", title: "Diagnosis", lo: "LO3",
+      slots: [
+        { id: "d1", label: "Best initial test to confirm respiratory acidosis",
+          answer: "Arterial blood gas (ABG)" },
+        { id: "d2", label: "HCO₃⁻ rise per 10 mmHg PaCO₂ increase in ACUTE respiratory acidosis",
+          answer: "1–2 mEq/L" },
+        { id: "d3", label: "HCO₃⁻ rise per 10 mmHg PaCO₂ increase in CHRONIC respiratory acidosis",
+          answer: "3–4 mEq/L" },
+        { id: "d4", label: "Imaging or functional test used if pulmonary cause is suspected",
+          answer: "Chest X-ray or pulmonary function testing" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "Opioid antagonist given immediately for suspected opioid overdose respiratory acidosis",
+          answer: "Naloxone" },
+        { id: "m2", label: "Non-invasive ventilatory support that increases tidal volume in COPD patients",
+          answer: "BiPAP (bilevel positive airway pressure)" },
+        { id: "m3", label: "Definitive airway intervention for markedly decreased respiratory drive",
+          answer: "Endotracheal intubation" },
+        { id: "m4", label: "Overall management principle: target the primary problem, not just the pH",
+          answer: "Treat the underlying cause" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+
+  const ICONS = { present: "🩺", patho: "⚗️", diag: "🧪", mgmt: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb("✓ " + placedItem.textContent, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb("✗ " + dragSource.textContent + " doesn't fit there.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

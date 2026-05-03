@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dialysis Access Hotspot — Module 36</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .krt-zone { cursor: pointer; }
+  .krt-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .krt-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .krt-zone text { pointer-events: none; user-select: none; }
+
+  .krt-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .krt-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 36</a></div>
+  <h1>Game 2 — Dialysis Access Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🏥</div>
+      <h2>Click the correct access type or modality for each vignette</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Read each clinical scenario and click the correct venous access or dialysis modality on the panel. Three cases — three clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 540 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- AV Fistula -->
+        <g class="krt-zone" data-name="AV Fistula">
+          <rect class="zone-bg" x="10" y="40" width="160" height="220" rx="12"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="90" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">AV Fistula</text>
+          <text x="90" y="60" text-anchor="middle" font-size="10" fill="#1e40af">Surgically created</text>
+          <text x="90" y="76" text-anchor="middle" font-size="10" fill="#1e40af">arteriovenous connection</text>
+          <text x="90" y="96" text-anchor="middle" font-size="10" fill="#444">Nondominant arm</text>
+          <text x="90" y="112" text-anchor="middle" font-size="10" fill="#444">Lowest infection risk</text>
+          <text x="90" y="128" text-anchor="middle" font-size="10" fill="#444">Preferred long-term</text>
+          <text x="90" y="148" text-anchor="middle" font-size="10" fill="#444">venous access</text>
+          <text x="90" y="172" text-anchor="middle" font-size="10" fill="#888">May develop stenosis</text>
+          <text x="90" y="188" text-anchor="middle" font-size="10" fill="#888">or thrombosis</text>
+        </g>
+
+        <!-- HD Catheter -->
+        <g class="krt-zone" data-name="HD Catheter">
+          <rect class="zone-bg" x="190" y="40" width="160" height="220" rx="12"
+                fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+          <text x="270" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">HD Catheter</text>
+          <text x="270" y="60" text-anchor="middle" font-size="10" fill="#78350f">Tunneled or non-tunneled</text>
+          <text x="270" y="76" text-anchor="middle" font-size="10" fill="#78350f">central venous catheter</text>
+          <text x="270" y="96" text-anchor="middle" font-size="10" fill="#444">Placed in jugular or</text>
+          <text x="270" y="112" text-anchor="middle" font-size="10" fill="#444">subclavian vein</text>
+          <text x="270" y="132" text-anchor="middle" font-size="10" fill="#444">Highest infection risk</text>
+          <text x="270" y="148" text-anchor="middle" font-size="10" fill="#444">Used as bridge while</text>
+          <text x="270" y="164" text-anchor="middle" font-size="10" fill="#444">fistula matures</text>
+          <text x="270" y="188" text-anchor="middle" font-size="10" fill="#888">Risk of bacteremia</text>
+        </g>
+
+        <!-- Peritoneal Dialysis -->
+        <g class="krt-zone" data-name="Peritoneal Dialysis">
+          <rect class="zone-bg" x="370" y="40" width="160" height="220" rx="12"
+                fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+          <text x="450" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Peritoneal</text>
+          <text x="450" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">Dialysis</text>
+          <text x="450" y="68" text-anchor="middle" font-size="10" fill="#065f46">Catheter into abdomen</text>
+          <text x="450" y="84" text-anchor="middle" font-size="10" fill="#065f46">Uses peritoneum as filter</text>
+          <text x="450" y="104" text-anchor="middle" font-size="10" fill="#444">Always done at home</text>
+          <text x="450" y="120" text-anchor="middle" font-size="10" fill="#444">Automated cycler at night</text>
+          <text x="450" y="140" text-anchor="middle" font-size="10" fill="#444">Dialysate instilled into</text>
+          <text x="450" y="156" text-anchor="middle" font-size="10" fill="#444">peritoneal cavity</text>
+          <text x="450" y="180" text-anchor="middle" font-size="10" fill="#888">Bacterial peritonitis risk</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three access scenarios identified!</h3>
+      <p>AV fistula = gold standard HD access (lowest infection, preferred long-term). HD catheter = bridge or emergent access (highest infection risk). Peritoneal dialysis = home-based using the peritoneum, ideal for patients who value independence.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 61-year-old man with ESKD has been on hemodialysis for 2 years. His dialysis team notes a thrill and bruit over his left forearm. He dialyzes through two needles placed into a vascular structure created surgically in his arm by joining his radial artery to a nearby vein. What type of venous access is this?",
+      answer: "AV Fistula",
+      explain: "An AV (arteriovenous) fistula is a surgically created connection between an artery and vein, typically in the nondominant forearm. It produces a palpable thrill and audible bruit. It is the preferred long-term hemodialysis access due to its very low infection risk compared to grafts and catheters."
+    },
+    {
+      text: "A 73-year-old woman with newly diagnosed ESKD urgently needs to start dialysis but her AV fistula has not yet been created. She has a wide-bore dual-lumen catheter placed percutaneously into her right internal jugular vein and connected to the dialysis machine. What type of access is this?",
+      answer: "HD Catheter",
+      explain: "A hemodialysis catheter (non-tunneled or tunneled) is placed into a central vein (internal jugular, subclavian) and used when immediate or temporary HD access is needed. It carries the highest infection risk (bacteremia) and is typically used as a bridge while a fistula is created and allowed to mature."
+    },
+    {
+      text: "A 48-year-old woman with ESKD from ADPKD prefers to perform dialysis at home. She has a soft catheter tunneled through her abdominal wall by a surgeon. Each night, a machine fills her abdomen with dialysate fluid, allows equilibration for several hours, then drains the fluid. She sees her nephrologist monthly at a home dialysis clinic. What modality is she using?",
+      answer: "Peritoneal Dialysis",
+      explain: "Peritoneal dialysis uses a surgically placed peritoneal catheter and the patient's own peritoneum as a dialysis membrane. Dialysate is instilled, equilibrates with blood via peritoneal capillaries, and is drained. An automated 'cycler' does this at night. PD is always done at home and accounts for some of the 10% of dialysis patients on home dialysis."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".krt-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 3200);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb(`✗ Re-read the clinical description of the access type.`, "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

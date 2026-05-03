@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organ Target Hotspot — Module 32</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .organ-zone { cursor: pointer; }
+  .organ-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .organ-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .organ-zone text { pointer-events: none; user-select: none; }
+  .organ-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .organ-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100%{ transform: translateX(0); }
+    25%{ transform: translateX(-4px); }
+    75%{ transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 32</a></div>
+  <h1>Game 2 — Organ Target Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🎯</div>
+      <h2>Click the organ where CAIs act for each scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each clinical scenario, click the organ system in which CAIs are primarily acting. Four cases — four clicks. Misses count.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Kidney -->
+        <g class="organ-zone" data-name="Kidney">
+          <rect class="zone-bg" x="15" y="30" width="135" height="155" rx="12"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="82" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">Kidney</text>
+          <text x="82" y="58" text-anchor="middle" font-size="10" fill="#1d4ed8">Proximal tubule</text>
+          <text x="82" y="74" text-anchor="middle" font-size="10" fill="#444">Blocks HCO₃⁻</text>
+          <text x="82" y="90" text-anchor="middle" font-size="10" fill="#444">reabsorption</text>
+          <text x="82" y="116" text-anchor="middle" font-size="10" fill="#444">→ metabolic acidosis</text>
+          <text x="82" y="132" text-anchor="middle" font-size="10" fill="#444">→ mild diuresis</text>
+          <text x="82" y="160" text-anchor="middle" font-size="10" fill="#888">Altitude sickness, COPD</text>
+        </g>
+
+        <!-- Eye -->
+        <g class="organ-zone" data-name="Eye">
+          <rect class="zone-bg" x="172" y="30" width="135" height="155" rx="12"
+                fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+          <text x="240" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">Eye</text>
+          <text x="240" y="58" text-anchor="middle" font-size="10" fill="#15803d">Ciliary body</text>
+          <text x="240" y="74" text-anchor="middle" font-size="10" fill="#444">Reduces aqueous</text>
+          <text x="240" y="90" text-anchor="middle" font-size="10" fill="#444">humor production</text>
+          <text x="240" y="116" text-anchor="middle" font-size="10" fill="#444">→ lower IOP</text>
+          <text x="240" y="160" text-anchor="middle" font-size="10" fill="#888">Open-angle glaucoma</text>
+        </g>
+
+        <!-- Brain -->
+        <g class="organ-zone" data-name="Brain">
+          <rect class="zone-bg" x="330" y="30" width="135" height="155" rx="12"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="397" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#9d174d">Brain</text>
+          <text x="397" y="58" text-anchor="middle" font-size="10" fill="#9d174d">Choroid plexus</text>
+          <text x="397" y="74" text-anchor="middle" font-size="10" fill="#444">Reduces CSF</text>
+          <text x="397" y="90" text-anchor="middle" font-size="10" fill="#444">production</text>
+          <text x="397" y="116" text-anchor="middle" font-size="10" fill="#444">→ lower ICP</text>
+          <text x="397" y="160" text-anchor="middle" font-size="10" fill="#888">Pseudotumor cerebri, seizures</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four targets identified!</h3>
+      <p>CAIs act in 3 organs: kidney (bicarbonate/diuresis → altitude sickness, COPD, sleep apnea), eye (aqueous humor → glaucoma), and brain (CSF production → pseudotumor cerebri, seizures).</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A trekker is prescribed acetazolamide before ascending to 4,500 meters to prevent altitude sickness. The drug prevents respiratory alkalosis by inducing bicarbonate excretion, which lowers blood pH and causes compensatory hyperventilation. In which organ is this primary effect occurring?",
+      answer: "Kidney",
+      explain: "Acetazolamide blocks CA in the proximal tubule of the kidney, increasing HCO₃⁻ excretion, lowering blood pH, and triggering hyperventilation to prevent altitude-related respiratory alkalosis."
+    },
+    {
+      text: "A 65-year-old woman with open-angle glaucoma is started on dorzolamide eye drops. The drug lowers intraocular pressure by reducing aqueous humor production. In which organ is this occurring?",
+      answer: "Eye",
+      explain: "CAIs in the eye act on the ciliary body, which produces aqueous humor using CA. Inhibiting CA reduces HCO₃⁻ available for aqueous humor formation, decreasing intraocular pressure."
+    },
+    {
+      text: "A 28-year-old obese woman has idiopathic intracranial hypertension (pseudotumor cerebri) with severe headaches and papilledema. She is started on acetazolamide. The drug reduces intracranial pressure by decreasing production in which organ?",
+      answer: "Brain",
+      explain: "The choroid plexus in the brain produces CSF using carbonic anhydrase. CAIs inhibit this process, reducing CSF production and lowering intracranial pressure in pseudotumor cerebri."
+    },
+    {
+      text: "A patient with COPD has chronic CO₂ retention. His kidneys have compensated with high bicarbonate, blunting his respiratory drive. Acetazolamide is used to lower serum bicarbonate. In which organ does this primary therapeutic effect occur?",
+      answer: "Kidney",
+      explain: "By blocking CA in the proximal tubule, acetazolamide reduces HCO₃⁻ reabsorption, lowering serum bicarbonate. This restores the pH gradient that drives ventilation in COPD patients with chronic hypercapnia."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".organ-zone");
+
+  let currentCase = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      if (picked === cases[currentCase].answer) {
+        lock = true; z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++; Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadCase, 2600);
+      } else {
+        misses++; missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — where does the drug exert its primary effect in this scenario?", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

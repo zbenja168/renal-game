@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Urine Chloride Hotspot — Module 29</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .ucl-zone { cursor: pointer; }
+  .ucl-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .ucl-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .ucl-zone text { pointer-events: none; user-select: none; }
+  .ucl-zone.found .zone-bg { stroke: #16a34a; stroke-width: 4; filter: drop-shadow(0 0 8px rgba(22,163,74,0.5)); }
+  .ucl-zone.miss .zone-bg { stroke: #dc2626; stroke-width: 4; animation: shakeUCl 0.4s; }
+  @keyframes shakeUCl { 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 29</a></div>
+  <h1>Game 2 — Urine Chloride Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Click the correct chloride category for each scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The urine chloride test separates chloride-responsive (low urine Cl⁻ &lt;10 mEq/L) from chloride-resistant (high urine Cl⁻ &gt;20 mEq/L) metabolic alkalosis. Three cases — three clicks.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbea;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 250" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Chloride-responsive -->
+        <g class="ucl-zone" data-name="Chloride-responsive">
+          <rect class="zone-bg" x="20" y="30" width="200" height="200" rx="12"
+                fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+          <text x="120" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#14532d">Chloride-Responsive</text>
+          <text x="120" y="55" text-anchor="middle" font-size="11" fill="#14532d">Urine Cl⁻ &lt; 10 mEq/L</text>
+          <text x="120" y="78" text-anchor="middle" font-size="10" fill="#374151">Volume-depleted</text>
+          <text x="120" y="94" text-anchor="middle" font-size="10" fill="#374151">Low chloride prevents</text>
+          <text x="120" y="110" text-anchor="middle" font-size="10" fill="#374151">pendrin from secreting</text>
+          <text x="120" y="126" text-anchor="middle" font-size="10" fill="#374151">HCO₃⁻</text>
+          <text x="120" y="152" text-anchor="middle" font-size="10" fill="#6b7280">Causes:</text>
+          <text x="120" y="168" text-anchor="middle" font-size="10" fill="#6b7280">Vomiting, NG suction,</text>
+          <text x="120" y="184" text-anchor="middle" font-size="10" fill="#6b7280">prior diuretic use</text>
+          <text x="120" y="208" text-anchor="middle" font-size="10" fill="#166534">Treat: normal saline</text>
+        </g>
+
+        <!-- Chloride-resistant -->
+        <g class="ucl-zone" data-name="Chloride-resistant">
+          <rect class="zone-bg" x="260" y="30" width="200" height="200" rx="12"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="360" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#713f12">Chloride-Resistant</text>
+          <text x="360" y="55" text-anchor="middle" font-size="11" fill="#713f12">Urine Cl⁻ &gt; 20 mEq/L</text>
+          <text x="360" y="78" text-anchor="middle" font-size="10" fill="#374151">Volume not depleted</text>
+          <text x="360" y="94" text-anchor="middle" font-size="10" fill="#374151">Aldosterone or ENaC</text>
+          <text x="360" y="110" text-anchor="middle" font-size="10" fill="#374151">drives H⁺ loss</text>
+          <text x="360" y="126" text-anchor="middle" font-size="10" fill="#374151">independently of volume</text>
+          <text x="360" y="152" text-anchor="middle" font-size="10" fill="#6b7280">Causes:</text>
+          <text x="360" y="168" text-anchor="middle" font-size="10" fill="#6b7280">Hyperaldosteronism,</text>
+          <text x="360" y="184" text-anchor="middle" font-size="10" fill="#6b7280">Bartter, Gitelman, Liddle</text>
+          <text x="360" y="208" text-anchor="middle" font-size="10" fill="#92400e">Treat: address cause</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three cases classified!</h3>
+      <p>Urine Cl⁻ &lt;10 = chloride-responsive (volume-depleted, vomiting, NG suction). Urine Cl⁻ &gt;20 = chloride-resistant (hyperaldosteronism, hereditary syndromes). Normal saline fixes the first; potassium and cause-directed therapy fixes the second.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 32-year-old male has been vomiting repeatedly after binge drinking. He is hypotensive with dry mucous membranes. Serum HCO₃⁻ 38 mEq/L, K⁺ 2.9 mEq/L. Urine chloride is 6 mEq/L. Classify his metabolic alkalosis.",
+      answer: "Chloride-responsive",
+      explain: "Urine Cl⁻ < 10 mEq/L confirms chloride-responsive alkalosis. Vomiting removes HCl; volume depletion maintains the alkalosis. Low chloride prevents pendrin from secreting bicarbonate. Treatment: IV normal saline and potassium replacement."
+    },
+    {
+      text: "A 55-year-old woman with hypertension has persistent hypokalemia and metabolic alkalosis. Her blood pressure is 162/95 mmHg. CT shows a left adrenal adenoma. Urine chloride is 32 mEq/L. Classify her metabolic alkalosis.",
+      answer: "Chloride-resistant",
+      explain: "Urine Cl⁻ > 20 mEq/L with hypertension and an adrenal adenoma indicates primary hyperaldosteronism (Conn syndrome) — a chloride-resistant cause. Aldosterone drives ENaC and H+ secretion regardless of volume status. Saline will not correct this."
+    },
+    {
+      text: "A 65-year-old with heart failure has been on furosemide for 4 weeks. He developed weakness and HCO₃⁻ of 35 mEq/L. He is clinically euvolemic now but recently had marked diuresis. Urine chloride is 8 mEq/L. Classify.",
+      answer: "Chloride-responsive",
+      explain: "Prior diuretic use causes volume depletion and chloride loss, leaving the patient with low urine chloride (< 10 mEq/L) even though they appear euvolemic now. This is a chloride-responsive state — saline and potassium correction are needed."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".ucl-zone");
+
+  let currentCase = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      if (z.dataset.name === cases[currentCase].answer) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) { setTimeout(() => Game.celebrate("winBanner"), 600); }
+        else { setTimeout(loadCase, 2800); }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Check the urine chloride value in the case — is it above or below 10 mEq/L?", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

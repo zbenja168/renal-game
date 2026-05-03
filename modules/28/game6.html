@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 28</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 28</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label across all four learning objectives.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool, 16 items. Drop each onto the correct slot. Wrong drops count as misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the brick!</h3>
+      <p>You can now differentiate AGMA from NAGMA, classify RTA types by electrolyte profile, apply MUDPILES, and plan treatment. Excellent work.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "lo1", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "a1", label: "Respiratory pattern seen in severe metabolic acidosis",      answer: "Kussmaul breathing" },
+        { id: "a2", label: "Late sign of severe acidemia affecting cardiac rhythm",      answer: "Arrhythmias and shock" },
+        { id: "a3", label: "Classic symptoms in DKA beyond Kussmaul breathing",         answer: "Nausea, vomiting, fruity breath" },
+        { id: "a4", label: "Most common first finding in mild metabolic acidosis",      answer: "Often asymptomatic (incidental labs)" },
+      ]
+    },
+    {
+      id: "lo2", title: "Pathophysiology", lo: "LO2",
+      slots: [
+        { id: "b1", label: "Formula for serum anion gap",                               answer: "Na⁺ − (Cl⁻ + HCO₃⁻)" },
+        { id: "b2", label: "Normal anion gap range",                                    answer: "4–12 mEq/L" },
+        { id: "b3", label: "Mnemonic for AGMA causes (traditional)",                   answer: "MUDPILES" },
+        { id: "b4", label: "Why NAGMA causes hyperchloremia",                           answer: "Cl⁻ rises to replace lost HCO₃⁻" },
+      ]
+    },
+    {
+      id: "lo3", title: "Diagnosis (RTA Types)", lo: "LO3",
+      slots: [
+        { id: "c1", label: "RTA type with urine pH > 5.3 and hypokalemia",             answer: "Type 1 (distal) RTA" },
+        { id: "c2", label: "RTA type with defective PT bicarbonate reabsorption",       answer: "Type 2 (proximal) RTA" },
+        { id: "c3", label: "RTA type with hyperkalemia and low aldosterone",            answer: "Type 4 (hyperkalemic) RTA" },
+        { id: "c4", label: "Syndrome that combines proximal RTA with full PT failure",  answer: "Fanconi syndrome" },
+      ]
+    },
+    {
+      id: "lo4", title: "Management", lo: "LO4",
+      slots: [
+        { id: "d1", label: "Drug that blocks methanol/ethylene glycol metabolism",      answer: "Fomepizole" },
+        { id: "d2", label: "Treatment for DKA to stop ketone production",               answer: "Insulin + normal saline" },
+        { id: "d3", label: "NAGMA treatment — provides base to replace HCO₃⁻ loss",   answer: "Sodium bicarbonate" },
+        { id: "d4", label: "Type 4 RTA management — avoid this class of drugs",        answer: "ACE inhibitors / potassium supplements" },
+      ]
+    }
+  ];
+
+  const pool     = document.getElementById("pool");
+  const board    = document.getElementById("board");
+  const scoreEl  = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl     = document.getElementById("feedback");
+  const TOTAL    = sections.reduce((s, sec) => s + sec.slots.length, 0);
+  const ICONS    = { lo1:"🩺", lo2:"🧮", lo3:"🔬", lo4:"💊" };
+
+  let placed = 0, misses = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id]||"•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb("✓ " + pi.textContent, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb("✗ " + dragSource.textContent + " doesn't fit there.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

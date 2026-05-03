@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dipstick Decision — Module 37</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .dip-zone { cursor: pointer; }
+  .dip-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .dip-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .dip-zone text { pointer-events: none; user-select: none; }
+  .dip-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .dip-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 37</a></div>
+  <h1>Game 2 — Dipstick Decision</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💧</div>
+      <h2>Click the dipstick pad that will be positive in each scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four clinical cases. For each case, click the correct dipstick pad (Glucose, Ketones, Bilirubin, Leukocyte Esterase, Nitrites, or pH). Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 540 220" xmlns="http://www.w3.org/2000/svg">
+
+        <g class="dip-zone" data-name="Glucose">
+          <rect class="zone-bg" x="10" y="30" width="80" height="160" rx="10" fill="#d4edff" stroke="#4a90d9" stroke-width="2"/>
+          <text x="50" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#1a5fa8">Glucose</text>
+          <text x="50" y="65" text-anchor="middle" font-size="9" fill="#444">Reabsorption</text>
+          <text x="50" y="80" text-anchor="middle" font-size="9" fill="#444">threshold</text>
+          <text x="50" y="95" text-anchor="middle" font-size="9" fill="#444">exceeded</text>
+          <text x="50" y="130" text-anchor="middle" font-size="9" fill="#888">DM, Fanconi</text>
+        </g>
+
+        <g class="dip-zone" data-name="Ketones">
+          <rect class="zone-bg" x="100" y="30" width="80" height="160" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="140" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Ketones</text>
+          <text x="140" y="65" text-anchor="middle" font-size="9" fill="#444">β-hydroxy-</text>
+          <text x="140" y="80" text-anchor="middle" font-size="9" fill="#444">butyrate &amp;</text>
+          <text x="140" y="95" text-anchor="middle" font-size="9" fill="#444">acetoacetate</text>
+          <text x="140" y="130" text-anchor="middle" font-size="9" fill="#888">Starvation,</text>
+          <text x="140" y="145" text-anchor="middle" font-size="9" fill="#888">DKA</text>
+        </g>
+
+        <g class="dip-zone" data-name="Bilirubin">
+          <rect class="zone-bg" x="190" y="30" width="80" height="160" rx="10" fill="#fde8d8" stroke="#ea580c" stroke-width="2"/>
+          <text x="230" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">Bilirubin</text>
+          <text x="230" y="65" text-anchor="middle" font-size="9" fill="#444">Conjugated</text>
+          <text x="230" y="80" text-anchor="middle" font-size="9" fill="#444">bilirubin</text>
+          <text x="230" y="95" text-anchor="middle" font-size="9" fill="#444">filtered by</text>
+          <text x="230" y="110" text-anchor="middle" font-size="9" fill="#444">kidney</text>
+          <text x="230" y="135" text-anchor="middle" font-size="9" fill="#888">Liver/biliary</text>
+          <text x="230" y="150" text-anchor="middle" font-size="9" fill="#888">obstruction</text>
+        </g>
+
+        <g class="dip-zone" data-name="Leukocyte Esterase">
+          <rect class="zone-bg" x="280" y="30" width="80" height="160" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+          <text x="320" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Leukocyte</text>
+          <text x="320" y="26" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Esterase</text>
+          <text x="320" y="65" text-anchor="middle" font-size="9" fill="#444">WBCs in</text>
+          <text x="320" y="80" text-anchor="middle" font-size="9" fill="#444">urine; enzyme</text>
+          <text x="320" y="95" text-anchor="middle" font-size="9" fill="#444">from WBCs</text>
+          <text x="320" y="130" text-anchor="middle" font-size="9" fill="#888">UTI,</text>
+          <text x="320" y="145" text-anchor="middle" font-size="9" fill="#888">nephritis</text>
+        </g>
+
+        <g class="dip-zone" data-name="Nitrites">
+          <rect class="zone-bg" x="370" y="30" width="80" height="160" rx="10" fill="#fdf4ff" stroke="#a21caf" stroke-width="2"/>
+          <text x="410" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#701a75">Nitrites</text>
+          <text x="410" y="65" text-anchor="middle" font-size="9" fill="#444">Bacteria</text>
+          <text x="410" y="80" text-anchor="middle" font-size="9" fill="#444">convert</text>
+          <text x="410" y="95" text-anchor="middle" font-size="9" fill="#444">nitrates →</text>
+          <text x="410" y="110" text-anchor="middle" font-size="9" fill="#444">nitrites</text>
+          <text x="410" y="135" text-anchor="middle" font-size="9" fill="#888">Gram-neg</text>
+          <text x="410" y="150" text-anchor="middle" font-size="9" fill="#888">bacteriuria</text>
+        </g>
+
+        <g class="dip-zone" data-name="pH">
+          <rect class="zone-bg" x="460" y="30" width="70" height="160" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+          <text x="495" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">pH</text>
+          <text x="495" y="65" text-anchor="middle" font-size="9" fill="#444">Normal</text>
+          <text x="495" y="80" text-anchor="middle" font-size="9" fill="#444">4.5–8.0</text>
+          <text x="495" y="110" text-anchor="middle" font-size="9" fill="#888">Infection,</text>
+          <text x="495" y="125" text-anchor="middle" font-size="9" fill="#888">diet, acid</text>
+          <text x="495" y="140" text-anchor="middle" font-size="9" fill="#888">base state</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All four cases cracked!</h3>
+      <p>The urine dipstick rapidly detects glucose (overflow), ketones (fasting/DKA), bilirubin (conjugated, from liver/biliary disease), leukocyte esterase (WBCs = infection/nephritis), nitrites (gram-negative bacteriuria), and pH (infection raises, acidic diet lowers).</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 19-year-old with type 1 diabetes presents with nausea and rapid breathing. Serum glucose is 480 mg/dL. Urine is tested. Which dipstick pad will be positive due to fat catabolism products?",
+      answer: "Ketones",
+      explain: "In diabetic ketoacidosis (DKA), insulin deficiency drives fat catabolism, producing acetoacetate and β-hydroxybutyrate. These appear on the dipstick as ketonuria."
+    },
+    {
+      text: "A 28-year-old woman has dysuria and urinary frequency for 2 days. Urine is cloudy. Her primary care physician wants a quick screen for bacterial infection before culture. Which dipstick pad best supports a bacterial UTI caused by E. coli?",
+      answer: "Nitrites",
+      explain: "E. coli, Proteus, and Klebsiella convert urinary nitrates to nitrites. A positive nitrite pad strongly suggests gram-negative bacteriuria and supports the UTI diagnosis."
+    },
+    {
+      text: "A 55-year-old man with known primary biliary cholangitis has dark 'cola-colored' urine. His liver is unable to conjugate bilirubin properly into bile. Which dipstick pad will be positive?",
+      answer: "Bilirubin",
+      explain: "Conjugated (direct) bilirubin is water-soluble and can be filtered by the kidney. Obstruction of biliary flow causes conjugated bilirubin to spill into the urine, detected on the dipstick bilirubin pad."
+    },
+    {
+      text: "A 45-year-old woman presents with flank pain, fever, and rigors. Urinalysis is ordered. Which dipstick finding best indicates that white blood cells are present in the urine, consistent with pyelonephritis?",
+      answer: "Leukocyte Esterase",
+      explain: "Leukocyte esterase detects an enzyme released by white blood cells. A positive result indicates pyuria — WBCs in the urine — seen with UTI (neutrophils) and interstitial nephritis (eosinophils)."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".dip-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 4);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 4);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not that pad — re-read what's happening in this patient.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

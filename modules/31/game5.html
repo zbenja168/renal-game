@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnosis Lab — Module 31</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 31</a></div>
+  <h1>Game 5 — Diagnosis Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩻</div>
+      <h2>Round 1: Sort each diagnostic test by its indication</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each diagnostic test or finding to the clinical situation where it is most relevant in the workup of respiratory alkalosis.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Diagnostic tests / findings</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ROUND 2: Fresh quiz questions -->
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply what you learned</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh scenarios testing the respiratory alkalosis brick from different angles. None are from the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Diagnosis Lab complete!</h3>
+      <p>Now take on the boss — Game 6 ties the entire respiratory alkalosis brick together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1: SORTER ===== */
+  const tests = [
+    { id: "t1", label: "Arterial blood gas (ABG)",              bin: "first" },
+    { id: "t2", label: "CT pulmonary angiography (CTA chest)", bin: "pe" },
+    { id: "t3", label: "D-dimer assay",                        bin: "pe" },
+    { id: "t4", label: "Chest X-ray",                          bin: "pulm" },
+    { id: "t5", label: "Thyroid function tests (TSH)",         bin: "hyper" },
+    { id: "t6", label: "Pulse oximetry",                       bin: "first" }
+  ];
+
+  const bins = [
+    { id: "first",  label: "Initial evaluation of any suspected respiratory alkalosis" },
+    { id: "pe",     label: "Suspected pulmonary embolism" },
+    { id: "pulm",   label: "Suspected underlying cardiopulmonary disease (CHF, pneumonia)" },
+    { id: "hyper",  label: "Suspected hyperthyroidism driving hypermetabolic hyperventilation" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, tests.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = ""; bucketsEl.innerHTML = "";
+
+    Game.shuffle(tests.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault(); zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const ph = zone.querySelector(".label"); if (ph) ph.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove(); placed++;
+        Game.setScore(scoreEl, placed, tests.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === tests.length) showFb("Round 1 complete — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That test belongs in a different clinical context.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: QUIZ (fresh — NOT brick review questions) ===== */
+  const questions = [
+    {
+      q: "A patient with sepsis from a urinary tract infection develops respiratory alkalosis. Her PO₂ is 96 mmHg on room air. What is the mechanism of her hyperventilation?",
+      options: ["Pulmonary edema reducing alveolar oxygen exchange", "Direct CNS/systemic stimulation of the respiratory center by sepsis", "Aspirin toxicity stimulating the brainstem", "Hypoxemia from V/Q mismatch in infected lung segments"],
+      correct: 1,
+      explain: "Sepsis is a hypermetabolic state with normal PO₂ that directly stimulates the respiratory center, causing non-hypoxic hyperventilation and respiratory alkalosis. PO₂ is normal; the driving force is systemic inflammation."
+    },
+    {
+      q: "A patient with chronic respiratory alkalosis (PaCO₂ 28 mmHg for several weeks) has a serum bicarbonate of 18 mEq/L. What process accounts for the low bicarbonate?",
+      options: ["The patient also has metabolic acidosis from renal tubular acidosis", "Renal compensation — the kidneys excrete bicarbonate to lower the elevated pH", "Acute hyperventilation is consuming bicarbonate as a buffer", "The low PaCO₂ directly destroys bicarbonate molecules in the blood"],
+      correct: 1,
+      explain: "In chronic respiratory alkalosis, the kidneys respond to the high pH by excreting bicarbonate, lowering HCO₃⁻. This is metabolic (renal) compensation — it brings pH partially back toward normal but never to 7.40."
+    },
+    {
+      q: "A woman at 32 weeks of pregnancy has pH 7.46 and PaCO₂ 32 mmHg on a routine blood gas. She feels well. What is the most appropriate management?",
+      options: ["Administer IV bicarbonate to correct the alkalosis", "Treat with oxygen since hypoxemia is likely the cause", "No specific treatment — this is physiologic and expected in pregnancy", "Refer to pulmonology to rule out pulmonary embolism"],
+      correct: 2,
+      explain: "Pregnancy causes a physiologic respiratory alkalosis due to elevated progesterone stimulating ventilation. PaCO₂ normally falls to about 28–32 mmHg. This requires no specific treatment."
+    },
+    {
+      q: "Why does respiratory alkalosis cause tingling (paresthesias) in the hands and around the mouth?",
+      options: ["Low CO₂ directly irritates peripheral nerve endings in the skin", "Alkalemia shifts calcium from ionized to protein-bound form, lowering free calcium", "Hyperventilation reduces blood flow to peripheral nerves", "Elevated pH directly depolarizes sensory neurons in the extremities"],
+      correct: 1,
+      explain: "Alkalemia causes calcium to bind more avidly to albumin, reducing ionized (free) calcium. This hypocalcemia increases neuronal excitability, producing tingling in the hands, feet, and perioral area — the classic symptom of respiratory alkalosis."
+    },
+    {
+      q: "A patient presents with sudden dyspnea, pleuritic chest pain, and respiratory alkalosis without significant hypoxemia. Which diagnosis must be urgently considered?",
+      options: ["Panic disorder with hyperventilation syndrome", "Pulmonary embolism with or without hypoxemia", "Severe COPD with air trapping", "Aspirin overdose in early stages"],
+      correct: 1,
+      explain: "Pulmonary embolism can cause respiratory alkalosis with or without hypoxemia. It is potentially fatal and should always be considered in sudden unexplained respiratory alkalosis, especially with pleuritic chest pain. It requires urgent workup."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

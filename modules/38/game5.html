@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imaging Lab — Module 38</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 38</a></div>
+  <h1>Game 5 — Imaging Lab</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧲</div>
+      <h2>Round 1: Sort each advantage to the correct modality</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each key advantage into the bucket for the modality it describes best.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Advantages</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="game-shell" style="margin-top:24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply your imaging knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios testing renal imaging selection — different from the brick's own review question.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Imaging Lab complete!</h3>
+      <p>You know when to reach for the ultrasound probe, the CT scanner, the nuclear camera, and the MRI. Head to the boss round!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1 ===== */
+  const advantages = [
+    { id: "a1", label: "No ionizing radiation; safe in pregnancy",          bin: "us" },
+    { id: "a2", label: "Best soft-tissue contrast for indeterminate masses", bin: "mri" },
+    { id: "a3", label: "Detects even the smallest kidney stones",            bin: "ct" },
+    { id: "a4", label: "Measures split renal function of each kidney",       bin: "nuc" },
+    { id: "a5", label: "Distinguishes solid from cystic masses with contrast", bin: "ct" },
+    { id: "a6", label: "Real-time Doppler assessment of renal blood flow",   bin: "us" }
+  ];
+  const bins = [
+    { id: "us",  label: "Renal Ultrasound" },
+    { id: "ct",  label: "CT Scan" },
+    { id: "nuc", label: "Nuclear Medicine Scan" },
+    { id: "mri", label: "MRI" }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl   = document.getElementById("score");
+  const fbEl      = document.getElementById("feedback");
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, advantages.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(advantages.slice()).forEach(a => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = a.bin;
+      el.textContent = a.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const pi = document.createElement("div");
+        pi.className = "drag-item placed";
+        pi.textContent = dragSource.textContent;
+        zone.appendChild(pi);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, advantages.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === advantages.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That advantage belongs to a different modality.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: NEW QUIZ ===== */
+  const questions = [
+    {
+      q: "A 32-year-old pregnant woman at 20 weeks' gestation has right flank pain and microscopic hematuria. The obstetrician wants to rule out ureteral obstruction. Which study is most appropriate?",
+      options: [
+        "Non-contrast CT abdomen and pelvis",
+        "Renal ultrasound with Doppler",
+        "Radionuclide renal scan",
+        "Gadolinium-enhanced MRI of the abdomen"
+      ],
+      correct: 1,
+      explain: "Renal ultrasound is preferred in pregnant patients because it avoids ionizing radiation. It can detect hydronephrosis from ureteral obstruction without exposing the fetus to radiation."
+    },
+    {
+      q: "On renal ultrasound, a kidney shows a 'bear claw' pattern with dilated calyces surrounding the papillae and an echogenic collecting system. What is the most likely diagnosis?",
+      options: [
+        "Renal cell carcinoma invading the collecting system",
+        "Autosomal dominant polycystic kidney disease",
+        "Hydronephrosis due to ureteral obstruction",
+        "Chronic kidney disease with cortical thinning"
+      ],
+      correct: 2,
+      explain: "A 'bear claw' pattern on ultrasound describes hydronephrosis — the dilated calyces surrounding the papillae resemble a bear's claw. This indicates obstructed urine flow upstream, typically from a stone, tumor, or stricture."
+    },
+    {
+      q: "A surgeon plans to remove a right kidney for renal cell carcinoma. Preoperatively she orders a study to confirm how much the left kidney contributes to total renal function. Which study provides this information?",
+      options: [
+        "Contrast-enhanced CT of the abdomen",
+        "MRI with gadolinium contrast",
+        "Radionuclide nuclear medicine scan",
+        "Renal ultrasound with Doppler"
+      ],
+      correct: 2,
+      explain: "Radionuclide (nuclear medicine) renal scans measure comparative (split) function of each kidney by tracking radioisotope through the renal vasculature and into the ultrafiltrate. This is essential before nephrectomy to ensure the remaining kidney can sustain function."
+    },
+    {
+      q: "A patient with a history of kidney stones presents with acute right flank pain. You want to identify the stone's exact location in the ureter and assess whether it is causing obstruction. Which modality is the test of choice?",
+      options: [
+        "Renal ultrasound — avoids radiation and is sufficient",
+        "Non-contrast CT — most sensitive and specific for stone location",
+        "MRI — best for urinary tract soft-tissue detail",
+        "Nuclear scan — detects functional obstruction of each kidney"
+      ],
+      correct: 1,
+      explain: "Non-contrast CT is the test of choice for nephrolithiasis. It detects even small stones, precisely localizes them within the ureter, and identifies any obstruction — with higher sensitivity than ultrasound for stones less than 5 mm."
+    },
+    {
+      q: "A small cortical kidney is seen on ultrasound in a patient with chronically elevated creatinine. What does this finding most likely represent, and why is ultrasound the appropriate modality here?",
+      options: [
+        "Renal infarction; CT angiography is needed for confirmation",
+        "Chronic kidney disease with cortical atrophy; ultrasound shows size without radiation",
+        "Acute tubular necrosis; nuclear scan would quantify the damage better",
+        "Renal artery stenosis; Doppler CT is the only accurate tool"
+      ],
+      correct: 1,
+      explain: "A small, echogenic kidney on ultrasound suggests chronic kidney disease (CKD) with cortical thinning and atrophy. Ultrasound is ideal here because it shows kidney size and structure without radiation, and CKD patients often need repeated imaging over years."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>
