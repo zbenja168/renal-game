@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathophysiology Sequencer — Module 47</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 47</a></div>
+  <h1>Game 4 — Pathophysiology Sequencer</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Place the steps of anti-GBM injury in the correct order</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each step of anti-GBM autoantibody-mediated injury into the numbered slot that reflects the correct sequence — from autoantibody formation through to end-organ failure.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 7</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Steps to sequence</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Sequence complete!</h3>
+      <p>Anti-GBM disease begins with autoantibody formation against alpha-3 type IV collagen in the GBM and alveolar BM. Antibody binding activates a type II cytotoxic immune response, recruiting inflammatory cells that destroy both the glomerulus and lung alveoli. Without plasmapheresis and immunosuppression, the disease progresses rapidly to renal failure.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // Slots in the correct pathophysiologic order
+  const slots = [
+    {
+      id: "s1",
+      label: "Step 1 — Trigger event",
+      answer: "Environmental trigger (e.g., smoking, infection) exposes basement membrane antigen"
+    },
+    {
+      id: "s2",
+      label: "Step 2 — Autoantibody formation",
+      answer: "Body forms IgG autoantibodies against alpha-3 chain of type IV collagen"
+    },
+    {
+      id: "s3",
+      label: "Step 3 — Antibody binding (kidney)",
+      answer: "Anti-GBM antibodies bind the glomerular basement membrane directly"
+    },
+    {
+      id: "s4",
+      label: "Step 4 — Antibody binding (lung)",
+      answer: "Anti-GBM antibodies also bind alveolar basement membranes in the lung"
+    },
+    {
+      id: "s5",
+      label: "Step 5 — Immune activation",
+      answer: "Type II hypersensitivity activates complement and recruits inflammatory cells"
+    },
+    {
+      id: "s6",
+      label: "Step 6 — Structural damage",
+      answer: "Glomerular crescents form; alveolar hemorrhage begins"
+    },
+    {
+      id: "s7",
+      label: "Step 7 — End-organ failure",
+      answer: "Rapidly declining GFR, hematuria, and respiratory failure (if untreated)"
+    }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.slotId = s.id;
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", el.dataset.label);
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (zone.classList.contains("correct")) return;
+
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dropped;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb(`✓ Correct — ${dropped}.`, "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ Not the right step here. Think about the sequence of events.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

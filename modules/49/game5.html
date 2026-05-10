@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Management Quiz — Module 49</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 49</a></div>
+  <h1>Game 5 — Management Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five fresh clinical scenarios — test your DKD management</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each scenario tests a different DKD management concept from the brick. Select the best answer, then read the explanation.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Management quiz complete!</h3>
+      <p>The boss round awaits — Game 6 covers the entire DKD brick in one comprehensive round.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions — NOT the brick's verbatim review questions */
+  const questions = [
+    {
+      q: "A 52-year-old woman with type 2 diabetes for 18 years has an ACR of 85 mg/g on two separate measurements. Her blood pressure is 148/92 mmHg and eGFR is 72 mL/min/1.73 m². She takes metformin only. Which addition to her regimen would most directly address both her hypertension and her kidney protection?",
+      options: [
+        "Add a thiazide diuretic to lower blood pressure alone",
+        "Add an ACE inhibitor to reduce intraglomerular pressure and proteinuria",
+        "Add a beta-blocker to slow heart rate and reduce cardiac output",
+        "Add a calcium channel blocker as preferred first-line in diabetic kidney disease"
+      ],
+      correct: 1,
+      explain: "ACE inhibitors (or ARBs) are the best choice for hypertension in DKD because they specifically reduce efferent arteriole tone, lowering intraglomerular pressure. This reduces hyperfiltration injury and slows albuminuria progression — beyond simple blood pressure lowering."
+    },
+    {
+      q: "A patient's eGFR has declined to 28 mL/min/1.73 m² over 3 years. He reports fatigue and nausea. His serum potassium is 5.7 mEq/L on his ACE inhibitor. Which of the following is the most appropriate next step?",
+      options: [
+        "Stop the ACE inhibitor permanently and switch to a beta-blocker",
+        "Add a potassium-wasting diuretic and continue ACE inhibitor",
+        "Refer to nephrology; consider dialysis or transplant evaluation",
+        "Increase the ACE inhibitor dose to further reduce proteinuria"
+      ],
+      correct: 2,
+      explain: "When eGFR falls below 30 mL/min/1.73 m², nephrology referral is required for preparation for renal replacement therapy (dialysis or transplantation). Hyperkalemia at this level is a dangerous complication of advanced DKD."
+    },
+    {
+      q: "A 44-year-old man with 8 years of type 2 diabetes has his yearly albumin/creatinine ratio checked. Result: ACR 210 mg/g. His HbA1c is 9.2%. Blood pressure is 134/84 mmHg. He is not on any kidney-protective medications. Which additional drug, beyond ACE inhibitors, has demonstrated both glucose-lowering and kidney-protective benefits in DKD?",
+      options: [
+        "Loop diuretics to reduce the volume of protein filtered per day",
+        "SGLT2 inhibitors which reduce renal glucose reabsorption and lower GFR",
+        "Sulfonylureas which stimulate insulin release and lower blood glucose",
+        "Insulin glargine which suppresses hepatic glucose production overnight"
+      ],
+      correct: 1,
+      explain: "SGLT2 inhibitors reduce renal glucose reabsorption and independently lower intraglomerular pressure via tubuloglomerular feedback, slowing DKD progression. They are recommended in combination with ACE inhibitors/ARBs in patients with DKD and significant albuminuria."
+    },
+    {
+      q: "A 58-year-old male with diabetic kidney disease has an ACR of 420 mg/g despite ACE inhibitor therapy for 2 years. His potassium is 4.2 mEq/L. His nephrologist considers adding finerenone. What is the mechanism of finerenone's benefit in DKD?",
+      options: [
+        "Blocks aldosterone receptors to reduce renal inflammation and fibrosis",
+        "Inhibits angiotensin II production to further lower glomerular pressure",
+        "Activates SGLT2 channels to promote glucose and sodium excretion",
+        "Stimulates GLP-1 receptors to improve insulin secretion in the kidney"
+      ],
+      correct: 0,
+      explain: "Finerenone is a non-steroidal mineralocorticoid receptor antagonist (MRA) that blocks aldosterone receptors. It reduces renal inflammation and fibrosis in DKD and is indicated when albuminuria persists >300 mg/g despite ACE inhibitor or ARB therapy."
+    },
+    {
+      q: "A physician is counseling a 39-year-old woman recently diagnosed with type 2 diabetes. She asks why strict blood sugar control matters for her kidneys, even though her kidneys feel fine now. The most accurate explanation based on the brick is:",
+      options: [
+        "High blood sugar directly dissolves the glomerular basement membrane",
+        "Glucose enters kidney cells and blocks sodium reabsorption channels",
+        "Chronic hyperglycemia drives AGE formation, causing mesangial expansion and GBM damage",
+        "Elevated insulin levels from glucose spikes cause direct podocyte toxicity"
+      ],
+      correct: 2,
+      explain: "Chronic hyperglycemia drives nonenzymatic glycation (NEG) of proteins and advanced glycation end-product (AGE) formation. AGEs activate receptors on mesangial cells, triggering TGF-β release, mesangial expansion, and GBM thickening — the cellular origins of DKD."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

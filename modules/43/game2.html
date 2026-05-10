@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microscopy ID Hotspot — Module 43</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .mpgn-zone { cursor: pointer; }
+  .mpgn-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .mpgn-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .mpgn-zone text { pointer-events: none; user-select: none; }
+  .mpgn-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .mpgn-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 43</a></div>
+  <h1>Game 2 — Microscopy ID Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct microscopy technique for each MPGN finding</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each pathologic finding described, click the microscopy technique that would reveal it in MPGN. Three cases — three clicks. Misses count.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Light Microscopy -->
+        <g class="mpgn-zone" data-name="Light Microscopy">
+          <rect class="zone-bg" x="20" y="40" width="140" height="180" rx="12"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="90" y="30"  text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Light</text>
+          <text x="90" y="46"  text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">Microscopy</text>
+          <text x="90" y="80"  text-anchor="middle" font-size="10" fill="#1e40af">H&amp;E, PAS,</text>
+          <text x="90" y="96"  text-anchor="middle" font-size="10" fill="#1e40af">silver stains</text>
+          <text x="90" y="120" text-anchor="middle" font-size="10" fill="#444">Structural changes</text>
+          <text x="90" y="136" text-anchor="middle" font-size="10" fill="#444">visible here</text>
+          <text x="90" y="160" text-anchor="middle" font-size="9" fill="#888">First technique used</text>
+        </g>
+
+        <!-- Immunofluorescence -->
+        <g class="mpgn-zone" data-name="Immunofluorescence">
+          <rect class="zone-bg" x="180" y="40" width="140" height="180" rx="12"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="250" y="30"  text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Immuno-</text>
+          <text x="250" y="46"  text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">fluorescence</text>
+          <text x="250" y="80"  text-anchor="middle" font-size="10" fill="#78350f">Labeled</text>
+          <text x="250" y="96"  text-anchor="middle" font-size="10" fill="#78350f">antibodies</text>
+          <text x="250" y="120" text-anchor="middle" font-size="10" fill="#444">Detects immune</text>
+          <text x="250" y="136" text-anchor="middle" font-size="10" fill="#444">deposits by type</text>
+          <text x="250" y="160" text-anchor="middle" font-size="9" fill="#888">IgG, IgM, C3, etc.</text>
+        </g>
+
+        <!-- Electron Microscopy -->
+        <g class="mpgn-zone" data-name="Electron Microscopy">
+          <rect class="zone-bg" x="340" y="40" width="140" height="180" rx="12"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="410" y="30"  text-anchor="middle" font-size="12" font-weight="700" fill="#9d174d">Electron</text>
+          <text x="410" y="46"  text-anchor="middle" font-size="12" font-weight="700" fill="#9d174d">Microscopy</text>
+          <text x="410" y="80"  text-anchor="middle" font-size="10" fill="#831843">Ultra-high</text>
+          <text x="410" y="96"  text-anchor="middle" font-size="10" fill="#831843">magnification</text>
+          <text x="410" y="120" text-anchor="middle" font-size="10" fill="#444">Deposit location</text>
+          <text x="410" y="136" text-anchor="middle" font-size="10" fill="#444">at nm level</text>
+          <text x="410" y="160" text-anchor="middle" font-size="9" fill="#888">Subendothelial, mesangial</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three findings identified!</h3>
+      <p>MPGN on light microscopy: thickened GBM, mesangial hypercellularity, tram-track appearance on silver stain. Immunofluorescence: granular IgM and C3 staining in HCV-MPGN. Electron microscopy: subendothelial and mesangial electron-dense deposits.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A silver stain of a kidney biopsy shows a characteristic 'tram-track' appearance of the glomerular basement membrane — a double contour caused by mesangial cell interposition into the capillary wall. Which microscopy technique reveals this structural landmark?",
+      answer: "Light Microscopy",
+      explain: "The tram-track (double contour) of the GBM is a defining light microscopy finding in MPGN. It results from mesangial cells migrating between the original GBM and the capillary endothelium, creating a new basement membrane layer."
+    },
+    {
+      text: "In Hepatitis C-related MPGN, labeled antibody staining reveals a granular pattern of immunoglobulin M and C3 complement deposited along the GBM. Which technique detects this specific antibody and complement pattern?",
+      answer: "Immunofluorescence",
+      explain: "Immunofluorescence microscopy uses fluorescently labeled antibodies to detect specific immunoglobulins (IgM, IgG) and complement components (C3, C4) deposited in the glomerulus. HCV-MPGN typically shows granular IgM and C3 staining."
+    },
+    {
+      text: "Ultrastructural analysis of the kidney shows electron-dense deposits located between the endothelial cells and the GBM (subendothelial) and within the mesangium. Which technique provides this level of resolution to localize deposits precisely?",
+      answer: "Electron Microscopy",
+      explain: "Electron microscopy provides nanometer-level resolution to identify the precise location of deposits — subendothelial, intramembranous, subepithelial, or mesangial. In MPGN, deposits are characteristically subendothelial and mesangial."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl  = document.getElementById("misses");
+  const fbEl    = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones = canvas.querySelectorAll(".mpgn-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2400);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — review the MPGN histopathology section.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

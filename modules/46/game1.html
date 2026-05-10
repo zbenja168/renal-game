@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathogen Sorter — Module 46</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 46</a></div>
+  <h1>Game 1 — Pathogen Sorter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🦠</div>
+      <h2>Sort each pathogen or infection type into the correct PIGN category</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each infectious organism or clinical scenario into the PIGN category it causes: Poststreptococcal GN (PSGN) or Staphylococcal-associated GN. Use only what the brick states about each pathogen.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted correctly: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Pathogens and scenarios to sort</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Pathogens sorted!</h3>
+      <p>PSGN is caused by specific nephritogenic strains of group A beta-hemolytic Streptococcus. Staphylococcal GN is increasingly recognized in adults, especially hospitalized patients with endocarditis, osteomyelitis, or skin infections, and presents without the typical weeks-long latency.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "strep_pyog",   label: "Group A beta-hemolytic Streptococcus pyogenes",              bucket: "psgn" },
+    { id: "pharyngitis",  label: "Streptococcal pharyngitis (strep throat) 1–3 weeks prior",   bucket: "psgn" },
+    { id: "impetigo",     label: "Streptococcal skin infection (impetigo) 3–6 weeks prior",    bucket: "psgn" },
+    { id: "cellulitis_s", label: "Streptococcal cellulitis 3–6 weeks prior",                   bucket: "psgn" },
+    { id: "children_5_12",label: "Peak incidence in children aged 5–12 years",                 bucket: "psgn" },
+    { id: "staph_infect", label: "Staphylococcus aureus infection concurrent with renal symptoms", bucket: "staph" },
+    { id: "endocarditis", label: "Staphylococcal endocarditis (heart valve infection)",        bucket: "staph" },
+    { id: "osteomyel",   label: "Staphylococcal osteomyelitis (bone infection)",              bucket: "staph" },
+    { id: "staph_adult", label: "Adults with prolonged serious infection — no weeks-long delay", bucket: "staph" }
+  ];
+
+  const buckets = [
+    { id: "psgn",  label: "Poststreptococcal GN (PSGN)" },
+    { id: "staph", label: "Staphylococcal-associated GN" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dragSource.textContent;
+        zone.appendChild(p);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-check which organism is responsible and the timing of renal symptoms.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MPGN Management Quiz — Module 43</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 43</a></div>
+  <h1>Game 5 — MPGN Management Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five fresh cases — apply MPGN knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Answer five new clinical scenarios testing your understanding of MPGN diagnosis and management from the brick. These are not the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>Key MPGN takeaways: treat the underlying cause first (antivirals for HCV); use ACE inhibitors for all; corticosteroids for primary MPGN; low C3 and C4 confirm secondary immune-complex disease; low C3 with normal C4 suggests primary alternative pathway MPGN.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      q: "A 45-year-old man with known Hepatitis C presents with hematuria, 4+ proteinuria, and leg swelling. Labs show low C3 and low C4. A renal biopsy confirms MPGN. According to the brick, what is the most important first treatment step?",
+      options: [
+        "Start high-dose prednisone immediately to suppress glomerular inflammation",
+        "Begin antiviral therapy to eradicate the Hepatitis C infection",
+        "Initiate plasmapheresis to remove immune complexes from the circulation",
+        "Start cyclophosphamide as the primary immunosuppressant"
+      ],
+      correct: 1,
+      explain: "The brick states that in secondary MPGN from HCV, treating the underlying infection is the priority. If HCV is cleared with antiviral therapy (protease or polymerase inhibitors), MPGN will usually resolve."
+    },
+    {
+      q: "A patient has a serum C3 level of 48 mg/dL (low) and a C4 level of 22 mg/dL (normal). Serology for all infections is negative. What MPGN mechanism is most consistent with these complement findings, per the brick?",
+      options: [
+        "Immune complex deposition with activation of both classical and alternative complement pathways",
+        "Alternative complement pathway dysregulation with low C3 but preserved C4",
+        "Complement depletion from urinary complement protein losses",
+        "Hepatitis B immune complex disease causing isolated C4 consumption"
+      ],
+      correct: 1,
+      explain: "The brick explains that primary MPGN involves dysregulation of the alternative complement pathway. The alternative pathway activates C3 directly without C4, so C3 is low while C4 remains normal. Secondary immune-complex MPGN (via classical pathway) lowers both C3 and C4."
+    },
+    {
+      q: "A nephrologist evaluating a patient with MPGN finds positive Hepatitis C serology. The next step according to the brick is to order which test to further characterize the HCV-related immune response?",
+      options: [
+        "Serum anti-PLA2 receptor antibody",
+        "Serum cryoglobulins",
+        "Serum ANCA panel",
+        "Serum anti-GBM antibody"
+      ],
+      correct: 1,
+      explain: "The brick states that if hepatitis serology is positive, serum cryoglobulins should be checked. Cryoglobulins are antibodies strongly linked to HCV-associated MPGN; their presence is a strong indicator of the HCV-MPGN connection."
+    },
+    {
+      q: "A 58-year-old woman with primary MPGN (no secondary cause found) has progressive proteinuria and declining GFR over 2 years. According to the brick, what is the expected prognosis for primary MPGN?",
+      options: [
+        "Excellent — the majority of cases spontaneously resolve without treatment",
+        "Good — most patients enter complete remission with a single steroid course",
+        "Poor — half or more eventually require dialysis or transplantation",
+        "Variable — identical prognosis to minimal change disease"
+      ],
+      correct: 2,
+      explain: "The brick states primary (idiopathic) MPGN has a very poor prognosis — half or more of patients develop progressive renal failure requiring dialysis or transplantation. Novel complement pathway inhibitors are being developed."
+    },
+    {
+      q: "A 40-year-old patient with MPGN secondary to HCV is started on antiviral therapy. The HCV viral load becomes undetectable six months later. Proteinuria decreases from 4.5 g to 0.8 g/24 h. What does this clinical course confirm about the brick's management principle?",
+      options: [
+        "Immunosuppression suppressed the autoimmune component of MPGN",
+        "Clearing HCV eradicated the immune-complex source, resolving MPGN",
+        "ACE inhibitor therapy reduced proteinuria independent of HCV treatment",
+        "Spontaneous remission of MPGN occurred coincidentally with antiviral use"
+      ],
+      correct: 1,
+      explain: "This case confirms the brick's principle: secondary MPGN caused by HCV is managed by treating the underlying infection. When HCV is eradicated with antiviral drugs, the immune complex formation that drives MPGN stops, and the kidney disease resolves in most cases."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

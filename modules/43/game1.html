@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MPGN Presentation Builder — Module 43</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 43</a></div>
+  <h1>Game 1 — MPGN Presentation Builder</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧱</div>
+      <h2>Drag each label into the correct MPGN clinical slot</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Build the clinical picture of membranoproliferative glomerulonephritis. MPGN can present with both nephritic and nephrotic features — place each label in its correct slot from the brick.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Labels</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 MPGN presentation built!</h3>
+      <p>MPGN is unique in presenting with BOTH hematuria and proteinuria — a mixed nephritic/nephrotic picture. It is mostly a secondary disease in adults, and Hepatitis C is the most common underlying cause. Complement levels (C3 and C4) are characteristically low.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "s1", label: "MPGN is seen in this percentage of renal biopsy specimens",              answer: "6%–12%" },
+    { id: "s2", label: "Most common cause of MPGN in adults in the United States",               answer: "Hepatitis C virus" },
+    { id: "s3", label: "Urine finding that distinguishes MPGN from pure nephrotic syndrome",     answer: "Hematuria" },
+    { id: "s4", label: "Presenting feature shared with nephrotic syndrome",                      answer: "Proteinuria and edema" },
+    { id: "s5", label: "Serum complement levels in secondary (immune-complex) MPGN",             answer: "Low C3 and C4" },
+    { id: "s6", label: "Serum complement pattern in primary (alternative pathway) MPGN",         answer: "Low C3, normal C4" },
+    { id: "s7", label: "Antibodies that precipitate in the cold — strongly linked to HCV-MPGN", answer: "Cryoglobulins" },
+    { id: "s8", label: "Advanced MPGN symptom from declining GFR — buildup of uremic toxins",    answer: "Uremic symptoms" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const dropped = dragSource.dataset.label;
+      if (zone.classList.contains("correct")) return;
+      if (dropped === zone.dataset.answer) {
+        zone.innerHTML = "";
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dropped;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb("✓ Correct — " + dropped, "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Not quite. Re-read the brick's presentation section.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

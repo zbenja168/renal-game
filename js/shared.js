@@ -5,7 +5,7 @@
 window.Game = (function () {
   const STORAGE_KEY = "renalBricks_v1";
   const GAMES_PER_MODULE = 6;
-  const TOTAL_MODULES = 39;
+  const TOTAL_MODULES = 55;
   const COLORS = ["#fb7185", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#f97316"];
 
   /* ---------- progress storage ---------- */

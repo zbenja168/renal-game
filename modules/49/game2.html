@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histology Hotspot — Module 49</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .histo-zone { cursor: pointer; }
+  .histo-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .histo-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .histo-zone text { pointer-events: none; user-select: none; }
+  .histo-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.5));
+  }
+  .histo-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeH 0.4s;
+  }
+  @keyframes shakeH {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 49</a></div>
+  <h1>Game 2 — Histology Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct histologic finding for each clue</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each description, click the correct histologic zone on the diagram. Four cases — wrong clicks count as misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- GBM thickening -->
+        <g class="histo-zone" data-name="GBM Thickening">
+          <rect class="zone-bg" x="15" y="40" width="115" height="200" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="72" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">GBM Thickening</text>
+          <text x="72" y="68" text-anchor="middle" font-size="10" fill="#1e40af">Glomerular basement</text>
+          <text x="72" y="84" text-anchor="middle" font-size="10" fill="#1e40af">membrane widens</text>
+          <text x="72" y="108" text-anchor="middle" font-size="10" fill="#374151">Earliest histologic</text>
+          <text x="72" y="124" text-anchor="middle" font-size="10" fill="#374151">change in DKD</text>
+          <text x="72" y="148" text-anchor="middle" font-size="10" fill="#374151">Seen on EM</text>
+        </g>
+
+        <!-- Mesangial expansion -->
+        <g class="histo-zone" data-name="Mesangial Expansion">
+          <rect class="zone-bg" x="145" y="40" width="115" height="200" rx="10"
+                fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+          <text x="202" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Mesangial Expansion</text>
+          <text x="202" y="68" text-anchor="middle" font-size="10" fill="#92400e">Mesangial cells</text>
+          <text x="202" y="84" text-anchor="middle" font-size="10" fill="#92400e">proliferate; matrix</text>
+          <text x="202" y="100" text-anchor="middle" font-size="10" fill="#92400e">increases</text>
+          <text x="202" y="124" text-anchor="middle" font-size="10" fill="#374151">Due to AGE-driven</text>
+          <text x="202" y="140" text-anchor="middle" font-size="10" fill="#374151">TGF-β signaling</text>
+        </g>
+
+        <!-- Kimmelstiel-Wilson nodules -->
+        <g class="histo-zone" data-name="Kimmelstiel-Wilson Nodules">
+          <rect class="zone-bg" x="275" y="40" width="115" height="200" rx="10"
+                fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="332" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#7f1d1d">KW Nodules</text>
+          <text x="332" y="68" text-anchor="middle" font-size="10" fill="#7f1d1d">Kimmelstiel-Wilson</text>
+          <text x="332" y="84" text-anchor="middle" font-size="10" fill="#7f1d1d">nodules</text>
+          <text x="332" y="108" text-anchor="middle" font-size="10" fill="#374151">Spherical pink ECM</text>
+          <text x="332" y="124" text-anchor="middle" font-size="10" fill="#374151">deposits in mesangium</text>
+          <text x="332" y="148" text-anchor="middle" font-size="10" fill="#374151">Pathognomonic for DKD</text>
+        </g>
+
+        <!-- Hyaline arteriolosclerosis -->
+        <g class="histo-zone" data-name="Hyaline Arteriolosclerosis">
+          <rect class="zone-bg" x="405" y="40" width="105" height="200" rx="10"
+                fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+          <text x="457" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Hyaline Arteriolosclerosis</text>
+          <text x="457" y="68" text-anchor="middle" font-size="10" fill="#065f46">Vessel wall</text>
+          <text x="457" y="84" text-anchor="middle" font-size="10" fill="#065f46">thickening with</text>
+          <text x="457" y="100" text-anchor="middle" font-size="10" fill="#065f46">hyaline deposits</text>
+          <text x="457" y="124" text-anchor="middle" font-size="10" fill="#374151">Narrowed lumen</text>
+          <text x="457" y="140" text-anchor="middle" font-size="10" fill="#374151">impairs blood flow</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Histology mastered!</h3>
+      <p>GBM thickening is the earliest change. Mesangial expansion follows. Kimmelstiel-Wilson nodules are pathognomonic. Hyaline arteriolosclerosis compounds vascular damage. Together they drive the decline in GFR.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A pathologist reviews a renal biopsy from a 12-year diabetic. On light microscopy she sees spherical, pink, eosinophilic deposits within the mesangium — the centers are acellular and the surrounding matrix is abundant. These deposits are composed mainly of type IV collagen, laminin, and fibronectin. What is this finding called?",
+      answer: "Kimmelstiel-Wilson Nodules",
+      explain: "Kimmelstiel-Wilson (KW) nodules are spherical, pink ECM deposits in the glomerular mesangium. They are composed of basement membrane-like material and are pathognomonic for diabetic kidney disease."
+    },
+    {
+      text: "Electron microscopy of a renal biopsy from a patient with 5 years of type 1 diabetes shows a markedly widened glomerular basement membrane compared to controls. The GFR is still above normal. This represents which histologic change?",
+      answer: "GBM Thickening",
+      explain: "Glomerular basement membrane thickening is one of the earliest histologic changes in DKD, visible on electron microscopy. It occurs alongside the hyperfiltration phase."
+    },
+    {
+      text: "A light microscopy slide shows proliferating mesangial cells surrounded by an increased amount of extracellular matrix material. TGF-β signaling, driven by elevated AGE levels, is the main driver. The capillary lumens are beginning to narrow. What process is this?",
+      answer: "Mesangial Expansion",
+      explain: "Mesangial expansion results from AGE-stimulated TGF-β causing mesangial cell proliferation and matrix overproduction. It narrows capillary lumens and reduces filtration area, contributing to declining GFR."
+    },
+    {
+      text: "An arteriole on the slide has a markedly thickened wall with a homogeneous, glassy-appearing deposit replacing the normal smooth muscle. The lumen is noticeably narrowed. Inflammation and fibrosis from microvascular disease are noted. Which finding is this?",
+      answer: "Hyaline Arteriolosclerosis",
+      explain: "Hyaline arteriolosclerosis appears as glassy, eosinophilic material deposited in the walls of arterioles. It is a microvascular complication of diabetes that thickens vessel walls and narrows lumens, impairing blood flow to the glomeruli."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText = document.getElementById("caseText");
+  const zones = canvas.querySelectorAll(".histo-zone");
+
+  let currentCase = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found", "miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      if (z.dataset.name === cases[currentCase].answer) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadCase, 2600);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — review the DKD histopathology section.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

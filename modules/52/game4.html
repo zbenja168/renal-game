@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic Workup Sorter — Module 52</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 52</a></div>
+  <h1>Game 4 — Diagnostic Workup Sorter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Drag each investigation into the correct workup category</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The diagnostic workup for RPN involves three types of tests. Drag each test or finding into the correct category: urine study, serum study, or radiology. Know what each one tells you about RPN.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Investigations &amp; findings</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Workup complete!</h3>
+      <p>RPN diagnosis is clinical: SCD + hematuria + flank pain. Urinalysis shows RBCs and tubular epithelial cells. Serum creatinine rises from reduced GFR. Renal ultrasound rules out stones; CT without contrast avoids nephrotoxic contrast. Sloughed papillary tissue on pathology is diagnostic.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "rbc_micro", label: "Microscopic hematuria — RBCs on urinalysis",                      bucket: "urine" },
+    { id: "tubcells",  label: "Tubular epithelial cells — the hallmark finding in RPN",           bucket: "urine" },
+    { id: "wbc_cast",  label: "WBC casts — if pyelonephritis is secondary cause",                bucket: "urine" },
+    { id: "creatinine",label: "Serum creatinine — elevated due to reduced GFR",                  bucket: "serum" },
+    { id: "gfr",       label: "GFR estimation — quantifies degree of renal impairment",          bucket: "serum" },
+    { id: "hbf",       label: "Fetal hemoglobin (HbF) level — key in SCD-associated RPN",       bucket: "serum" },
+    { id: "us",        label: "Renal ultrasound — rules out stones; may show echogenic kidneys", bucket: "radio" },
+    { id: "ct",        label: "CT scan (without contrast) — avoids contrast nephropathy risk",   bucket: "radio" },
+    { id: "calcif",    label: "Calcifications on X-ray — may appear in chronic disease",         bucket: "radio" }
+  ];
+
+  const buckets = [
+    { id: "urine", label: "Urine Studies" },
+    { id: "serum", label: "Serum Studies" },
+    { id: "radio", label: "Radiology" }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl   = document.getElementById("score");
+  const fbEl      = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That test belongs in a different category.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vasa Recta Hotspot — Module 52</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .rpn-zone { cursor: pointer; }
+  .rpn-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .rpn-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .rpn-zone text { pointer-events: none; user-select: none; }
+  .rpn-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.5));
+  }
+  .rpn-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shake52 0.4s;
+  }
+  @keyframes shake52 {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 52</a></div>
+  <h1>Game 2 — Vasa Recta Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🫀</div>
+      <h2>Click the correct kidney zone for each question</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three questions about renal anatomy and the vasa recta. Each time, click the correct zone on the kidney diagram. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="questionBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Question <span id="qNum">1</span> of 3:</strong>
+      <p id="qText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Cortex zone -->
+        <g class="rpn-zone" data-name="Cortex">
+          <rect class="zone-bg" x="20" y="20" width="140" height="110" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="90" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">Cortex</text>
+          <text x="90" y="68" text-anchor="middle" font-size="10" fill="#1e3a8a">Outer kidney</text>
+          <text x="90" y="84" text-anchor="middle" font-size="10" fill="#1e3a8a">Glomeruli here</text>
+          <text x="90" y="100" text-anchor="middle" font-size="10" fill="#1e3a8a">Rich blood supply</text>
+          <text x="90" y="116" text-anchor="middle" font-size="10" fill="#1e3a8a">from cortical arteries</text>
+        </g>
+
+        <!-- Medulla zone -->
+        <g class="rpn-zone" data-name="Medulla">
+          <rect class="zone-bg" x="180" y="20" width="140" height="110" rx="10"
+                fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="250" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Medulla</text>
+          <text x="250" y="68" text-anchor="middle" font-size="10" fill="#78350f">Inner kidney</text>
+          <text x="250" y="84" text-anchor="middle" font-size="10" fill="#78350f">Loops of Henle</text>
+          <text x="250" y="100" text-anchor="middle" font-size="10" fill="#78350f">Collecting ducts</text>
+          <text x="250" y="116" text-anchor="middle" font-size="10" fill="#78350f">Vasa recta here</text>
+        </g>
+
+        <!-- Papilla zone -->
+        <g class="rpn-zone" data-name="Papilla">
+          <rect class="zone-bg" x="340" y="20" width="140" height="110" rx="10"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="410" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#9d174d">Papilla</text>
+          <text x="410" y="68" text-anchor="middle" font-size="10" fill="#831843">Tip of pyramid</text>
+          <text x="410" y="84" text-anchor="middle" font-size="10" fill="#831843">Drains into calyx</text>
+          <text x="410" y="100" text-anchor="middle" font-size="10" fill="#831843">Hyperosmolar</text>
+          <text x="410" y="116" text-anchor="middle" font-size="10" fill="#831843">Most ischemia-prone</text>
+        </g>
+
+        <!-- Legend -->
+        <text x="250" y="160" text-anchor="middle" font-size="11" fill="#555" font-style="italic">Kidney cross-section (simplified)</text>
+
+        <!-- Simple kidney outline shapes -->
+        <ellipse cx="250" cy="230" rx="200" ry="70" fill="#f9fafb" stroke="#9ca3af" stroke-width="1.5"/>
+        <text x="250" y="218" text-anchor="middle" font-size="10" fill="#6b7280">← Cortex</text>
+        <text x="250" y="234" text-anchor="middle" font-size="10" fill="#6b7280">Medulla (pyramids)</text>
+        <text x="250" y="250" text-anchor="middle" font-size="10" fill="#6b7280">Papilla → Calyx →</text>
+        <text x="250" y="295" text-anchor="middle" font-size="10" fill="#6b7280">Renal pelvis → Ureter</text>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All zones identified!</h3>
+      <p>The renal papilla is the most vulnerable zone: it is the innermost, most concentrated, and most hyperosmolar region, supplied only by the vasa recta — small arteries that contain high-oncotic-pressure plasma after glomerular filtration. Any reduction in flow here leads to ischemia and necrosis.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      text: "The collecting ducts merge here, dumping filtrate into the renal pelvis. This structure is the innermost tip of the renal pyramid. Click the correct zone.",
+      answer: "Papilla",
+      explain: "The renal papilla is the tip of each renal pyramid, where collecting ducts converge and drain filtrate into the minor calyces. This is the site of necrosis in RPN."
+    },
+    {
+      text: "The vasa recta — the small, straight arteries that supply the deepest kidney tissue — run alongside the loops of Henle in this zone. Click it.",
+      answer: "Medulla",
+      explain: "The vasa recta run through the renal medulla alongside the loops of Henle. They contain high-oncotic-pressure blood (plasma already filtered at glomeruli) and operate in the hyperosmolar medullary environment, making them uniquely vulnerable to occlusion."
+    },
+    {
+      text: "In renal papillary necrosis, the structure that undergoes cell death and can slough off into the urine — causing hematuria and potential ureteral obstruction — is which zone?",
+      answer: "Papilla",
+      explain: "In RPN, the papilla undergoes coagulative necrosis. The necrotic tip can detach, pass into the renal pelvis, travel down the ureter, and cause obstruction — mimicking a kidney stone clinically."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const qNumEl    = document.getElementById("qNum");
+  const qTextEl   = document.getElementById("qText");
+  const zones     = canvas.querySelectorAll(".rpn-zone");
+
+  let current = 0;
+  let correct = 0;
+  let misses  = 0;
+  let lock    = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadQ() {
+    if (current >= questions.length) return;
+    qNumEl.textContent = current + 1;
+    qTextEl.textContent = questions[current].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    current = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadQ();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || current >= questions.length) return;
+      const picked   = z.dataset.name;
+      const expected = questions[current].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb("✓ Correct! " + questions[current].explain, "correct");
+        current++;
+        if (current === questions.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadQ, 2800);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not that zone — re-read the description carefully.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline Sequencer — Module 46</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 46</a></div>
+  <h1>Game 2 — Timeline Sequencer</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⏱️</div>
+      <h2>Drag events into the correct order for PSGN</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The numbered slots below represent the chronological sequence of poststreptococcal GN — from the initial infection to recovery. Drag each event label from the pool into the correct numbered slot. The brick is very precise about the timing.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 7</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Events</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Timeline complete!</h3>
+      <p>PSGN: Strep infection → nephritogenic strains trigger immune complex formation (IgG/IgM) → deposits in GBM → complement activated → inflammation → hematuria, edema, hypertension → resolve in 1–2 weeks (hematuria may persist months). Most children recover fully.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // Slots in strict chronological order per the brick
+  const slots = [
+    { id: "s1", label: "Step 1: Infection begins",      answer: "Group A Streptococcus throat or skin infection occurs" },
+    { id: "s2", label: "Step 2: Latency period",         answer: "1–3 weeks (pharyngitis) or 3–6 weeks (skin) before renal symptoms" },
+    { id: "s3", label: "Step 3: Immune complex formation", answer: "IgG (or IgM) antibodies form circulating immune complexes" },
+    { id: "s4", label: "Step 4: Glomerular deposition",  answer: "Immune complexes deposit in the subepithelial and mesangial GBM locations" },
+    { id: "s5", label: "Step 5: Complement activation",  answer: "Complement activated via alternative pathway — C3 consumed, C4 normal" },
+    { id: "s6", label: "Step 6: Clinical disease",       answer: "Gross hematuria, tea-colored urine, edema, hypertension appear" },
+    { id: "s7", label: "Step 7: Resolution",             answer: "Symptoms resolve in 1–2 weeks; hematuria may persist months in some patients" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl = document.getElementById("zonesList");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.slotId = s.id;
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", el.dataset.label); });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (zone.classList.contains("correct")) return;
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const p = document.createElement("div");
+        p.className = "drag-item placed";
+        p.textContent = dropped;
+        zone.appendChild(p);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb("✓ Correct — " + dropped, "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ That event doesn't belong in this step — check the PSGN timeline.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

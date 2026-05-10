@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sclerosis Hotspot — Module 42</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .fsgs-zone { cursor: pointer; }
+  .fsgs-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .fsgs-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .fsgs-zone text { pointer-events: none; user-select: none; }
+  .fsgs-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .fsgs-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 42</a></div>
+  <h1>Game 2 — Sclerosis Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct zone for each FSGS histology scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each case, click the glomerular zone that describes the histopathologic findings in FSGS. Three cases — three clicks. Misses count.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Focal (few glomeruli) -->
+        <g class="fsgs-zone" data-name="Focal">
+          <rect class="zone-bg" x="20" y="40" width="140" height="180" rx="12"
+                fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+          <text x="90" y="30"  text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">Focal</text>
+          <text x="90" y="68"  text-anchor="middle" font-size="10" fill="#166534">Less than 50%</text>
+          <text x="90" y="84"  text-anchor="middle" font-size="10" fill="#166534">of glomeruli</text>
+          <text x="90" y="108" text-anchor="middle" font-size="10" fill="#444">Disease affects</text>
+          <text x="90" y="124" text-anchor="middle" font-size="10" fill="#444">only SOME</text>
+          <text x="90" y="140" text-anchor="middle" font-size="10" fill="#444">glomeruli</text>
+          <text x="90" y="168" text-anchor="middle" font-size="9" fill="#888">Opposite: diffuse</text>
+        </g>
+
+        <!-- Segmental (part of one glomerulus) -->
+        <g class="fsgs-zone" data-name="Segmental">
+          <rect class="zone-bg" x="180" y="40" width="140" height="180" rx="12"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="250" y="30"  text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Segmental</text>
+          <text x="250" y="68"  text-anchor="middle" font-size="10" fill="#78350f">Less than 50%</text>
+          <text x="250" y="84"  text-anchor="middle" font-size="10" fill="#78350f">of each glomerulus</text>
+          <text x="250" y="108" text-anchor="middle" font-size="10" fill="#444">Sclerosis involves</text>
+          <text x="250" y="124" text-anchor="middle" font-size="10" fill="#444">only PART of</text>
+          <text x="250" y="140" text-anchor="middle" font-size="10" fill="#444">the tuft</text>
+          <text x="250" y="168" text-anchor="middle" font-size="9" fill="#888">Opposite: global</text>
+        </g>
+
+        <!-- Global (whole glomerulus) -->
+        <g class="fsgs-zone" data-name="Global sclerosis">
+          <rect class="zone-bg" x="340" y="40" width="140" height="180" rx="12"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="410" y="30"  text-anchor="middle" font-size="13" font-weight="700" fill="#9d174d">Global</text>
+          <text x="410" y="44"  text-anchor="middle" font-size="13" font-weight="700" fill="#9d174d">Sclerosis</text>
+          <text x="410" y="78"  text-anchor="middle" font-size="10" fill="#831843">Entire glomerulus</text>
+          <text x="410" y="94"  text-anchor="middle" font-size="10" fill="#831843">affected</text>
+          <text x="410" y="118" text-anchor="middle" font-size="10" fill="#444">End-stage of</text>
+          <text x="410" y="134" text-anchor="middle" font-size="10" fill="#444">ongoing focal</text>
+          <text x="410" y="150" text-anchor="middle" font-size="10" fill="#444">injury</text>
+          <text x="410" y="178" text-anchor="middle" font-size="9" fill="#888">Late FSGS finding</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three identified correctly!</h3>
+      <p>"Focal" = less than 50% of glomeruli involved. "Segmental" = less than 50% of the affected glomerulus involved. The disease starts focal and segmental, then progresses to global sclerosis of all glomeruli as renal function worsens.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A pathologist reviews a biopsy. On light microscopy, only 3 of 14 glomeruli show any abnormality — the other 11 look completely normal. This pattern of disease affecting a minority of glomeruli is called what?",
+      answer: "Focal",
+      explain: "Focal means less than 50% of glomeruli are involved. This is the 'F' in FSGS — the disease is not present in every glomerulus, making it easy to miss on biopsy if too few cores are taken."
+    },
+    {
+      text: "Within one affected glomerulus, the sclerosis is confined to a wedge-shaped area of the capillary tuft. The rest of the same glomerular tuft appears normal. This partial involvement of a single glomerulus is called what?",
+      answer: "Segmental",
+      explain: "Segmental means less than 50% of the glomerular tuft is involved. This is the 'S' in FSGS — sclerosis is not global within any single glomerulus, at least early in the disease."
+    },
+    {
+      text: "In advanced FSGS, some glomeruli have been completely replaced by collagen and scarring. The entire tuft is obliterated. This end-stage pattern within a single glomerulus is called what?",
+      answer: "Global sclerosis",
+      explain: "As FSGS progresses, the segmental sclerosis expands to involve the entire glomerulus — global sclerosis. This represents the end-stage of ongoing podocyte injury and collapse of the capillary loops."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl  = document.getElementById("misses");
+  const fbEl    = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones = canvas.querySelectorAll(".fsgs-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2400);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — re-read the FSGS histology section.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

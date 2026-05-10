@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios Quiz — Module 54</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 54</a></div>
+  <h1>Game 5 — Clinical Scenarios Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Five fresh clinical scenarios — reason from the brick</h2>
+    </div>
+    <div class="game-instructions">
+      New case-based questions that test stone knowledge from angles different from the brick's own review questions. Each question has four balanced answer choices.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>Calcium stones are most common. Smaller stones cause more symptoms (obstruction). Uric acid is radiolucent. Non-contrast CT is the gold-standard initial imaging. Bilateral obstruction or single-kidney obstruction causes creatinine rise. Surgical management is for stones that cannot pass spontaneously.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss round →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // NEW questions — not paraphrases of the brick's own review questions
+  const questions = [
+    {
+      q: "A 42-year-old man has severe right-sided flank pain radiating to the groin. Imaging reveals a 4 mm stone at the ureteropelvic junction. His pain is controlled with ibuprofen. What is the most appropriate next management step?",
+      options: [
+        "Schedule urgent lithotripsy — all ureteral stones require intervention",
+        "Prescribe tamsulosin and hydration to encourage spontaneous stone passage",
+        "Place a ureteral stent immediately to prevent obstruction",
+        "Perform percutaneous nephrolithotomy given the stone's location"
+      ],
+      correct: 1,
+      explain: "Stones ≤10 mm can pass spontaneously. The brick recommends tamsulosin (alpha-1 blocker) to relax the ureter and facilitate passage, combined with adequate hydration. Surgical intervention is reserved for stones that fail to pass or cause obstruction with infection."
+    },
+    {
+      q: "A 33-year-old woman with inflammatory bowel disease and chronic fat malabsorption develops recurrent calcium oxalate stones. Which mechanism from the brick best explains her increased stone risk?",
+      options: [
+        "Reduced GFR causes calcium to precipitate in the renal tubules",
+        "Fat binds dietary calcium in the gut, leaving excess oxalate to be absorbed",
+        "Chronic diarrhea causes metabolic alkalosis, promoting calcium precipitation",
+        "Malabsorption reduces urine citrate levels, lowering its inhibitory effect"
+      ],
+      correct: 1,
+      explain: "In fat malabsorption, unabsorbed fatty acids bind to calcium in the intestinal lumen, preventing calcium from binding to oxalate. This leaves free oxalate to be absorbed, resulting in hyperoxaluria — a major driver of calcium oxalate stone formation, as described in the brick."
+    },
+    {
+      q: "A patient has a plain abdominal X-ray ordered for kidney stone evaluation. The radiologist reports no stone visualized, but symptoms strongly suggest nephrolithiasis. Which stone type is most likely if the stone is truly present but invisible on X-ray?",
+      options: [
+        "Calcium oxalate — highly radiopaque on plain film",
+        "Struvite — densely calcified and easily visible",
+        "Uric acid — radiolucent and not visible on plain X-ray",
+        "Cystine — always radiopaque due to sulfur content"
+      ],
+      correct: 2,
+      explain: "Uric acid stones are radiolucent — they do not absorb X-rays and are invisible on plain film. The brick specifically notes this property. Non-contrast CT is far more sensitive and is the preferred imaging modality, as it detects all stone types including radiolucent ones."
+    },
+    {
+      q: "A 55-year-old man with gout has a 6 mm uric acid stone in the mid-ureter. Urine pH is 5.1. In addition to tamsulosin and hydration, which additional intervention targets the specific physiology of uric acid stones?",
+      options: [
+        "Thiazide diuretics to reduce urine calcium excretion",
+        "Urine alkalinization with potassium citrate to dissolve the stone",
+        "Calcium supplements taken with meals to bind intestinal urate",
+        "High-sodium diet to increase urine output and flush the stone"
+      ],
+      correct: 1,
+      explain: "Uric acid stones form and persist in acidic urine (pH <5.5). Alkalinizing the urine with potassium citrate or sodium bicarbonate raises urine pH, increasing uric acid solubility and promoting dissolution of existing stones — a unique property of uric acid stones not shared by calcium stones."
+    },
+    {
+      q: "A 28-year-old woman with a known right-sided stone now presents with high fever, chills, and costovertebral angle tenderness. CT shows hydronephrosis proximal to the stone. What is the most urgent management priority?",
+      options: [
+        "Administer tamsulosin and observe for 48 hours before imaging",
+        "Order ESWL to break up the stone before infection worsens",
+        "Relieve the obstruction urgently with nephrostomy or ureteral stent",
+        "Start broad-spectrum antibiotics and schedule elective lithotripsy"
+      ],
+      correct: 2,
+      explain: "The brick states that obstructing stones associated with fever and infection require immediate relief of obstruction. An infected, obstructed kidney can progress rapidly to urosepsis. Emergency drainage via nephrostomy tube or retrograde ureteral stent is indicated — antibiotics alone are insufficient when drainage is blocked."
+    }
+  ];
+
+  const container   = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    container.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

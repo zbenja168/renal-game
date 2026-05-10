@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios — Module 45</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 45</a></div>
+  <h1>Game 5 — Clinical Scenarios</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Five fresh case-based questions</h2>
+    </div>
+    <div class="game-instructions">
+      These scenarios test nephritic syndrome concepts from new angles. They are <em>not</em> the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Scenarios complete!</h3>
+      <p>You applied nephritic syndrome concepts to novel cases. Head to the boss round to place all the pieces together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // NEW questions — not the brick's verbatim review Qs. All facts from brick content.
+  const questions = [
+    {
+      q: "A urinalysis from a patient with nephritic syndrome is reviewed under the microscope. The technician identifies red blood cells with irregular shapes and varying sizes, along with tubular casts containing red blood cells. Which specific urinalysis finding is the brick's most highly specific indicator of glomerular disease in nephritic syndrome?",
+      options: [
+        "Dysmorphic red blood cells alone",
+        "Red blood cell casts",
+        "Protein 2+ on dipstick",
+        "Granular casts in urine sediment"
+      ],
+      correct: 1,
+      explain: "The brick states that red blood cell casts are highly specific for glomerular disease and strongly suggest nephritic syndrome. Dysmorphic RBCs are suggestive but less specific. Granular casts appear in many conditions."
+    },
+    {
+      q: "A 14-year-old boy develops tea-colored urine and bilateral leg swelling two weeks after a sore throat treated with amoxicillin. C3 complement is low and anti-streptolysin O titer is elevated. What does the brick say about the expected clinical course in a child with this presentation?",
+      options: [
+        "Rapid progression to end-stage renal disease within 2 years without immunosuppression",
+        "Spontaneous resolution is the rule; most children recover completely",
+        "Lifelong hemodialysis is required due to irreversible GBM damage",
+        "Kidney transplantation is the only curative option for children under 16"
+      ],
+      correct: 1,
+      explain: "The brick states that postinfectious GN in children has a very good prognosis; treatment is mainly supportive. Most children recover completely. Adults with staphylococcal PIGN have a worse prognosis with a 17% chance of progressing to ESRD."
+    },
+    {
+      q: "A patient with nephritic syndrome is found to have a biopsy showing proliferative changes but NO immune complex deposits on immunofluorescence. ANCA testing is ordered. Which pattern is most consistent with this biopsy finding based on the brick?",
+      options: [
+        "Immune complex deposition — granular IgG on immunofluorescence",
+        "Pauci-immune disease — no immune deposits despite immune injury",
+        "Linear IgG deposition — autoantibodies directed at the GBM",
+        "Mesangial IgA deposits — IgA nephropathy pattern"
+      ],
+      correct: 1,
+      explain: "The brick describes pauci-immune GN (seen in granulomatosis with polyangiitis) as having evidence of immune injury but no discrete immune complexes on biopsy. ANCA testing (c-ANCA or p-ANCA) is the distinguishing serologic test."
+    },
+    {
+      q: "A physician orders serum C3 and C4 levels as part of the workup for nephritic syndrome. Both C3 and C4 are low. Based on the brick's Table 1, which disease is MOST consistent with this pattern of low C3 AND low C4?",
+      options: [
+        "IgA nephropathy",
+        "Lupus nephritis",
+        "Anti-GBM disease",
+        "Granulomatosis with polyangiitis"
+      ],
+      correct: 1,
+      explain: "The brick lists lupus nephritis with low complement (C3 and C4 both low, along with ANA and anti-dsDNA). Postinfectious GN typically shows low C3 but normal C4. Anti-GBM and GPA do not cause complement consumption."
+    },
+    {
+      q: "A patient with confirmed nephritic syndrome and a rapidly falling GFR is started on treatment. The brick notes that anti-GBM disease requires a specific intervention to remove circulating antibodies. Which treatment accomplishes this?",
+      options: [
+        "High-dose corticosteroids only",
+        "ACE inhibitor to reduce proteinuria",
+        "Plasmapheresis to remove circulating anti-GBM antibodies",
+        "Loop diuretics to reduce edema and blood pressure"
+      ],
+      correct: 2,
+      explain: "The brick states that anti-GBM disease treatment includes plasmapheresis (plasma exchange) to remove the harmful anti-GBM antibodies from the body, in addition to immunosuppressant drugs."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disease Hotspot — Module 45</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .dis-zone { cursor: pointer; }
+  .dis-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .dis-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .dis-zone text { pointer-events: none; user-select: none; }
+  .dis-zone.found .zone-bg { stroke: #16a34a; stroke-width: 4; filter: drop-shadow(0 0 8px rgba(22,163,74,0.4)); }
+  .dis-zone.miss .zone-bg { stroke: #dc2626; stroke-width: 4; animation: shk 0.4s; }
+  @keyframes shk { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 45</a></div>
+  <h1>Game 2 — Disease Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct nephritic disease for each case</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Read each clinical scenario, then click the disease zone that best matches. Four cases, four clicks. Misses count.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg">
+
+        <g class="dis-zone" data-name="IgA nephropathy">
+          <rect class="zone-bg" x="10" y="20" width="115" height="130" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="67" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">IgA Nephropathy</text>
+          <text x="67" y="48" text-anchor="middle" font-size="9" fill="#1e40af">Concurrent with</text>
+          <text x="67" y="62" text-anchor="middle" font-size="9" fill="#1e40af">upper resp. infection</text>
+          <text x="67" y="86" text-anchor="middle" font-size="9" fill="#555">No extrarenal signs</text>
+          <text x="67" y="100" text-anchor="middle" font-size="9" fill="#555">No distinguishing</text>
+          <text x="67" y="114" text-anchor="middle" font-size="9" fill="#555">serologic test</text>
+          <text x="67" y="135" text-anchor="middle" font-size="8" fill="#888">(Berger disease)</text>
+        </g>
+
+        <g class="dis-zone" data-name="Lupus nephritis">
+          <rect class="zone-bg" x="140" y="20" width="115" height="130" rx="10" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="197" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#831843">Lupus Nephritis</text>
+          <text x="197" y="48" text-anchor="middle" font-size="9" fill="#831843">SLE precedes</text>
+          <text x="197" y="62" text-anchor="middle" font-size="9" fill="#831843">renal disease</text>
+          <text x="197" y="86" text-anchor="middle" font-size="9" fill="#555">Arthritis, rash, fatigue</text>
+          <text x="197" y="100" text-anchor="middle" font-size="9" fill="#555">+ANA, anti-dsDNA</text>
+          <text x="197" y="114" text-anchor="middle" font-size="9" fill="#555">Low complement</text>
+        </g>
+
+        <g class="dis-zone" data-name="Anti-GBM disease">
+          <rect class="zone-bg" x="270" y="20" width="115" height="130" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="327" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">Anti-GBM Disease</text>
+          <text x="327" y="48" text-anchor="middle" font-size="9" fill="#92400e">No preceding illness</text>
+          <text x="327" y="62" text-anchor="middle" font-size="9" fill="#92400e">Pulmonary + renal</text>
+          <text x="327" y="86" text-anchor="middle" font-size="9" fill="#555">Dyspnea, hemoptysis</text>
+          <text x="327" y="100" text-anchor="middle" font-size="9" fill="#555">+Anti-GBM antibodies</text>
+          <text x="327" y="114" text-anchor="middle" font-size="9" fill="#555">Rapidly progressive</text>
+        </g>
+
+        <g class="dis-zone" data-name="Membranoproliferative GN">
+          <rect class="zone-bg" x="10" y="170" width="370" height="130" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+          <text x="195" y="163" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Membranoproliferative GN</text>
+          <text x="195" y="194" text-anchor="middle" font-size="9" fill="#14532d">Preceding hepatitis C or cryoglobulinemia</text>
+          <text x="195" y="210" text-anchor="middle" font-size="9" fill="#555">Jaundice or abdominal swelling sometimes present</text>
+          <text x="195" y="226" text-anchor="middle" font-size="9" fill="#555">Positive hepatitis C serology and low complement</text>
+          <text x="195" y="250" text-anchor="middle" font-size="8" fill="#888">Tram-track pattern on light microscopy (doubled GBM)</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All cases diagnosed!</h3>
+      <p>Key discriminators: IgA nephropathy = concurrent URI, no serology. Lupus nephritis = SLE + ANA/anti-dsDNA + low complement. Anti-GBM = hemoptysis + dyspnea + anti-GBM antibodies. MPGN = hepatitis C + low complement + tram-track.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 19-year-old male presents with cola-colored urine starting the same day he notices a sore throat and runny nose. He has no rash, joint pain, or systemic symptoms. Urinalysis shows dysmorphic RBCs. Complement levels and serologic tests are normal. What is the most likely diagnosis?",
+      answer: "IgA nephropathy",
+      explain: "IgA nephropathy (Berger disease) classically presents with hematuria concurrent (within days) with a viral upper respiratory infection. There are no extrarenal signs and no characteristic serologic test, per the brick's table."
+    },
+    {
+      text: "A 28-year-old woman with known joint pain, a facial rash, and fatigue develops edema and hematuria. Her creatinine is rising. Labs show +ANA, elevated anti-dsDNA, and low complement C3 and C4. What nephritic disease does she have?",
+      answer: "Lupus nephritis",
+      explain: "Lupus nephritis occurs in the setting of SLE and is identified by the serologic triad of positive ANA, elevated anti-dsDNA, and low complement levels (C3/C4), per the brick's Table 1."
+    },
+    {
+      text: "A 44-year-old man presents with rapidly worsening kidney function and hemoptysis over 3 days. He is severely hypertensive and dyspneic. ELISA testing reveals antibodies directed at the glomerular and alveolar basement membranes. What disease does he have?",
+      answer: "Anti-GBM disease",
+      explain: "Anti-GBM disease (Goodpasture syndrome) presents with combined renal and pulmonary hemorrhage. The distinguishing test is anti-GBM antibodies. It may cause rapidly progressive GN with crescent formation, as per the brick."
+    },
+    {
+      text: "A 38-year-old woman with a known history of hepatitis C and cryoglobulinemia develops hematuria, edema, and rising creatinine. Serum complement levels (C3 and C4) are low. Hepatitis C serology is positive. What glomerular disease pattern is most likely on biopsy?",
+      answer: "Membranoproliferative GN",
+      explain: "Membranoproliferative GN is listed in the brick's table as being preceded by hepatitis C or cryoglobulinemia, with low complement and positive hepatitis C serology as distinguishing features."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText = document.getElementById("caseText");
+  const zones = canvas.querySelectorAll(".dis-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found", "miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — look at the key discriminating feature in the case.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

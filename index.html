@@ -54,6 +54,13 @@
   <p style="color: #5a6473; margin-bottom: 4px;">18 bricks. Builds on week 1 with disease states, diagnostics, and management.</p>
   <div class="module-grid" id="moduleGridWk2"></div>
 
+  <div class="week-header">
+    <h2>Week 3 · Glomerular &amp; Tubulointerstitial Disease</h2>
+    <span class="week-sub">Nephrotic &amp; nephritic spectrum · ATN/AIN · UTIs · Stones · Schistosomiasis</span>
+  </div>
+  <p style="color: #5a6473; margin-bottom: 4px;">16 bricks. Glomerular diseases, tubulo-interstitial injury, and lower urinary tract pathology.</p>
+  <div class="module-grid" id="moduleGridWk3"></div>
+
 </main>
 
 <footer>
@@ -103,11 +110,29 @@
     { num: 36, week: 2, title: "End-Stage Kidney Disease and Kidney Replacement Therapy",    games: 6, ready: true },
     { num: 37, week: 2, title: "Renal Laboratory Tests",                                     games: 6, ready: true },
     { num: 38, week: 2, title: "Renal Imaging",                                              games: 6, ready: true },
-    { num: 39, week: 2, title: "Hematuria",                                                  games: 6, ready: true }
+    { num: 39, week: 2, title: "Hematuria",                                                  games: 6, ready: true },
+    // ===== WEEK 3: Glomerular & Tubulointerstitial Disease =====
+    { num: 40, week: 3, title: "Nephrotic Syndrome",                                         games: 6, ready: true },
+    { num: 41, week: 3, title: "Minimal Change Disease",                                     games: 6, ready: true },
+    { num: 42, week: 3, title: "Focal Segmental Glomerulosclerosis",                         games: 6, ready: true },
+    { num: 43, week: 3, title: "Membranoproliferative Glomerulonephritis",                   games: 6, ready: true },
+    { num: 44, week: 3, title: "Membranous Nephropathy",                                     games: 6, ready: true },
+    { num: 45, week: 3, title: "Nephritic Syndrome",                                         games: 6, ready: true },
+    { num: 46, week: 3, title: "Postinfectious Glomerulonephritis",                          games: 6, ready: true },
+    { num: 47, week: 3, title: "Anti-GBM Disease (Goodpasture Syndrome)",                    games: 6, ready: true },
+    { num: 48, week: 3, title: "Alport Syndrome",                                            games: 6, ready: true },
+    { num: 49, week: 3, title: "Diabetic Kidney Disease",                                    games: 6, ready: true },
+    { num: 50, week: 3, title: "Acute Tubular Necrosis",                                     games: 6, ready: true },
+    { num: 51, week: 3, title: "Acute Interstitial Nephritis",                               games: 6, ready: true },
+    { num: 52, week: 3, title: "Renal Papillary Necrosis",                                   games: 6, ready: true },
+    { num: 53, week: 3, title: "Cystitis and Pyelonephritis",                                games: 6, ready: true },
+    { num: 54, week: 3, title: "Renal Stones",                                               games: 6, ready: true },
+    { num: 55, week: 3, title: "Renal: Schistosomiasis",                                     games: 6, ready: true }
   ];
 
   const grid1 = document.getElementById("moduleGridWk1");
   const grid2 = document.getElementById("moduleGridWk2");
+  const grid3 = document.getElementById("moduleGridWk3");
   modules.forEach(m => {
     const numStr = String(m.num).padStart(2, "0");
     const card = document.createElement(m.ready ? "a" : "div");
@@ -120,7 +145,8 @@
       <h3>${m.title}</h3>
       <div class="meta">${m.ready ? `${m.games} games` : "Coming soon"}</div>
     `;
-    (m.week === 2 ? grid2 : grid1).appendChild(card);
+    const grid = m.week === 3 ? grid3 : m.week === 2 ? grid2 : grid1;
+    grid.appendChild(card);
   });
 </script>
 

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Management Quiz — Module 51</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 51</a></div>
+  <h1>Game 5 — Management Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Five fresh scenarios — diagnose and manage AIN</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Fresh case-based scenarios from the brick's AIN content. Each tests a different concept. Select the best answer and read the explanation.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>Ready for the boss? Game 6 covers the entire AIN brick comprehensively.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions — NOT the brick's verbatim review questions */
+  const questions = [
+    {
+      q: "A 67-year-old woman with osteoarthritis has been taking naproxen daily for 3 months. Routine labs show creatinine 2.4 mg/dL (previously 0.9 mg/dL). Urinalysis: WBCs, WBC casts, proteinuria 4.2 g/24 h. She denies fever or rash. What is the most appropriate next management step?",
+      options: [
+        "Start prednisone immediately to reverse the renal inflammation",
+        "Discontinue naproxen and provide supportive care",
+        "Begin hemodialysis for proteinuria exceeding nephrotic threshold",
+        "Add a diuretic to reduce proteinuria while continuing naproxen"
+      ],
+      correct: 1,
+      explain: "NSAID-induced AIN can cause nephrotic-range proteinuria — a unique feature compared to other AIN causes. The primary treatment is to stop the offending NSAID. Supportive care typically leads to recovery. Glucocorticoids are not useful in NSAID-induced AIN."
+    },
+    {
+      q: "A 48-year-old man with seasonal allergies is treated with amoxicillin for presumed streptococcal pharyngitis. Eight days later he develops fever, a maculopapular rash, and creatinine rises to 3.1 mg/dL. Urinalysis shows WBCs, WBC casts, and eosinophils. What is the mechanism of kidney injury?",
+      options: [
+        "Amoxicillin directly damages glomeruli by inhibiting complement activation",
+        "Amoxicillin acts as a hapten, triggering an immune attack on the interstitium",
+        "Bacterial superinfection from untreated strep causes direct tubular toxicity",
+        "Amoxicillin blocks tubular secretion, accumulating to nephrotoxic levels"
+      ],
+      correct: 1,
+      explain: "In allergic AIN, beta-lactam antibiotics like amoxicillin act as haptens — small molecules that bind to renal tubular proteins and trigger a type IV hypersensitivity response. Inflammatory cells infiltrate the interstitium, causing AKI."
+    },
+    {
+      q: "A patient is told they have AIN and need a renal biopsy to confirm. When is a renal biopsy most likely to be performed in AIN?",
+      options: [
+        "Routinely in all patients — biopsy is the standard first-line diagnostic test",
+        "Only when the course is prolonged or the temporal relationship to a drug is unclear",
+        "Only in patients over age 65 with high proteinuria and low eGFR",
+        "Biopsy is contraindicated in AIN due to risk of accelerating fibrosis"
+      ],
+      correct: 1,
+      explain: "Renal biopsy is not routinely performed in AIN because withdrawing the offending drug often confirms the diagnosis by leading to recovery. Biopsy is reserved for cases where the course is protracted or the causal drug is not identifiable."
+    },
+    {
+      q: "A 71-year-old man taking omeprazole for GERD for 2 years is found to have creatinine 1.8 mg/dL (previously 1.0 mg/dL) on a routine check. He is asymptomatic. Which drug class does omeprazole belong to, and what is the most appropriate action?",
+      options: [
+        "ACE inhibitor — reduce the dose to lower glomerular pressure",
+        "Proton pump inhibitor — discontinue it and monitor creatinine for improvement",
+        "H2 receptor blocker — this is a low-risk drug and no action is needed",
+        "NSAID — add misoprostol for gastroprotection and continue therapy"
+      ],
+      correct: 1,
+      explain: "Proton pump inhibitors (PPIs) are a recognized cause of AIN, and prevalence is higher in older adults taking them long-term. Omeprazole should be discontinued and creatinine monitored. Recovery of renal function is typical with early discontinuation."
+    },
+    {
+      q: "A 55-year-old oncology patient receiving nivolumab for lung cancer develops AIN. Nivolumab belongs to which drug class, and what is the mechanism by which it causes AIN?",
+      options: [
+        "Aminoglycoside antibiotic — accumulates in proximal tubule causing direct necrosis",
+        "PD-1 checkpoint inhibitor — unleashes T-cell attack on the renal interstitium",
+        "Calcineurin inhibitor — directly toxic to tubular cells blocking survival signals",
+        "Loop diuretic — electrolyte shifts trigger inflammatory cell infiltration"
+      ],
+      correct: 1,
+      explain: "Nivolumab is a PD-1 checkpoint inhibitor. By blocking the PD-1 immune checkpoint, it removes regulatory braking on T-cell activity. This can cause an exuberant immune response in the kidney interstitium, resulting in AIN — an immune-related adverse event."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

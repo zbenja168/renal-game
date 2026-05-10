@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSGS Management Quiz — Module 42</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 42</a></div>
+  <h1>Game 5 — FSGS Management Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five fresh cases — apply FSGS knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Answer five new clinical scenarios testing your understanding of FSGS diagnosis and management from the brick. These are not the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>FSGS: treat with corticosteroids; add cyclosporine or mycophenolate for steroid-resistant cases; always use ACE inhibitor/ARB; treat secondary causes directly (e.g., antiretrovirals for HIV-FSGS). Prognosis is guarded — about 50% reach ESRD in 5–10 years.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      q: "A 35-year-old man with biopsy-proven FSGS has nephrotic-range proteinuria. His blood pressure is 148/94. According to the brick, what supportive therapy should be started regardless of the underlying FSGS cause?",
+      options: [
+        "Furosemide as first-line antihypertensive in all glomerular disease",
+        "Beta-blocker for proteinuria reduction",
+        "ACE inhibitor or ARB to reduce proteinuria and slow CKD progression",
+        "Calcium channel blocker for blood pressure control in FSGS"
+      ],
+      correct: 2,
+      explain: "The brick states ACE inhibitors (or ARBs) are used in all patients with FSGS for their dual benefit: blood pressure reduction and proteinuria lowering, which slows CKD progression."
+    },
+    {
+      q: "A 29-year-old man is newly diagnosed with HIV and found to have 4.6 g of protein in his 24-hour urine. A renal biopsy confirms FSGS pattern. According to the brick, what is the most important first step in managing his kidney disease?",
+      options: [
+        "Start corticosteroids for the FSGS immediately",
+        "Begin antiretroviral therapy to treat the underlying HIV infection",
+        "Perform plasmapheresis to remove circulating permeability factors",
+        "Start mycophenolate mofetil as first-line immunosuppression"
+      ],
+      correct: 1,
+      explain: "The brick states secondary causes of FSGS should be treated by addressing the underlying condition. In HIV-associated FSGS, antiretroviral therapy is prioritized as treating the infection may lead to disease remission."
+    },
+    {
+      q: "A 48-year-old woman who donated her left kidney 8 years ago now has proteinuria of 2.8 g/24 h and mildly elevated creatinine. A biopsy shows focal segmental sclerosis. What is the most likely mechanism, per the brick?",
+      options: [
+        "Recurrence of primary idiopathic FSGS in the solitary kidney",
+        "Compensatory hyperfiltration in the remaining kidney causing podocyte stress",
+        "Immune complex deposition from prior surgery-related inflammation",
+        "Drug toxicity from long-term immunosuppression after kidney donation"
+      ],
+      correct: 1,
+      explain: "The brick describes compensatory adaptive FSGS — when nephron mass is reduced (as in renal donation, single kidney, or obesity), remaining nephrons hyperfiltrate, increasing podocyte stress and eventually causing sclerosis."
+    },
+    {
+      q: "A pathologist reports immunofluorescence on a kidney biopsy showing IgM and C3 deposited in the sclerotic segments. The patient has FSGS. How does this finding differ from MPGN, according to the brick?",
+      options: [
+        "IgM and C3 in FSGS are nonspecific trapping, unlike the granular GBM deposits in MPGN",
+        "IgM and C3 in FSGS indicate the disease is immune-complex mediated like MPGN",
+        "MPGN shows no immune deposits, while FSGS is defined by immune deposits",
+        "Both FSGS and MPGN show tram-track GBM changes on silver stain"
+      ],
+      correct: 0,
+      explain: "The brick notes that in FSGS, immunofluorescence may show IgM and C3 in the sclerotic areas, but this is nonspecific trapping — not true immune complex deposition as in MPGN. EM may show podocyte effacement and detachment but lacks the subendothelial deposits of MPGN."
+    },
+    {
+      q: "A patient with primary FSGS and nephrotic-range proteinuria has initial proteinuria less than 3.5 g/24 h. According to the brick, how does this level of proteinuria affect the prognosis compared to nephrotic-range proteinuria?",
+      options: [
+        "No difference — proteinuria level does not affect FSGS outcomes",
+        "Lower proteinuria carries a better prognosis and a lower risk of ESRD",
+        "Lower proteinuria indicates more advanced disease and worse prognosis",
+        "Patients with sub-nephrotic proteinuria have higher thrombosis risk"
+      ],
+      correct: 1,
+      explain: "The brick states patients with FSGS and lower amounts of proteinuria generally have a better prognosis. Initial elevated serum creatinine and nephrotic-range proteinuria are high-risk features for progression to ESRD."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

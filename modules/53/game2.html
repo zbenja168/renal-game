@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organism Hotspot — Module 53</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .org-zone { cursor: pointer; }
+  .org-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .org-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .org-zone text { pointer-events: none; user-select: none; }
+  .org-zone.found .zone-bg { stroke: #16a34a; stroke-width: 4; filter: drop-shadow(0 0 8px rgba(22,163,74,0.45)); }
+  .org-zone.miss  .zone-bg { stroke: #dc2626; stroke-width: 4; animation: shake53 0.4s; }
+  @keyframes shake53 { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 53</a></div>
+  <h1>Game 2 — Organism Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct organism for each clinical clue</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three clinical clues about UTI-causing organisms. Each time, click the correct zone on the organism panel. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- E. coli -->
+        <g class="org-zone" data-name="E. coli">
+          <rect class="zone-bg" x="10" y="30" width="145" height="200" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="82" y="55"  text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">E. coli</text>
+          <text x="82" y="75"  text-anchor="middle" font-size="10" fill="#1e40af">Gram-negative rod</text>
+          <text x="82" y="92"  text-anchor="middle" font-size="10" fill="#444">Most common UTI cause</text>
+          <text x="82" y="108" text-anchor="middle" font-size="10" fill="#444">~65% of cases</text>
+          <text x="82" y="124" text-anchor="middle" font-size="10" fill="#444">Fecal flora, P fimbriae</text>
+          <text x="82" y="140" text-anchor="middle" font-size="10" fill="#444">promotes adhesion</text>
+          <text x="82" y="165" text-anchor="middle" font-size="10" fill="#888">Nitrite-positive</text>
+          <text x="82" y="181" text-anchor="middle" font-size="10" fill="#888">Lactose fermenter</text>
+        </g>
+
+        <!-- S. saprophyticus -->
+        <g class="org-zone" data-name="S. saprophyticus">
+          <rect class="zone-bg" x="178" y="30" width="145" height="200" rx="10"
+                fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="250" y="55"  text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">S. saprophyticus</text>
+          <text x="250" y="75"  text-anchor="middle" font-size="10" fill="#92400e">Gram-positive coccus</text>
+          <text x="250" y="92"  text-anchor="middle" font-size="10" fill="#444">2nd most common</text>
+          <text x="250" y="108" text-anchor="middle" font-size="10" fill="#444">in young women</text>
+          <text x="250" y="124" text-anchor="middle" font-size="10" fill="#444">Normal flora of GU tract</text>
+          <text x="250" y="140" text-anchor="middle" font-size="10" fill="#444">Sexually active females</text>
+          <text x="250" y="165" text-anchor="middle" font-size="10" fill="#888">Nitrite-negative</text>
+          <text x="250" y="181" text-anchor="middle" font-size="10" fill="#888">Novobiocin resistant</text>
+        </g>
+
+        <!-- Proteus mirabilis -->
+        <g class="org-zone" data-name="Proteus mirabilis">
+          <rect class="zone-bg" x="346" y="30" width="145" height="200" rx="10"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="419" y="55"  text-anchor="middle" font-size="12" font-weight="700" fill="#9d174d">Proteus mirabilis</text>
+          <text x="419" y="75"  text-anchor="middle" font-size="10" fill="#9d174d">Gram-negative rod</text>
+          <text x="419" y="92"  text-anchor="middle" font-size="10" fill="#444">Converts urea → ammonia</text>
+          <text x="419" y="108" text-anchor="middle" font-size="10" fill="#444">Alkaline urine → struvite</text>
+          <text x="419" y="124" text-anchor="middle" font-size="10" fill="#444">Associated with kidney</text>
+          <text x="419" y="140" text-anchor="middle" font-size="10" fill="#444">stones</text>
+          <text x="419" y="165" text-anchor="middle" font-size="10" fill="#888">Swarming motility</text>
+          <text x="419" y="181" text-anchor="middle" font-size="10" fill="#888">Urease-positive</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All organisms identified!</h3>
+      <p>E. coli causes ~65% of UTIs via P fimbriae adhesion from fecal flora. S. saprophyticus is the #2 cause in sexually active young women. Proteus mirabilis splits urea to produce ammonia, alkalinizing urine and causing struvite stones — making it the organism most associated with kidney stones in the UTI context.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 20-year-old sexually active female develops dysuria and frequency. Gram stain of urine shows gram-positive cocci, and the nitrite dipstick is negative. This is the second most common UTI organism in her demographic. Which organism?",
+      answer: "S. saprophyticus",
+      explain: "Staphylococcus saprophyticus is gram-positive (nitrite-negative), the second most common UTI organism in sexually active young women after E. coli."
+    },
+    {
+      text: "A patient with recurrent UTIs has alkaline urine and staghorn calculi visible on CT. The urease-positive organism splitting urea into ammonia is causing struvite stone formation. Which organism?",
+      answer: "Proteus mirabilis",
+      explain: "Proteus mirabilis is urease-positive, converting urea to ammonia, which alkalinizes urine and promotes magnesium ammonium phosphate (struvite) stone formation — the classic association with staghorn calculi."
+    },
+    {
+      text: "A 25-year-old woman presents with cystitis. Urine culture grows a gram-negative rod that is the most common cause of urinary tract infections, accounting for approximately 65% of cases. It promotes adhesion via P fimbriae. Which organism?",
+      answer: "E. coli",
+      explain: "Escherichia coli causes ~65% of UTIs. It colonizes the periurethral area from fecal flora and uses P fimbriae to adhere to uroepithelium, facilitating ascent up the urinary tract."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".org-zone");
+
+  let current = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (current >= cases.length) return;
+    caseNumEl.textContent = current + 1;
+    caseText.textContent  = cases[current].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    current = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || current >= cases.length) return;
+      const picked   = z.dataset.name;
+      const expected = cases[current].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb("✓ Correct! " + cases[current].explain, "correct");
+        current++;
+        if (current === cases.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadCase, 2800);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Wrong organism — re-read the characteristics.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

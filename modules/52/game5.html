@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios Quiz — Module 52</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 52</a></div>
+  <h1>Game 5 — Clinical Scenarios Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five fresh clinical scenarios — apply what you know</h2>
+    </div>
+    <div class="game-instructions">
+      These are new scenarios written to test RPN concepts from angles not covered by the brick's own review questions. Each asks you to reason through the mechanism, diagnosis, or management step by step.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>RPN: papillary death from ischemia or toxicity. SCD → sickling occludes vasa recta. NSAIDs → block prostaglandins → vasoconstriction. Hydroxyurea raises HbF to reduce sickling. Contrast is avoided. Supportive hydration is the cornerstone of acute management.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss round →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // NEW questions — not paraphrases of the brick's review questions
+  const questions = [
+    {
+      q: "A 19-year-old with sickle cell disease arrives in pain crisis after exercising in hot weather. Urinalysis shows gross hematuria and tubular epithelial cells. His creatinine has risen from baseline. Which physiological change in the vasa recta most directly causes the papillary damage in this patient?",
+      options: [
+        "Increased glomerular filtration pressure",
+        "Vaso-occlusion by sickled RBCs reducing medullary blood flow",
+        "Inhibition of prostaglandin synthesis by exercise metabolites",
+        "Immune complex deposition in the glomerular basement membrane"
+      ],
+      correct: 1,
+      explain: "In SCD, sickling of red blood cells in the vasa recta causes vaso-occlusion. The resulting ischemia starves the renal papillae of oxygen, leading to coagulative necrosis — the core mechanism of SCD-associated RPN."
+    },
+    {
+      q: "A 58-year-old woman with osteoarthritis takes high-dose ibuprofen daily for three years. She now has flank pain, hematuria, and a creatinine of 2.1 mg/dL. Which mechanism best explains why NSAIDs specifically damage the renal papillae rather than the cortex?",
+      options: [
+        "NSAIDs directly accumulate in papillary tissue and cause tubular toxicity",
+        "NSAIDs inhibit prostaglandin synthesis, causing vasoconstriction of the vasa recta",
+        "NSAIDs activate complement, leading to immune-mediated papillary destruction",
+        "NSAIDs increase urine osmolality, crystallizing in the papillary ducts"
+      ],
+      correct: 1,
+      explain: "NSAIDs block prostaglandin synthesis. In the renal medulla, prostaglandins are vasodilatory and essential for maintaining vasa recta flow. Without them, the vasa recta constrict, and the hyperosmolar papilla — already poorly perfused — becomes ischemic."
+    },
+    {
+      q: "A provider orders a CT scan with intravenous contrast to evaluate a suspected case of RPN in a patient with chronic SCD. Which concern from the brick should prompt a different choice of imaging?",
+      options: [
+        "Contrast CT cannot detect papillary calcifications",
+        "CT exposes the patient to excessive radiation compared with MRI",
+        "Contrast risks nephropathy and acute tubular necrosis in these patients",
+        "CT is contraindicated in patients who also have diabetes mellitus"
+      ],
+      correct: 2,
+      explain: "The brick specifically states that contrast administration should be avoided in RPN patients because of the risk of contrast nephropathy and acute tubular necrosis. Non-contrast CT or renal ultrasound is preferred."
+    },
+    {
+      q: "A 22-year-old with SCD is hospitalized for RPN-associated acute kidney injury. Which of the following management steps addresses the underlying SCD mechanism specifically — not just supportive care?",
+      options: [
+        "IV normal saline to maintain adequate hydration",
+        "Hydroxyurea to increase fetal hemoglobin and reduce sickling events",
+        "Discontinuation of NSAIDs and analgesic nephrotoxins",
+        "Empiric fluoroquinolone antibiotics to treat possible pyelonephritis"
+      ],
+      correct: 1,
+      explain: "Hydroxyurea increases fetal hemoglobin (HbF), which does not sickle, thereby reducing vaso-occlusive crises and the ischemic insults to the renal papillae. IV hydration is supportive; the others address different causes."
+    },
+    {
+      q: "On histology, renal papillary necrosis is characterized by which combination of findings?",
+      options: [
+        "Crescent formation and fibrinoid necrosis of glomeruli",
+        "Necrotic papillary tissue, tubular necrosis, and neutrophilic infiltrates",
+        "Hyaline casts and diffuse tubular atrophy with interstitial fibrosis",
+        "Foam cells in the interstitium with lymphocytic infiltration"
+      ],
+      correct: 1,
+      explain: "Per the brick, histology of RPN shows papillae with necrotic tissue sloughing into the renal pelvis, tubular necrosis, and neutrophilic inflammatory infiltrates. This triad distinguishes RPN on biopsy, although biopsy is rarely needed as diagnosis is usually clinical."
+    }
+  ];
+
+  const container  = document.getElementById("quizContainer");
+  const quizScoreEl= document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    container.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

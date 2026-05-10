@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios — Module 44</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 44</a></div>
+  <h1>Game 5 — Clinical Scenarios</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five fresh case-based questions</h2>
+    </div>
+    <div class="game-instructions">
+      These scenarios test the same concepts as the brick from different angles. They are <em>not</em> the brick's own review questions. Read each case and select the best answer.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Scenarios complete!</h3>
+      <p>You applied MN concepts across presentation, pathophysiology, diagnosis, and management. Take on the boss round to cement everything.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // NEW questions — not from the brick's review section. All facts strictly from brick content.
+  const questions = [
+    {
+      q: "A 48-year-old man on long-term NSAID therapy for chronic back pain develops bilateral leg swelling. Urinalysis shows 4+ protein, no blood, no casts. Serum albumin is 2.1 g/dL. Kidney biopsy shows thickened GBM with subepithelial deposits on EM and no cellular proliferation. Which mechanism best explains why stopping his current medication might lead to disease improvement?",
+      options: [
+        "NSAIDs block the alternative complement pathway, preventing immune complex clearance",
+        "NSAIDs act as a secondary cause by triggering immune complex deposition, so removal eliminates the driving antigen",
+        "NSAIDs directly thicken the GBM by upregulating collagen IV synthesis",
+        "NSAIDs cause direct podocyte toxicity by blocking prostaglandin-mediated foot process maintenance"
+      ],
+      correct: 1,
+      explain: "The brick lists NSAIDs among secondary causes of MN. Secondary MN results from an identifiable external trigger causing immune complex deposition; removing the trigger can allow remission. The mechanism is immune-mediated, not direct GBM thickening."
+    },
+    {
+      q: "A 61-year-old woman is found to have 5.2 g of protein in her 24-hour urine collection. Her serum creatinine is normal. Anti-PLA2R antibody is negative. Which next diagnostic step is most appropriate based on the brick's approach?",
+      options: [
+        "Start immunosuppression immediately since proteinuria is in the nephrotic range",
+        "Evaluate for secondary causes including malignancy and perform kidney biopsy",
+        "Prescribe a low-protein diet and repeat urinalysis in 3 months",
+        "Order a complement panel; low C3 confirms primary MN and biopsy is unnecessary"
+      ],
+      correct: 1,
+      explain: "When anti-PLA2R is negative, a secondary cause must be sought (malignancy, hepatitis, SLE). The brick states biopsy is especially important when the serologic workup is indeterminate or when staging is needed. Normal complement levels do not confirm primary MN."
+    },
+    {
+      q: "A 55-year-old man with MN presents for follow-up 6 months after starting ACE inhibitor therapy. His 24-hour urine protein has decreased from 7 g to 3.2 g/day and his eGFR is stable. His anti-PLA2R titer remains modestly elevated. What does the brick say is the appropriate next step?",
+      options: [
+        "Add cyclophosphamide and glucocorticoids immediately to eradicate the anti-PLA2R antibody",
+        "Continue optimized supportive care and monitor — many patients have spontaneous or treatment-induced remission",
+        "Refer for kidney transplant evaluation since persistent proteinuria predicts ESRD",
+        "Switch to calcineurin inhibitor therapy to target the PLA2R antigen directly"
+      ],
+      correct: 1,
+      explain: "The brick states that if proteinuria remains above 3.5 g after 6 months of supportive care, immunosuppression is considered. This patient's proteinuria has decreased to 3.2 g and GFR is stable — continued observation with supportive therapy is appropriate before escalating to immunosuppression."
+    },
+    {
+      q: "A young woman has nephrotic-range proteinuria and a kidney biopsy showing MN pattern. Serologic workup reveals a positive ANA and positive anti-dsDNA. Which secondary cause of MN does this picture point to?",
+      options: [
+        "Hepatitis B infection",
+        "Systemic lupus erythematosus",
+        "NSAIDs",
+        "Occult colorectal malignancy"
+      ],
+      correct: 1,
+      explain: "The brick lists SLE as a secondary cause of MN that can produce a glomerular MN pattern. ANA and anti-dsDNA are the serologic markers for SLE. Hepatitis B would show hepatitis B surface antigen positivity; NSAIDs require medication history; malignancy requires cancer screening."
+    },
+    {
+      q: "A patient with MN and a creatinine of 2.3 mg/dL is found to have persistent proteinuria of 8 g/day after 6 months of supportive care. Colonoscopy and chest X-ray are negative. According to the brick, which of the following most accurately describes the appropriate escalation of therapy?",
+      options: [
+        "Plasmapheresis to remove anti-PLA2R antibodies from circulation",
+        "Kidney biopsy to re-stage disease before any further treatment",
+        "Immunosuppression — rituximab, cyclophosphamide, or calcineurin inhibitors depending on severity",
+        "Corticosteroids alone are the first-line immunosuppressive choice for all MN patients with high proteinuria"
+      ],
+      correct: 2,
+      explain: "The brick states that immunosuppression is considered when proteinuria remains >3.5 g after 6 months or if there are high-risk features. First-line therapy depends on disease severity; the brick mentions rituximab, cyclophosphamide, and calcineurin inhibitors as options. Corticosteroids alone are not recommended per the brick."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

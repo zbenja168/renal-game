@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 50</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 50</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💉</div>
+      <h2>Five clinical vignettes — diagnose and manage ATN</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Fresh case-based scenarios from the brick's ATN content. Select the best answer for each, then read the explanation.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>The boss round awaits — Game 6 covers the entire ATN brick comprehensively.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions — NOT the brick's verbatim review questions */
+  const questions = [
+    {
+      q: "A 24-year-old male is brought to the ER after a building collapse. He was trapped under debris for 6 hours. His urine appears tea-colored. Urine dipstick is positive for blood but microscopy shows no red blood cells. Serum creatinine is rising. What is the most likely explanation for his AKI?",
+      options: [
+        "Hemoglobin from a hemolytic transfusion reaction is toxic to tubules",
+        "Myoglobin released from crushed muscle is filtered and toxic to renal tubules",
+        "Direct tubular injury from radiocontrast given during imaging at the scene",
+        "Prerenal AKI from hypovolemia due to blood loss at the trauma site"
+      ],
+      correct: 1,
+      explain: "Rhabdomyolysis releases myoglobin from necrotic muscle. Myoglobin is filtered by the glomerulus and is directly toxic to renal tubular cells, causing nephrotoxic ATN. The dipstick is positive for heme without RBCs on microscopy — this distinguishes myoglobinuria from hematuria."
+    },
+    {
+      q: "A 66-year-old woman with chronic hypertension was admitted for a hip replacement. Postoperatively her blood pressure drops to 70/40 mmHg for 90 minutes. On day 3, serum creatinine rises from 0.9 to 3.2 mg/dL. Urinalysis shows muddy-brown granular casts. FENa is 3.8%. Which AKI category does this represent?",
+      options: [
+        "Prerenal AKI — hypotension caused functional vasoconstriction only",
+        "Postrenal AKI — urinary obstruction from an indwelling catheter",
+        "Intrinsic AKI / ATN — sustained ischemia caused tubular necrosis",
+        "Contrast nephropathy from dye used during orthopedic imaging"
+      ],
+      correct: 2,
+      explain: "Sustained hypotension (90 minutes) caused ischemic death of renal tubular epithelial cells — intrinsic AKI (ATN). FENa >2% confirms lost tubular sodium reabsorption. Muddy-brown casts are pathognomonic of tubular necrosis."
+    },
+    {
+      q: "A patient in the ATN maintenance phase has a serum potassium of 6.8 mEq/L. An ECG shows peaked T waves. This electrolyte disturbance in ATN results from which mechanism?",
+      options: [
+        "Excess potassium intake from IV fluids containing KCl",
+        "Impaired tubular secretion of potassium from damaged renal epithelium",
+        "Increased aldosterone levels driving potassium into renal tubules",
+        "Gastrointestinal potassium absorption increases in renal failure"
+      ],
+      correct: 1,
+      explain: "In the maintenance phase of ATN, damaged tubular epithelial cells cannot secrete potassium normally. This leads to hyperkalemia, which in severe cases causes peaked T waves and potentially fatal ventricular arrhythmias on ECG."
+    },
+    {
+      q: "A patient recovering from ATN develops urine output of 4 liters over the past 12 hours. His blood pressure falls to 90/58 mmHg despite no change in his fluid intake. Creatinine is beginning to trend down. What management is most important at this stage?",
+      options: [
+        "Restrict fluid intake to prevent further tubular damage from high urine flow",
+        "Start loop diuretics to convert oliguric ATN to non-oliguric ATN",
+        "Administer IV fluids to replace losses and prevent hypotension",
+        "Begin dialysis immediately due to the persistent rise in creatinine"
+      ],
+      correct: 2,
+      explain: "During the recovery (diuretic) phase, accumulated urea, sodium, and water pour into the urine. Large urine volumes can cause hypotension. Patients must receive aggressive IV fluid replacement to prevent volume depletion and hypotension."
+    },
+    {
+      q: "A physician is considering starting an aminoglycoside antibiotic in a patient with gram-negative sepsis. She recalls that aminoglycosides cause nephrotoxic ATN. Which property of the kidney makes the proximal tubule particularly vulnerable to circulating nephrotoxins?",
+      options: [
+        "Proximal tubules have the lowest blood flow in the kidney",
+        "Proximal tubules are supplied by end-arteries with no collateral circulation",
+        "Proximal tubular cells reabsorb most filtered drugs and concentrate them intracellularly",
+        "Proximal tubules have gap junctions that allow toxins to spread between cells"
+      ],
+      correct: 2,
+      explain: "Proximal tubular cells reabsorb most of the filtered load, concentrating many nephrotoxins to levels far higher than plasma. Aminoglycosides accumulate in proximal tubule cells via uptake transporters and alter metabolism, causing direct cytotoxicity."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

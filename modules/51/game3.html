@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKI Differential Match — Module 51</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 51</a></div>
+  <h1>Game 3 — AKI Differential Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Match each AKI diagnosis to its urinalysis pattern</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Click a urinalysis finding on the left, then click its corresponding AKI diagnosis on the right. The brick's Table 1 maps these — use it.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 8</span></span>
+      <span>Tries: <span class="score" id="tries">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-pairs-board">
+      <div class="match-col" id="leftCol"></div>
+      <div class="match-col" id="rightCol"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Differential matched!</h3>
+      <p>ATN = muddy-brown casts + rare proteinuria. AIN = WBCs ± eosinophils + WBC casts + low proteinuria (except NSAIDs). Acute GN = dysmorphic RBCs + RBC casts + heavy proteinuria. Renal papillary necrosis = RBCs + tubular cells + possible bacteriuria.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Muddy-brown granular casts; renal tubular epithelial cells",      b: "Acute Tubular Necrosis (ATN)" },
+    { a: "Proteinuria uncommon; FENa typically >2%",                        b: "Acute Tubular Necrosis (ATN)" },
+    { a: "WBCs ± eosinophils and WBC casts; proteinuria <1 g in 24 h",    b: "Acute Interstitial Nephritis (AIN)" },
+    { a: "NSAID-induced AIN: may show nephrotic-range proteinuria >3.5 g", b: "Acute Interstitial Nephritis (AIN)" },
+    { a: "Dysmorphic RBCs and RBC casts; heavy proteinuria >4 g",         b: "Acute Glomerulonephritis" },
+    { a: "RBCs, tubular epithelial cells, possible WBCs and bacteriuria",  b: "Renal Papillary Necrosis" },
+    { a: "WBC casts: pathognomonic of inflammation in the renal parenchyma", b: "Acute Interstitial Nephritis (AIN)" },
+    { a: "Hematuria with RBC casts and significant proteinuria",           b: "Acute Glomerulonephritis" }
+  ];
+
+  const leftCol = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
+  const scoreEl = document.getElementById("score");
+  const triesEl = document.getElementById("tries");
+  const fbEl = document.getElementById("feedback");
+
+  let firstPick = null, lock = false, matched = 0, tries = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2200);
+  }
+
+  function init() {
+    matched = 0; tries = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    triesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    leftCol.innerHTML = "";
+    rightCol.innerHTML = "";
+
+    const lefts = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
+    lefts.forEach(it => makeCard(it, leftCol));
+    rights.forEach(it => makeCard(it, rightCol));
+  }
+
+  function makeCard(it, col) {
+    const c = document.createElement("div");
+    c.className = "match-pair-card";
+    c.dataset.matchKey = it.matchKey;
+    c.dataset.side = it.side;
+    c.textContent = it.text;
+    c.addEventListener("click", () => onPick(c));
+    col.appendChild(c);
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("matched")) return;
+    if (firstPick === card) { card.classList.remove("selected"); firstPick = null; return; }
+    if (!firstPick) { firstPick = card; card.classList.add("selected"); return; }
+    if (firstPick.dataset.side === card.dataset.side) {
+      firstPick.classList.remove("selected"); firstPick = card; card.classList.add("selected"); return;
+    }
+    tries++;
+    triesEl.textContent = tries;
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
+      firstPick.classList.remove("selected");
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      const a = firstPick, b = card;
+      a.classList.add("miss"); b.classList.add("miss");
+      showFb("✗ Not a match — try another.", "incorrect");
+      setTimeout(() => {
+        a.classList.remove("miss", "selected"); b.classList.remove("miss");
+        firstPick = null; lock = false;
+      }, 700);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

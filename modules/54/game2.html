@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crystal Hotspot — Module 54</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .crystal-zone { cursor: pointer; }
+  .crystal-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .crystal-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .crystal-zone text { pointer-events: none; user-select: none; }
+  .crystal-zone.found .zone-bg { stroke: #16a34a; stroke-width: 4; filter: drop-shadow(0 0 8px rgba(22,163,74,0.5)); }
+  .crystal-zone.miss  .zone-bg { stroke: #dc2626; stroke-width: 4; animation: shake54 0.4s; }
+  @keyframes shake54 { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 54</a></div>
+  <h1>Game 2 — Crystal Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔭</div>
+      <h2>Click the correct crystal shape for each description</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three questions about crystal morphology on urinalysis. Each time, click the zone matching the crystal shape described. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="qBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Question <span id="qNum">1</span> of 3:</strong>
+      <p id="qText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Calcium oxalate -->
+        <g class="crystal-zone" data-name="Calcium oxalate">
+          <rect class="zone-bg" x="10" y="20" width="145" height="240" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="82" y="45"  text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Calcium Oxalate</text>
+          <!-- dumbbell shape sketch -->
+          <ellipse cx="82" cy="90"  rx="18" ry="10" fill="#93c5fd" stroke="#2563eb" stroke-width="1.5"/>
+          <ellipse cx="82" cy="130" rx="18" ry="10" fill="#93c5fd" stroke="#2563eb" stroke-width="1.5"/>
+          <line   x1="82" y1="100" x2="82" y2="120" stroke="#2563eb" stroke-width="3"/>
+          <text x="82" y="165" text-anchor="middle" font-size="10" fill="#1e3a8a">Dumbbell or</text>
+          <text x="82" y="179" text-anchor="middle" font-size="10" fill="#1e3a8a">envelope-back shape</text>
+          <text x="82" y="205" text-anchor="middle" font-size="10" fill="#555">Most common stone</text>
+          <text x="82" y="220" text-anchor="middle" font-size="10" fill="#555">crystal on urinalysis</text>
+        </g>
+
+        <!-- Struvite -->
+        <g class="crystal-zone" data-name="Struvite">
+          <rect class="zone-bg" x="178" y="20" width="145" height="240" rx="10"
+                fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="250" y="45"  text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">Struvite</text>
+          <!-- coffin-lid rectangle sketch -->
+          <rect x="215" y="65" width="70" height="90" rx="4" fill="#fcd34d" stroke="#b45309" stroke-width="1.5"/>
+          <line x1="215" y1="65"  x2="250" y2="50"  stroke="#b45309" stroke-width="1.5"/>
+          <line x1="285" y1="65"  x2="250" y2="50"  stroke="#b45309" stroke-width="1.5"/>
+          <text x="250" y="183" text-anchor="middle" font-size="10" fill="#78350f">Coffin-lid shaped</text>
+          <text x="250" y="197" text-anchor="middle" font-size="10" fill="#78350f">rectangular prisms</text>
+          <text x="250" y="222" text-anchor="middle" font-size="10" fill="#555">Alkaline urine</text>
+          <text x="250" y="237" text-anchor="middle" font-size="10" fill="#555">UTI-associated</text>
+        </g>
+
+        <!-- Cystine -->
+        <g class="crystal-zone" data-name="Cystine">
+          <rect class="zone-bg" x="346" y="20" width="145" height="240" rx="10"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="419" y="45"  text-anchor="middle" font-size="11" font-weight="700" fill="#9d174d">Cystine</text>
+          <!-- hexagon sketch -->
+          <polygon points="419,65 444,79 444,107 419,121 394,107 394,79"
+                   fill="#f9a8d4" stroke="#be185d" stroke-width="1.5"/>
+          <text x="419" y="150" text-anchor="middle" font-size="10" fill="#831843">Hexagonal shape</text>
+          <text x="419" y="175" text-anchor="middle" font-size="10" fill="#555">Cystinuria</text>
+          <text x="419" y="190" text-anchor="middle" font-size="10" fill="#555">Rare; genetic</text>
+          <text x="419" y="215" text-anchor="middle" font-size="10" fill="#555">Often in children</text>
+          <text x="419" y="230" text-anchor="middle" font-size="10" fill="#555">Small lateral knob</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All crystal shapes identified!</h3>
+      <p>Crystal morphology on urinalysis gives a rapid clue to stone type: dumbbell/envelope back = calcium oxalate; coffin-lid rectangles = struvite (infection); hexagonal = cystine. Uric acid crystals are rhomboid or rosette-shaped. These shapes guide both diagnosis and initial treatment choices.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      text: "A 45-year-old man passes a kidney stone. Urinalysis crystal microscopy shows dumbbell-shaped or 'envelope-back' crystals. Which stone type does this morphology indicate?",
+      answer: "Calcium oxalate",
+      explain: "Calcium oxalate stones are the most common type. Their crystals on urinalysis appear as dumbbells or like the back of an envelope — a distinctive biconvex shape with a central indentation."
+    },
+    {
+      text: "A 6-year-old child has recurrent kidney stones. Urinalysis shows flat, hexagonal crystals. What is the stone type associated with this crystal shape?",
+      answer: "Cystine",
+      explain: "Cystine crystals are hexagonal (six-sided). Cystine stones result from the genetic disorder cystinuria and are rare — often presenting in children or young adults with recurrent stones."
+    },
+    {
+      text: "A patient with recurrent UTIs from urease-positive bacteria has a stone on CT. Urinalysis shows rectangular 'coffin-lid' shaped crystals. What stone type is this?",
+      answer: "Struvite",
+      explain: "Struvite (magnesium ammonium phosphate) stones have coffin-lid shaped crystals. They form in alkaline urine when urease-positive bacteria convert urea to ammonia, and can grow into staghorn calculi."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const qNumEl    = document.getElementById("qNum");
+  const qTextEl   = document.getElementById("qText");
+  const zones     = canvas.querySelectorAll(".crystal-zone");
+
+  let current = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadQ() {
+    if (current >= questions.length) return;
+    qNumEl.textContent = current + 1;
+    qTextEl.textContent = questions[current].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    current = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadQ();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || current >= questions.length) return;
+      const picked   = z.dataset.name;
+      const expected = questions[current].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb("✓ Correct! " + questions[current].explain, "correct");
+        current++;
+        if (current === questions.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadQ, 2800);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Wrong crystal shape — re-read the description.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

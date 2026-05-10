@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triad Hotspot — Module 51</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .triad-zone { cursor: pointer; }
+  .triad-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .triad-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .triad-zone text { pointer-events: none; user-select: none; }
+  .triad-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.5));
+  }
+  .triad-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeT 0.4s;
+  }
+  @keyframes shakeT {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 51</a></div>
+  <h1>Game 2 — Triad Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct element of the allergic AIN triad</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Allergic AIN has a classical triad. For each clinical clue, click the correct triad element. Wrong clicks count as misses. Remember: the full triad is seen in less than 10% of patients.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Fever -->
+        <g class="triad-zone" data-name="Fever">
+          <rect class="zone-bg" x="15" y="40" width="140" height="190" rx="10"
+                fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="85" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#7f1d1d">Fever</text>
+          <text x="85" y="68" text-anchor="middle" font-size="10" fill="#7f1d1d">Systemic immune</text>
+          <text x="85" y="84" text-anchor="middle" font-size="10" fill="#7f1d1d">activation sign</text>
+          <text x="85" y="108" text-anchor="middle" font-size="10" fill="#374151">Part of allergic</text>
+          <text x="85" y="124" text-anchor="middle" font-size="10" fill="#374151">drug triad</text>
+          <text x="85" y="148" text-anchor="middle" font-size="10" fill="#374151">Can occur even</text>
+          <text x="85" y="164" text-anchor="middle" font-size="10" fill="#374151">without infection</text>
+        </g>
+
+        <!-- Rash -->
+        <g class="triad-zone" data-name="Rash">
+          <rect class="zone-bg" x="170" y="40" width="140" height="190" rx="10"
+                fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+          <text x="240" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">Rash</text>
+          <text x="240" y="68" text-anchor="middle" font-size="10" fill="#92400e">Maculopapular</text>
+          <text x="240" y="84" text-anchor="middle" font-size="10" fill="#92400e">skin eruption</text>
+          <text x="240" y="108" text-anchor="middle" font-size="10" fill="#374151">Classic allergic</text>
+          <text x="240" y="124" text-anchor="middle" font-size="10" fill="#374151">reaction sign</text>
+          <text x="240" y="148" text-anchor="middle" font-size="10" fill="#374151">Appears with</text>
+          <text x="240" y="164" text-anchor="middle" font-size="10" fill="#374151">drug exposure</text>
+        </g>
+
+        <!-- Eosinophilia -->
+        <g class="triad-zone" data-name="Eosinophilia">
+          <rect class="zone-bg" x="325" y="40" width="140" height="190" rx="10"
+                fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+          <text x="395" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#4c1d95">Eosinophilia</text>
+          <text x="395" y="68" text-anchor="middle" font-size="10" fill="#4c1d95">Elevated blood</text>
+          <text x="395" y="84" text-anchor="middle" font-size="10" fill="#4c1d95">eosinophil count</text>
+          <text x="395" y="108" text-anchor="middle" font-size="10" fill="#374151">Allergic marker;</text>
+          <text x="395" y="124" text-anchor="middle" font-size="10" fill="#374151">not reliable alone</text>
+          <text x="395" y="148" text-anchor="middle" font-size="10" fill="#374151">Urine eosinophils</text>
+          <text x="395" y="164" text-anchor="middle" font-size="10" fill="#374151">detected by Hansel stain</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Triad mastered!</h3>
+      <p>The classical allergic AIN triad — fever, rash, eosinophilia — is seen in less than 10% of patients. Most present only with rising creatinine. The triad is most reliably present with antibiotic-induced AIN. NSAIDs more often cause AIN without the full triad.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A patient started on amoxicillin for a sinus infection 8 days ago develops diffuse, flat, red skin spots across the trunk. Serum creatinine has risen from 0.8 to 2.1 mg/dL. Which element of the allergic AIN triad is described by the skin finding?",
+      answer: "Rash",
+      explain: "A maculopapular rash is one of the three elements of the allergic AIN triad. Drug-induced AIN (especially from antibiotics like penicillin) can cause a hypersensitivity rash as part of the immune response."
+    },
+    {
+      text: "A 44-year-old patient on rifampin for TB prophylaxis develops a temperature of 39.2°C, malaise, and a rising creatinine 10 days into treatment. There is no identified source of infection. Which triad element is represented?",
+      answer: "Fever",
+      explain: "Fever without infection is a systemic sign of the immune/allergic reaction in drug-induced AIN. It is part of the classical triad along with rash and eosinophilia."
+    },
+    {
+      text: "A complete blood count on a patient with suspected drug-induced AIN shows peripheral blood eosinophil count of 850/μL (reference <500/μL). A Hansel stain of the urine also shows eosinophilic cells. Which triad element does this represent?",
+      answer: "Eosinophilia",
+      explain: "Eosinophilia — both in blood and on Hansel-stained urinalysis — is the third element of the allergic AIN triad. However, it is not reliably present and its absence does not exclude AIN."
+    },
+    {
+      text: "A 62-year-old woman on ibuprofen for knee osteoarthritis has a routine creatinine measured at 2.8 mg/dL (previously 1.0 mg/dL). She denies rash or fever. Her blood eosinophil count is normal. She has no skin findings. If this is NSAID-induced AIN, she still has a risk of which serious feature that is more common with this drug class than with antibiotics?",
+      answer: "Rash",
+      explain: "This is a trick: NSAIDs more commonly cause AIN without the classical allergic triad (no fever, rash, or eosinophilia). However, the scenario asks about the triad element — rash is the visible feature one might look for. NSAID-induced AIN often lacks all three triad features."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText = document.getElementById("caseText");
+  const zones = canvas.querySelectorAll(".triad-zone");
+
+  let currentCase = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found", "miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      if (z.dataset.name === cases[currentCase].answer) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadCase, 2800);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — review the allergic AIN triad.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

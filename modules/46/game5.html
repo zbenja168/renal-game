@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios — Module 46</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 46</a></div>
+  <h1>Game 5 — Clinical Scenarios</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💡</div>
+      <h2>Five fresh case-based questions</h2>
+    </div>
+    <div class="game-instructions">
+      These scenarios test PIGN concepts from angles not covered in the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Scenarios complete!</h3>
+      <p>You worked through PIGN concepts — timing, pathophysiology, complement patterns, histology, and management. Take on the boss round next.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // NEW questions — NOT the brick's review questions. All facts from brick.
+  const questions = [
+    {
+      q: "A 9-year-old develops impetigo on his lower extremities. Five weeks later, his urine turns cola-colored and his face and ankles are swollen. Which aspect of the brick's timeline is most accurately reflected by this presentation?",
+      options: [
+        "Skin strep infections cause PSGN with a 1–3 week latency period",
+        "Skin strep infections cause PSGN with a 3–6 week latency period",
+        "Skin strep infections rarely cause PSGN — only pharyngitis does",
+        "The latency period for staphylococcal PIGN is also 3–6 weeks"
+      ],
+      correct: 1,
+      explain: "The brick is specific: pharyngitis → PSGN onset in 1–3 weeks; strep skin infection (impetigo, cellulitis) → PSGN onset in 3–6 weeks. This 5-week gap after impetigo fits the skin infection timeline."
+    },
+    {
+      q: "A lab panel for a child with PSGN shows C3 = 45 mg/dL (low), C4 = 22 mg/dL (normal). Which complement pathway activation does the brick attribute this specific pattern to?",
+      options: [
+        "Classical pathway — complement cleaves C4 first before C3",
+        "Alternative pathway — bypasses C4 and cleaves C3 directly",
+        "Lectin pathway — activates C2 and C4 simultaneously with C3",
+        "Terminal pathway only — the MAC attacks the GBM directly"
+      ],
+      correct: 1,
+      explain: "The brick explicitly states that in PIGN, circulating immune complexes activate the alternative complement pathway, bypassing classical pathway components like C2 and C4. This is why C3 is low but C4 is typically normal."
+    },
+    {
+      q: "A hospitalized 62-year-old man with methicillin-resistant Staphylococcus aureus endocarditis develops hematuria and rising creatinine on day 3 of admission. Compared to PSGN in children, what does the brick state is distinctly different about staphylococcal GN?",
+      options: [
+        "Staphylococcal GN involves IgA deposits rather than IgG",
+        "Staphylococcal GN has no latency — renal disease occurs concurrently with active infection",
+        "Staphylococcal GN is more common in developing countries than in the United States",
+        "Staphylococcal GN spares the mesangium and only affects the GBM"
+      ],
+      correct: 1,
+      explain: "The brick contrasts PSGN with staphylococcal PIGN: in staphylococcal disease, glomerular disease appears in the first few days of infection without the 1–6 week latency seen in PSGN. These patients are often hospitalized with serious infections."
+    },
+    {
+      q: "An 8-year-old with PSGN has a mild presentation: microscopic hematuria, normal creatinine, and well-controlled blood pressure. Her pediatrician asks about treatment beyond supportive care. What does the brick recommend?",
+      options: [
+        "Initiate immunosuppression immediately to prevent crescent formation",
+        "Start penicillin to eradicate any residual Streptococcus in the throat",
+        "Supportive care only — PSGN in children is self-limited",
+        "Dialysis initiation is recommended for all children to prevent ESRD"
+      ],
+      correct: 2,
+      explain: "The brick states that PSGN treatment in children is mainly supportive because the natural course of the disease is very short. The only exception is staphylococcal PIGN, which requires prompt antibiotic treatment to eradicate the active infection."
+    },
+    {
+      q: "An adult with a history of staphylococcal cellulitis and PIGN recovers but a follow-up serum creatinine 2 years later is persistently elevated. Which outcome does the brick specifically attribute to adults with staphylococcal PIGN?",
+      options: [
+        "Complete resolution in all adult cases within 3 months",
+        "A 17% chance of progressing to end-stage renal disease",
+        "Universal requirement for renal replacement therapy within 1 year",
+        "Spontaneous complete remission without any long-term sequelae"
+      ],
+      correct: 1,
+      explain: "The brick states that adults with poststreptococcal (or post-staphylococcal) disease have a 17% chance of developing persistent GFR decrease leading to end-stage renal disease, in contrast to the generally favorable outcome in children."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

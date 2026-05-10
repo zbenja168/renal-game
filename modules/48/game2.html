@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GBM Hotspot — Module 48</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .gbm-zone { cursor: pointer; }
+  .gbm-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .gbm-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .gbm-zone text { pointer-events: none; user-select: none; }
+  .gbm-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.5));
+  }
+  .gbm-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeGBM 0.4s;
+  }
+  @keyframes shakeGBM {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 48</a></div>
+  <h1>Game 2 — GBM Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct GBM zone for each description</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each case clue, click the correct region on the GBM diagram. Four cases — four clicks. Wrong clicks count as misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Normal GBM zone -->
+        <g class="gbm-zone" data-name="Normal GBM">
+          <rect class="zone-bg" x="20" y="40" width="110" height="190" rx="10"
+                fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+          <text x="75" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Normal GBM</text>
+          <text x="75" y="68" text-anchor="middle" font-size="10" fill="#065f46">Uniform thickness</text>
+          <text x="75" y="84" text-anchor="middle" font-size="10" fill="#065f46">~300–400 nm</text>
+          <text x="75" y="108" text-anchor="middle" font-size="10" fill="#374151">Smooth lamina</text>
+          <text x="75" y="124" text-anchor="middle" font-size="10" fill="#374151">densa</text>
+          <text x="75" y="148" text-anchor="middle" font-size="10" fill="#374151">Intact podocyte</text>
+          <text x="75" y="164" text-anchor="middle" font-size="10" fill="#374151">foot processes</text>
+        </g>
+
+        <!-- Irregular / Basket-weave zone -->
+        <g class="gbm-zone" data-name="Basket-weave GBM">
+          <rect class="zone-bg" x="150" y="40" width="110" height="190" rx="10"
+                fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="205" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Basket-weave GBM</text>
+          <text x="205" y="68" text-anchor="middle" font-size="10" fill="#92400e">Irregular lamination</text>
+          <text x="205" y="84" text-anchor="middle" font-size="10" fill="#92400e">splitting into thin layers</text>
+          <text x="205" y="108" text-anchor="middle" font-size="10" fill="#374151">Classic Alport</text>
+          <text x="205" y="124" text-anchor="middle" font-size="10" fill="#374151">EM finding</text>
+          <text x="205" y="148" text-anchor="middle" font-size="10" fill="#374151">Alternating thick</text>
+          <text x="205" y="164" text-anchor="middle" font-size="10" fill="#374151">and thin segments</text>
+        </g>
+
+        <!-- Podocyte foot process effacement -->
+        <g class="gbm-zone" data-name="Podocyte Effacement">
+          <rect class="zone-bg" x="280" y="40" width="110" height="190" rx="10"
+                fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="335" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#7f1d1d">Podocyte Effacement</text>
+          <text x="335" y="68" text-anchor="middle" font-size="10" fill="#7f1d1d">Foot processes</text>
+          <text x="335" y="84" text-anchor="middle" font-size="10" fill="#7f1d1d">flatten out</text>
+          <text x="335" y="108" text-anchor="middle" font-size="10" fill="#374151">Seen in Alport</text>
+          <text x="335" y="124" text-anchor="middle" font-size="10" fill="#374151">biopsy specimens</text>
+          <text x="335" y="148" text-anchor="middle" font-size="10" fill="#374151">Contributes to</text>
+          <text x="335" y="164" text-anchor="middle" font-size="10" fill="#374151">proteinuria</text>
+        </g>
+
+        <!-- Absent alpha-5 chain -->
+        <g class="gbm-zone" data-name="Absent Alpha-5">
+          <rect class="zone-bg" x="410" y="40" width="80" height="190" rx="10"
+                fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+          <text x="450" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#4c1d95">Absent α5</text>
+          <text x="450" y="68" text-anchor="middle" font-size="10" fill="#4c1d95">No type IV</text>
+          <text x="450" y="84" text-anchor="middle" font-size="10" fill="#4c1d95">collagen α5 chain</text>
+          <text x="450" y="108" text-anchor="middle" font-size="10" fill="#374151">Skin biopsy</text>
+          <text x="450" y="124" text-anchor="middle" font-size="10" fill="#374151">finding in XLAS</text>
+          <text x="450" y="148" text-anchor="middle" font-size="10" fill="#374151">Detected by</text>
+          <text x="450" y="164" text-anchor="middle" font-size="10" fill="#374151">immunofluorescence</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 GBM zones mastered!</h3>
+      <p>The basket-weave appearance on EM is the hallmark of Alport syndrome. The absent α5 chain on skin biopsy diagnoses X-linked disease without a renal biopsy.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "Electron microscopy of a renal biopsy shows the glomerular basement membrane alternating between thick and thin segments, with splitting of the lamina densa into multiple thin layers. What is this pattern called?",
+      answer: "Basket-weave GBM",
+      explain: "The basket-weave appearance — irregular lamination and splitting of the GBM — is the classic electron microscopy finding of Alport syndrome."
+    },
+    {
+      text: "A pathologist performs immunofluorescence on a skin biopsy from a boy with hematuria and hearing loss. The staining shows complete absence of the type IV collagen alpha-5 chain in the skin's basement membrane. Which zone does this correspond to?",
+      answer: "Absent Alpha-5",
+      explain: "Absent type IV collagen α5 chain in the skin basement membrane, detected by immunofluorescence, diagnoses X-linked Alport syndrome without requiring a renal biopsy."
+    },
+    {
+      text: "On renal biopsy, the GBM in this patient shows flattening and fusion of podocyte foot processes. This finding is expected in Alport syndrome and contributes to which urinalysis finding?",
+      answer: "Podocyte Effacement",
+      explain: "Podocyte foot process effacement in Alport syndrome contributes to proteinuria, as the filtration barrier is disrupted."
+    },
+    {
+      text: "A control biopsy from a healthy volunteer shows glomerular basement membrane with uniform thickness of approximately 300–400 nm and a smooth, intact lamina densa. This is the appearance of which zone?",
+      answer: "Normal GBM",
+      explain: "Normal GBM has uniform thickness with intact lamina densa. In Alport syndrome, the type IV collagen abnormalities cause the GBM to become irregularly thickened, thinned, and laminated — the basket-weave pattern."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText = document.getElementById("caseText");
+  const zones = canvas.querySelectorAll(".gbm-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2400);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — review the GBM pathology section.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

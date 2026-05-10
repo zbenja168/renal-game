@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histology Hotspot — Module 44</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .histo-zone { cursor: pointer; }
+  .histo-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .histo-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .histo-zone text { pointer-events: none; user-select: none; }
+  .histo-zone.found .zone-bg {
+    stroke: #16a34a; stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .histo-zone.miss .zone-bg {
+    stroke: #dc2626; stroke-width: 4;
+    animation: shk 0.4s;
+  }
+  @keyframes shk {
+    0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 44</a></div>
+  <h1>Game 2 — Histology Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧫</div>
+      <h2>Click the correct microscopy finding for each clue</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Read each clue about a microscopy finding in MN. Click the correct zone on the diagram. Misses count against you — aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="clueBox" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="clueNum">1</span> of 4:</strong>
+      <p id="clueText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Light microscopy: GBM thickening -->
+        <g class="histo-zone" data-name="LM-GBM">
+          <rect class="zone-bg" x="15" y="30" width="110" height="120" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="70" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Light Microscopy</text>
+          <text x="70" y="58" text-anchor="middle" font-size="10" fill="#1e40af">Diffuse GBM</text>
+          <text x="70" y="74" text-anchor="middle" font-size="10" fill="#1e40af">thickening</text>
+          <text x="70" y="98" text-anchor="middle" font-size="9" fill="#555">No increased</text>
+          <text x="70" y="112" text-anchor="middle" font-size="9" fill="#555">cellularity</text>
+        </g>
+
+        <!-- Silver stain: spikes -->
+        <g class="histo-zone" data-name="Silver-spikes">
+          <rect class="zone-bg" x="145" y="30" width="110" height="120" rx="10"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="200" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="#78350f">Silver Stain</text>
+          <text x="200" y="58" text-anchor="middle" font-size="10" fill="#78350f">Basement membrane</text>
+          <text x="200" y="74" text-anchor="middle" font-size="10" fill="#78350f">"spikes" between</text>
+          <text x="200" y="90" text-anchor="middle" font-size="10" fill="#78350f">deposits</text>
+          <text x="200" y="112" text-anchor="middle" font-size="9" fill="#555">Projections of GBM</text>
+        </g>
+
+        <!-- IF: granular IgG/C3 -->
+        <g class="histo-zone" data-name="IF-granular">
+          <rect class="zone-bg" x="275" y="30" width="110" height="120" rx="10"
+                fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+          <text x="330" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Immunofluorescence</text>
+          <text x="330" y="58" text-anchor="middle" font-size="10" fill="#14532d">Granular pattern</text>
+          <text x="330" y="74" text-anchor="middle" font-size="10" fill="#14532d">of IgG and C3</text>
+          <text x="330" y="90" text-anchor="middle" font-size="10" fill="#14532d">along capillaries</text>
+          <text x="330" y="112" text-anchor="middle" font-size="9" fill="#555">Immune deposits</text>
+        </g>
+
+        <!-- EM: subepithelial deposits -->
+        <g class="histo-zone" data-name="EM-subepithelial">
+          <rect class="zone-bg" x="15" y="170" width="370" height="110" rx="10"
+                fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+          <text x="200" y="162" text-anchor="middle" font-size="11" font-weight="700" fill="#581c87">Electron Microscopy</text>
+          <text x="200" y="196" text-anchor="middle" font-size="10" fill="#581c87">Subepithelial immune complex deposits</text>
+          <text x="200" y="212" text-anchor="middle" font-size="10" fill="#581c87">on the outer (epithelial) side of the GBM</text>
+          <text x="200" y="234" text-anchor="middle" font-size="9" fill="#555">Adjacent to the podocyte layer, away from capillary lumen</text>
+          <text x="200" y="252" text-anchor="middle" font-size="9" fill="#555">Cause the "spike" pattern seen on silver stain</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Histology mastered!</h3>
+      <p>MN: LM shows GBM thickening. Silver stain shows "spikes." IF shows granular IgG/C3. EM shows subepithelial deposits. Each technique reveals the same immune complex deposition from a different angle.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const clues = [
+    {
+      text: "On light microscopy, the glomerular basement membrane appears widened and thickened. There is NO increase in the number of cells within the glomerulus. What finding is this?",
+      answer: "LM-GBM",
+      explain: "Light microscopy in MN shows diffuse GBM thickening without hypercellularity — the 'membranous' in the name. This distinguishes MN from proliferative (nephritic) diseases."
+    },
+    {
+      text: "A Jones silver stain of the kidney biopsy shows dark projections of basement membrane material between light-staining deposits, giving the appearance of a comb or fence. What is this finding called?",
+      answer: "Silver-spikes",
+      explain: "The 'spikes' on silver stain represent projections of the GBM growing between subepithelial immune deposits. This is a hallmark of MN on silver stain."
+    },
+    {
+      text: "Immunofluorescence staining shows a coarsely granular, bumpy pattern of IgG and C3 distributed along the glomerular capillary walls. Which finding is this?",
+      answer: "IF-granular",
+      explain: "IF in MN shows granular (not linear) staining of IgG and C3, reflecting immune complex deposits. This differs from anti-GBM disease which shows a linear IgG pattern."
+    },
+    {
+      text: "Electron microscopy shows electron-dense deposits located on the OUTER surface of the glomerular basement membrane, between the GBM and the overlying podocyte foot processes. What is this location called?",
+      answer: "EM-subepithelial",
+      explain: "The subepithelial location (outer face of the GBM, adjacent to podocytes, away from the capillary lumen) is the defining feature of MN on electron microscopy."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const clueNumEl = document.getElementById("clueNum");
+  const clueText = document.getElementById("clueText");
+  const zones = canvas.querySelectorAll(".histo-zone");
+
+  let currentClue = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadClue() {
+    if (currentClue >= clues.length) return;
+    clueNumEl.textContent = currentClue + 1;
+    clueText.textContent = clues[currentClue].text;
+    zones.forEach(z => { z.classList.remove("found", "miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentClue = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, clues.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadClue();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentClue >= clues.length) return;
+      const picked = z.dataset.name;
+      const expected = clues[currentClue].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, clues.length);
+        showFb("✓ Correct! " + clues[currentClue].explain, "correct");
+        currentClue++;
+        if (currentClue === clues.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadClue, 2400);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not this one — re-read the clue carefully.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

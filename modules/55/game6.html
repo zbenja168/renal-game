@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 55</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 55</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>Boss round. Place every label across all four learning objectives of Renal: Schistosomiasis.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of 16 labels. Drop each onto the correct slot across epidemiology/species, life cycle, lab identification, and treatment. Wrong drops count as misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Renal: Schistosomiasis!</h3>
+      <p>Three species, one drug (praziquantel). Eggs drive pathology, snails are the link to humans, and sanitation + snail control breaks the cycle. Excellent work!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "epid", title: "Epidemiology &amp; Species", lo: "LO1",
+      slots: [
+        { id: "e1", label: "Species endemic in sub-Saharan Africa and South America — eggs in stool with lateral spine",  answer: "S. mansoni" },
+        { id: "e2", label: "Species in Africa/Middle East — eggs in urine with terminal spine — bladder cancer risk",     answer: "S. haematobium" },
+        { id: "e3", label: "Species in China and Philippines — eggs in stool with small lateral knob — most prolific",   answer: "S. japonicum" },
+        { id: "e4", label: "Common name for schistosomiasis — also called this because snails kill more people than sharks", answer: "Snail fever" }
+      ]
+    },
+    {
+      id: "lifecycle", title: "Life Cycle", lo: "LO2",
+      slots: [
+        { id: "lc1", label: "The intermediate host in which asexual reproduction produces cercariae",                    answer: "Freshwater snail" },
+        { id: "lc2", label: "The infectious cercariae stage that penetrates human skin on water contact",                 answer: "Cercariae" },
+        { id: "lc3", label: "After skin penetration, cercariae transform into this larval form in the bloodstream",     answer: "Schistosomula" },
+        { id: "lc4", label: "Adult female Schistosoma lives in the gynaecophoral canal of this structure",               answer: "Male worm (paired coupling)" }
+      ]
+    },
+    {
+      id: "lab", title: "Lab Identification", lo: "LO3",
+      slots: [
+        { id: "lb1", label: "Primary method for definitive diagnosis — microscopic examination of this sample",         answer: "Stool or urine microscopy for eggs" },
+        { id: "lb2", label: "Blood test useful when eggs cannot be found — detects antibodies against Schistosoma",     answer: "Serological antibody test" },
+        { id: "lb3", label: "Characteristic blood lab finding in acute Katayama fever",                                 answer: "Eosinophilia" },
+        { id: "lb4", label: "Acute schistosomiasis classified as this immunological reaction type",                     answer: "Type III hypersensitivity" }
+      ]
+    },
+    {
+      id: "treatment", title: "Treatment", lo: "LO4",
+      slots: [
+        { id: "tx1", label: "First-line treatment for all three Schistosoma species",                                   answer: "Praziquantel" },
+        { id: "tx2", label: "Mechanism of praziquantel — increases this ion's permeability in parasite membrane",       answer: "Calcium ions" },
+        { id: "tx3", label: "Adjunct used in acute Katayama fever to reduce host inflammatory response",                answer: "Corticosteroids" },
+        { id: "tx4", label: "Public health strategy to interrupt transmission by targeting the intermediate host",       answer: "Snail management / mollusciciding" }
+      ]
+    }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const board     = document.getElementById("board");
+  const scoreEl   = document.getElementById("score");
+  const missesEl  = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const ICONS     = { epid:"🗺️", lifecycle:"🐌", lab:"🔬", treatment:"💊" };
+  const TOTAL     = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0, misses = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = ""; board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

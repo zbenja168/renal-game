@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase Hotspot — Module 50</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .phase-zone { cursor: pointer; }
+  .phase-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .phase-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .phase-zone text { pointer-events: none; user-select: none; }
+  .phase-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.5));
+  }
+  .phase-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeP 0.4s;
+  }
+  @keyframes shakeP {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 50</a></div>
+  <h1>Game 2 — Phase Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct phase of tubular injury for each clue</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> ATN has three clinical phases. For each clinical description, click the correct phase on the diagram. Wrong clicks count as misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Inciting Event Phase -->
+        <g class="phase-zone" data-name="Inciting Phase">
+          <rect class="zone-bg" x="15" y="40" width="140" height="190" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="85" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">Inciting Phase</text>
+          <text x="85" y="68" text-anchor="middle" font-size="10" fill="#1e40af">Cells damaged but</text>
+          <text x="85" y="84" text-anchor="middle" font-size="10" fill="#1e40af">still intact</text>
+          <text x="85" y="108" text-anchor="middle" font-size="10" fill="#374151">Unable to reabsorb</text>
+          <text x="85" y="124" text-anchor="middle" font-size="10" fill="#374151">sodium</text>
+          <text x="85" y="148" text-anchor="middle" font-size="10" fill="#374151">Modest BUN rise;</text>
+          <text x="85" y="164" text-anchor="middle" font-size="10" fill="#374151">slight urine decline</text>
+        </g>
+
+        <!-- Maintenance Phase -->
+        <g class="phase-zone" data-name="Maintenance Phase">
+          <rect class="zone-bg" x="170" y="40" width="140" height="190" rx="10"
+                fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="240" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#7f1d1d">Maintenance Phase</text>
+          <text x="240" y="68" text-anchor="middle" font-size="10" fill="#7f1d1d">Cells necrose and</text>
+          <text x="240" y="84" text-anchor="middle" font-size="10" fill="#7f1d1d">slough into tubules</text>
+          <text x="240" y="108" text-anchor="middle" font-size="10" fill="#374151">Oliguria 40–400 mL/day</text>
+          <text x="240" y="124" text-anchor="middle" font-size="10" fill="#374151">Hyperkalemia, acidosis</text>
+          <text x="240" y="148" text-anchor="middle" font-size="10" fill="#374151">Rising BUN, uremia</text>
+          <text x="240" y="164" text-anchor="middle" font-size="10" fill="#374151">Muddy-brown casts</text>
+        </g>
+
+        <!-- Recovery Phase -->
+        <g class="phase-zone" data-name="Recovery Phase">
+          <rect class="zone-bg" x="325" y="40" width="140" height="190" rx="10"
+                fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+          <text x="395" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">Recovery Phase</text>
+          <text x="395" y="68" text-anchor="middle" font-size="10" fill="#065f46">Tubules reestablish</text>
+          <text x="395" y="84" text-anchor="middle" font-size="10" fill="#065f46">architecture</text>
+          <text x="395" y="108" text-anchor="middle" font-size="10" fill="#374151">Diuretic phase:</text>
+          <text x="395" y="124" text-anchor="middle" font-size="10" fill="#374151">large urine output</text>
+          <text x="395" y="148" text-anchor="middle" font-size="10" fill="#374151">Urea, Na, water</text>
+          <text x="395" y="164" text-anchor="middle" font-size="10" fill="#374151">pour into urine</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All phases identified!</h3>
+      <p>Inciting phase: cells fail but are intact. Maintenance phase: cells necrose and slough — oliguria, hyperkalemia, acidosis. Recovery phase: diuretic phase as tubules regenerate. Watch for hypotension during recovery from massive diuresis.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 58-year-old man was in hemorrhagic shock for 45 minutes before resuscitation. 24 hours later, his urine output drops to 80 mL/day. BUN is rising sharply. Urinalysis shows muddy-brown granular casts and renal tubular epithelial cells. He is developing metabolic acidosis and hyperkalemia. Which phase of ATN does this represent?",
+      answer: "Maintenance Phase",
+      explain: "The maintenance phase is characterized by sustained oliguria (40–400 mL/day), rising BUN, hyperkalemia, metabolic acidosis, and muddy-brown granular casts on urinalysis as necrotic cells slough into the tubule lumens."
+    },
+    {
+      text: "A patient who had ATN secondary to sepsis has his urine output improve dramatically over the past 48 hours — now producing 3 liters per day. His BUN is still elevated but beginning to trend down. His blood pressure dips to 88/54 mmHg. He requires aggressive IV fluid replacement. Which phase of ATN is he now in?",
+      answer: "Recovery Phase",
+      explain: "During the recovery (diuretic) phase, tubules regenerate but cannot yet concentrate urine efficiently. Accumulated urea, sodium, and water pour into the urine, causing massive diuresis. Hypotension from volume loss is a key management concern."
+    },
+    {
+      text: "A 72-year-old woman received IV gentamicin for gram-negative bacteremia. 2 days later, her urine output drops slightly and BUN begins to rise. The cells are damaged and cannot reabsorb sodium, but necrosis has not yet occurred. Muddy-brown casts are not yet visible. Which phase of tubular injury has begun?",
+      answer: "Inciting Phase",
+      explain: "The inciting phase occurs immediately after the ischemic or toxic insult. Tubular cells are damaged and lose their ability to reabsorb and secrete, but cell necrosis has not yet occurred. BUN rises modestly and urine output declines slightly."
+    },
+    {
+      text: "On urinalysis of a patient with ATN, the classic finding is muddy-brown granular casts — formed when necrotic tubular cells and debris accumulate in the tubular lumen. This finding is most characteristic of which phase of the disease?",
+      answer: "Maintenance Phase",
+      explain: "Muddy-brown granular casts are pathognomonic of ATN and form during the maintenance phase when necrotic tubular epithelial cells slough off into the tubule lumen. They reflect ongoing tubular destruction."
+    }
+  ];
+
+  const canvas = document.getElementById("canvas");
+  const scoreEl = document.getElementById("score");
+  const missEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText = document.getElementById("caseText");
+  const zones = canvas.querySelectorAll(".phase-zone");
+
+  let currentCase = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => { z.classList.remove("found", "miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      if (z.dataset.name === cases[currentCase].answer) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadCase, 2800);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — review the three phases of tubular injury.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios Quiz — Module 55</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 55</a></div>
+  <h1>Game 5 — Clinical Scenarios Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Five fresh clinical scenarios — apply Schistosoma knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      New case-based questions testing Schistosoma concepts from angles not covered by the brick's own review questions. Four balanced options each.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>Praziquantel works by increasing calcium permeability — parasite contraction and lysis. Corticosteroids can adjunct in acute Katayama fever. S. haematobium drives bladder SCC. Eggs, not adult worms, drive the pathological immune response. Public health prevention requires snail control + sanitation + mass drug administration.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss round →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // ALL NEW questions — not paraphrases of brick review questions
+  const questions = [
+    {
+      q: "A 30-year-old engineer returns from a humanitarian project in sub-Saharan Africa where he waded in freshwater streams. Four weeks later he develops high fever, urticaria, eosinophilia, and lymphadenopathy. This acute presentation is primarily driven by which immunological mechanism?",
+      options: [
+        "Direct toxin secretion by adult worms causing cell death",
+        "Type III hypersensitivity to egg antigen-antibody complexes",
+        "IgE-mediated anaphylaxis to cercarial proteins in the skin",
+        "CD8 cytotoxic T-cell destruction of infected hepatocytes"
+      ],
+      correct: 1,
+      explain: "Katayama fever (acute schistosomiasis) is a Type III hypersensitivity reaction to the sudden surge of egg antigen-antibody complexes when the female worm begins laying eggs. It occurs weeks after exposure, not at the time of cercarial penetration."
+    },
+    {
+      q: "A 50-year-old woman from Egypt presents with painless terminal hematuria for 3 months. She grew up swimming in irrigation canals. Cystoscopy shows a bladder wall mass. Which pathological process does chronic S. haematobium infection most strongly promote in the bladder?",
+      options: [
+        "Transitional cell (urothelial) carcinoma from chronic irritation",
+        "Squamous cell carcinoma driven by chronic inflammation and egg deposition",
+        "Adenocarcinoma from metaplastic change in bladder glandular cells",
+        "Lymphoma from chronic lymphocytic stimulation around egg granulomas"
+      ],
+      correct: 1,
+      explain: "The brick states that chronic S. haematobium infection is strongly linked to squamous cell carcinoma of the bladder. Persistent egg deposition causes chronic inflammation, fibrosis, and squamous metaplasia of the bladder urothelium, which undergoes malignant transformation."
+    },
+    {
+      q: "A physician prescribing praziquantel for a patient with schistosomiasis explains its mechanism of action. Which of the following correctly describes how praziquantel kills Schistosoma?",
+      options: [
+        "Inhibits parasite DNA gyrase, preventing replication in the bloodstream",
+        "Increases calcium permeability of the parasite membrane, causing paralysis",
+        "Blocks the parasite's glucose uptake, leading to metabolic starvation",
+        "Inhibits tubulin polymerization, disrupting parasite structural integrity"
+      ],
+      correct: 1,
+      explain: "Praziquantel increases the permeability of the Schistosoma cell membrane to calcium ions. The resulting calcium influx causes sustained muscular contraction (spastic paralysis) and disruption of the tegument, exposing the worm to immune attack. The brick specifically identifies this as its mechanism."
+    },
+    {
+      q: "A researcher studying schistosomiasis notes that asymptomatic patients can still contribute to disease transmission in endemic communities. What is the key reason for this?",
+      options: [
+        "Asymptomatic patients shed cercariae through skin lesions into local water sources",
+        "Asymptomatic patients can excrete viable eggs in urine or stool despite no symptoms",
+        "Asymptomatic patients harbor adult worms that survive in the blood for decades without shedding eggs",
+        "Asymptomatic patients develop immunity that prevents egg excretion but not worm survival"
+      ],
+      correct: 1,
+      explain: "The brick explicitly states that asymptomatic infections can still result in excretion of eggs in urine and/or stool. These eggs reach freshwater, hatch into miracidia, and infect snails — continuing the transmission cycle even without visible disease in the human host."
+    },
+    {
+      q: "A patient with chronic S. mansoni infection develops esophageal varices and an enlarged spleen. His liver enzymes are minimally elevated despite significant portal hypertension. Which pathological feature of S. mansoni-associated liver disease explains this discrepancy?",
+      options: [
+        "S. mansoni directly destroys hepatocytes, causing cirrhosis and reduced hepatic synthetic function",
+        "Periportal fibrosis impedes portal flow while sparing hepatocyte function",
+        "S. mansoni eggs deposit primarily in hepatic veins, causing Budd-Chiari syndrome",
+        "Chronic inflammation depletes glutathione, causing lipid peroxidation and steatohepatitis"
+      ],
+      correct: 1,
+      explain: "The brick notes that in S. mansoni chronic disease, hepatosplenic schistosomiasis results from periportal (pipe-stem) fibrosis that impedes portal blood flow — causing portal hypertension and splenomegaly — but hepatocellular function is relatively preserved because hepatocytes themselves are not extensively destroyed. This distinguishes it from cirrhosis."
+    }
+  ];
+
+  const container   = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    container.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

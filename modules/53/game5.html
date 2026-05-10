@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios Quiz — Module 53</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 53</a></div>
+  <h1>Game 5 — Clinical Scenarios Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Round 1: Fresh clinical scenarios — apply UTI knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      Five new case-based questions testing cystitis and pyelonephritis concepts from angles not covered by the brick's own review questions. Read carefully and reason from first principles.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>E. coli fimbriae drive adherence. Urinalysis nitrites indicate gram-negative bacteria. Nitrofurantoin does not penetrate renal tissue. WBC casts confirm renal parenchymal infection. Retrograde spread from the GI tract via the short female urethra is the dominant UTI pathway.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss round →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // All NEW questions — not paraphrases of brick review questions
+  const questions = [
+    {
+      q: "A 28-year-old woman has dysuria, frequency, and suprapubic pain for 2 days. She is afebrile, has no CVA tenderness, and no known urologic abnormality. She is not pregnant or immunocompromised. Which initial workup approach does the brick support?",
+      options: [
+        "Order urine culture and start antibiotics only after results return",
+        "Diagnose clinically and start empiric antibiotics without cultures",
+        "Order a renal ultrasound to rule out hydronephrosis before treating",
+        "Refer to urology for cystoscopy to confirm diagnosis"
+      ],
+      correct: 1,
+      explain: "The brick states that uncomplicated cystitis can be diagnosed based on history of dysuria, urinary frequency, and urgency alone. Cultures are only needed in selected cases. Clinical diagnosis supports immediate empiric antibiotic treatment without awaiting culture results."
+    },
+    {
+      q: "A 35-year-old male with a Foley catheter in place develops fever, flank pain, and costovertebral angle tenderness 5 days post-operatively. Urinalysis shows WBC casts. Which statement best explains why WBC casts are significant in this setting?",
+      options: [
+        "WBC casts form in the bladder during severe cystitis",
+        "WBC casts form in renal tubules, confirming renal parenchymal infection",
+        "WBC casts indicate allergic interstitial nephritis rather than infection",
+        "WBC casts are a non-specific finding seen in any febrile illness"
+      ],
+      correct: 1,
+      explain: "WBC casts form within renal tubules. Their presence in urinalysis confirms that white blood cells are coming from the kidney itself, indicating renal parenchymal involvement — a hallmark of pyelonephritis, not simple cystitis."
+    },
+    {
+      q: "A 24-year-old woman is treated with nitrofurantoin for a suspected lower UTI. Three days later she returns with worsening fever and flank pain. Urinalysis now shows WBC casts. Why is nitrofurantoin not appropriate for this presentation?",
+      options: [
+        "Nitrofurantoin causes renal stone formation as an adverse effect",
+        "Nitrofurantoin resistance is universal for E. coli in young women",
+        "Nitrofurantoin does not achieve adequate concentrations in renal parenchyma",
+        "Nitrofurantoin is contraindicated in patients under 30 years of age"
+      ],
+      correct: 2,
+      explain: "The brick notes that nitrofurantoin does not achieve adequate drug levels in renal tissue — it concentrates in urine, not parenchyma. It is therefore suitable only for lower UTI (bladder), not pyelonephritis, which requires agents that penetrate renal tissue."
+    },
+    {
+      q: "A sexually active 22-year-old female is evaluated for a UTI. Urinalysis reveals pyuria but the nitrite dipstick is negative. Which organism is most consistent with a nitrite-negative UTI in this patient population?",
+      options: [
+        "Escherichia coli (gram-negative, reduces nitrates)",
+        "Staphylococcus saprophyticus (gram-positive, nitrate-negative)",
+        "Klebsiella pneumoniae (gram-negative, nitrate-reducing)",
+        "Pseudomonas aeruginosa (gram-negative, hospital-acquired)"
+      ],
+      correct: 1,
+      explain: "Nitrite is produced when gram-negative bacteria reduce urinary nitrates. Staphylococcus saprophyticus is gram-positive and does not reduce nitrates, causing a nitrite-negative result despite being the second most common cause of UTI in sexually active young women."
+    },
+    {
+      q: "A 67-year-old woman living in a long-term care facility is found confused and incontinent. Her temperature is 38.4°C and she has no complaints of dysuria. A urine culture grows 10^5 CFU/mL of E. coli. According to the brick's framework, what is the key distinguishing factor that determines whether this represents a UTI requiring treatment?",
+      options: [
+        "The colony count of bacteria in urine culture",
+        "Systemic symptoms such as fever or altered cognition",
+        "The age and sex of the patient",
+        "The species of bacteria isolated on culture"
+      ],
+      correct: 1,
+      explain: "The brick emphasizes that complicated UTIs and pyelonephritis present with systemic symptoms. In elderly patients, confusion is a recognized atypical presentation of pyelonephritis. Fever combined with altered mental status in the absence of another explanation points to symptomatic UTI requiring treatment — not asymptomatic bacteriuria, which would not be treated."
+    }
+  ];
+
+  const container   = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0, answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, oi, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    container.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) { btn.classList.add("correct"); quizScore++; }
+    else { btn.classList.add("incorrect"); opts.children[qd.correct].classList.add("correct"); }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

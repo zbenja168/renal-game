@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Cycle Sequencer — Module 55</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 55</a></div>
+  <h1>Game 1 — Life Cycle Sequencer</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🐌</div>
+      <h2>Build the Schistosoma life cycle in order</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each life cycle step from the pool and drop it into the numbered slot in the correct sequence. The cycle begins with eggs released into freshwater and ends with adult worms laying eggs in human tissue.
+    </div>
+
+    <div class="score-bar">
+      <span>Steps placed: <span class="score" id="score">0 / 9</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Life cycle steps</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Life cycle complete!</h3>
+      <p>Eggs → freshwater → miracidia → infect snail → cercariae released → penetrate human skin → schistosomula → migrate to blood → adult worms → lay eggs in tissue → eggs exit via urine or stool → cycle repeats. The snail is the intermediate host; humans are the definitive host.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "step1", label: "Step 1: Eggs are released into freshwater via urine or feces", answer: "Eggs in freshwater" },
+    { id: "step2", label: "Step 2: Eggs hatch in freshwater into this free-swimming larval form", answer: "Miracidia" },
+    { id: "step3", label: "Step 3: Miracidia infect this intermediate host", answer: "Freshwater snail" },
+    { id: "step4", label: "Step 4: Inside the snail, asexual reproduction produces this infectious form", answer: "Cercariae" },
+    { id: "step5", label: "Step 5: Cercariae are released from the snail into water and do this to infect a human", answer: "Penetrate human skin" },
+    { id: "step6", label: "Step 6: After skin penetration, cercariae transform into this larval stage", answer: "Schistosomula" },
+    { id: "step7", label: "Step 7: Schistosomula migrate via bloodstream to these vessels", answer: "Mesenteric or bladder venous plexus" },
+    { id: "step8", label: "Step 8: Schistosomula mature into adult worms here, then do this", answer: "Male and female worms pair and mate" },
+    { id: "step9", label: "Step 9: The female worm produces hundreds of these per day in human tissue", answer: "Eggs deposited in tissues" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = ""; zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", el.dataset.label); });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      const dropped = dragSource.dataset.label;
+      if (dropped === zone.dataset.answer) {
+        zone.innerHTML = "";
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dropped;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb(`✓ Correct!`, "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That step doesn't belong in this position.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 54</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 54</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>Boss round. Place every label across all four learning objectives of Renal Stones.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of 16 labels. Drop each onto the correct slot across clinical presentation, stone types, diagnosis, and management. Wrong drops count as misses. Aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Renal Stones!</h3>
+      <p>Four stone types, each with a distinct mechanism. Non-contrast CT for imaging. Tamsulosin for passage. Stone-specific prevention keeps patients stone-free. You're ready for the exam!</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "present", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "p1", label: "Classic symptom: acute unilateral flank pain radiating to the groin", answer: "Renal colic" },
+        { id: "p2", label: "Hematuria type most commonly seen with kidney stones",                 answer: "Microscopic or gross hematuria" },
+        { id: "p3", label: "Why smaller stones cause more pain than larger ones",                  answer: "Smaller stones obstruct the ureter" },
+        { id: "p4", label: "Pain location when stone is in the lower ureter",                     answer: "Ipsilateral testicle or labium" }
+      ]
+    },
+    {
+      id: "stonetypes", title: "Stone Types &amp; Mechanisms", lo: "LO2",
+      slots: [
+        { id: "st1", label: "Most common stone type — accounts for ~75% of kidney stones",         answer: "Calcium oxalate" },
+        { id: "st2", label: "Stone type formed in alkaline urine via urease-positive bacteria",    answer: "Struvite (infection stone)" },
+        { id: "st3", label: "Stone type that forms in acidic urine (pH &lt;5.5); radiolucent",     answer: "Uric acid stone" },
+        { id: "st4", label: "Rare genetic stone; hexagonal crystals; children; amino acid defect", answer: "Cystine stone" }
+      ]
+    },
+    {
+      id: "diag", title: "Diagnosis", lo: "LO3",
+      slots: [
+        { id: "d1", label: "Best initial imaging modality for renal stones — no radiation, no contrast risk", answer: "Non-contrast CT abdomen/pelvis" },
+        { id: "d2", label: "Serum marker elevated when bilateral obstruction impairs kidney function",          answer: "Elevated creatinine" },
+        { id: "d3", label: "Crystal shape associated with calcium oxalate stones on urinalysis",              answer: "Dumbbell or envelope-back" },
+        { id: "d4", label: "Preferred imaging in pregnant patients or children due to no radiation",          answer: "Renal ultrasound" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "First-line analgesic in acute kidney stone pain",                          answer: "NSAID (e.g., ibuprofen)" },
+        { id: "m2", label: "Alpha-1 blocker that relaxes the ureter — used for stones ≤10 mm",        answer: "Tamsulosin" },
+        { id: "m3", label: "Non-invasive procedure using shock waves — for stones ≤2 cm",             answer: "ESWL (lithotripsy)" },
+        { id: "m4", label: "Surgical back-access technique for staghorn or large stones (>2 cm)",     answer: "Percutaneous nephrolithotomy" }
+      ]
+    }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const board     = document.getElementById("board");
+  const scoreEl   = document.getElementById("score");
+  const missesEl  = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const ICONS     = { present:"🪨", stonetypes:"🔬", diag:"🧪", mgmt:"🏥" };
+  const TOTAL     = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0, misses = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = ""; board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const ph = zone.querySelector(".label");
+        if (ph) ph.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

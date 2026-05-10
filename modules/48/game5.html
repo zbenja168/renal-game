@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios — Module 48</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 48</a></div>
+  <h1>Game 5 — Clinical Scenarios</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five clinical scenarios — apply what you know</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Fresh case-based scenarios drawn from the brick's content. Each question tests a different concept. Select the best answer and read the explanation.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Scenarios complete!</h3>
+      <p>Ready for the boss? Game 6 covers the entire Alport brick in one comprehensive drag-and-drop round.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions — NOT the brick's verbatim review questions */
+  const questions = [
+    {
+      q: "A 9-year-old boy is found to have microscopic hematuria on a school screening urinalysis. His grandfather underwent kidney transplantation at age 28. His physical exam is normal. Genetic testing reveals a pathogenic variant in COL4A5. Which of the following best explains why this boy, rather than his female cousin with the same variant, is more severely affected?",
+      options: [
+        "Male patients have higher protein intake causing faster GBM damage",
+        "COL4A5 is X-linked; males have one copy, so the mutated gene is fully expressed",
+        "Boys have smaller kidneys and thus less filtration reserve",
+        "Female carriers always remain asymptomatic regardless of the variant"
+      ],
+      correct: 1,
+      explain: "COL4A5 resides on the X chromosome. Males have only one X chromosome, so a single pathogenic COL4A5 variant is fully expressed with no normal allele to compensate. Females with one mutated X often develop only mild or late disease."
+    },
+    {
+      q: "An ophthalmologist examines a 14-year-old with known Alport syndrome. She notes a conical, forward projection of the anterior surface of the crystalline lens. What is this finding called, and what structural defect causes it?",
+      options: [
+        "Posterior lenticonus; excess collagen deposits stiffen the posterior capsule",
+        "Keratoconus; corneal thinning from absent type IV collagen in the stroma",
+        "Anterior lenticonus; weakened lens capsule from type IV collagen defects",
+        "Ectopia lentis; zonular fiber rupture from elevated intraocular pressure"
+      ],
+      correct: 2,
+      explain: "Anterior lenticonus is the most common eye abnormality in Alport syndrome. The lens capsule is thinned and weakened because of type IV collagen α3/4/5 defects, allowing the lens to bow forward into a conical shape."
+    },
+    {
+      q: "A 16-year-old male with Alport syndrome is started on medication to slow kidney decline. His current GFR is 65 mL/min. He has proteinuria of 800 mg/day. Which drug class is first-line to slow GFR decline in this patient?",
+      options: [
+        "Loop diuretics to reduce fluid retention and proteinuria",
+        "Beta-blockers to lower heart rate and reduce renal perfusion pressure",
+        "ACE inhibitors or ARBs to reduce intraglomerular pressure and proteinuria",
+        "Calcium channel blockers as the preferred antihypertensive in CKD"
+      ],
+      correct: 2,
+      explain: "ACE inhibitors and ARBs are used in Alport syndrome (as in many forms of chronic kidney disease) to slow GFR decline and reduce proteinuria. They should be started at the time of diagnosis and improve long-term prognosis."
+    },
+    {
+      q: "A mother of a 6-year-old boy with Alport syndrome asks: 'Why does my son need a hearing test if his kidneys are what's affected?' The best explanation is:",
+      options: [
+        "Nephrotoxic medications used for kidney disease are ototoxic as a side effect",
+        "Fluid overload from kidney disease transmits pressure waves to the inner ear",
+        "Type IV collagen α3/α4/α5 chains are essential in the cochlea's basement membrane",
+        "Elevated BUN in kidney failure damages sensory hair cells of the cochlea"
+      ],
+      correct: 2,
+      explain: "Type IV collagen α3, α4, and α5 chains are essential structural elements in the inner ear, specifically in the basement membrane of the cochlea. The same collagen defect that harms the GBM also causes progressive sensorineural hearing loss."
+    },
+    {
+      q: "A 7-year-old girl undergoes renal biopsy because her urinalysis shows persistent microscopic hematuria and mild proteinuria. Light microscopy is non-specific in early disease. Electron microscopy shows irregular thickening and thinning of the GBM with splitting of the lamina densa. Which of the following also appears abnormal on immunofluorescence in the X-linked form?",
+      options: [
+        "IgA deposits in the mesangium indicating concurrent IgA nephropathy",
+        "Linear IgG along the GBM indicating anti-GBM antibody disease",
+        "Granular C3 deposits indicating complement-mediated glomerulonephritis",
+        "Absent type IV collagen α5 chain staining along the GBM"
+      ],
+      correct: 3,
+      explain: "In X-linked Alport syndrome, immunofluorescence shows absent or markedly reduced type IV collagen α5 chain staining along the GBM. This is a key diagnostic feature distinguishing Alport from other hereditary nephropathies."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

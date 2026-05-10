@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Management Quiz — Module 40</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 40</a></div>
+  <h1>Game 5 — Management Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five fresh clinical scenarios — apply the brick</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each question is a new clinical scenario testing your understanding of diagnosis and management concepts from the nephrotic syndrome brick. These are not the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>ACE inhibitors reduce proteinuria and slow progression in all glomerular diseases. Immunosuppression targets primary glomerular disease. Secondary causes require treating the underlying condition first.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      q: "A 38-year-old woman with no prior kidney disease develops 4+ proteinuria after starting ibuprofen for chronic back pain. A renal biopsy would most likely show which pattern?",
+      options: [
+        "Focal segmental sclerosis of glomeruli",
+        "Thickening of the glomerular basement membrane",
+        "Minimal change on light microscopy; effaced foot processes on EM",
+        "Mesangial proliferation with tram-track basement membrane"
+      ],
+      correct: 2,
+      explain: "NSAIDs are a recognized secondary cause of minimal change disease. Light microscopy is normal; the diagnosis requires electron microscopy showing podocyte foot process effacement."
+    },
+    {
+      q: "A 52-year-old patient with nephrotic syndrome has a serum albumin of 1.8 g/dL. He is on no specific treatment. Which complication of low albumin is he most at risk for, based on urinary protein losses described in the brick?",
+      options: [
+        "Hyperkalemia from aldosterone deficiency",
+        "Deep vein thrombosis from urinary loss of antithrombin",
+        "Bacterial endocarditis from complement depletion",
+        "Hemolytic anemia from transferrin loss in urine"
+      ],
+      correct: 1,
+      explain: "The brick states that urinary loss of antithrombin (an anticoagulant protein) in nephrotic syndrome increases thrombotic risk. Loss of immunoglobulins also increases infection risk, but thrombosis from antithrombin loss is specifically highlighted."
+    },
+    {
+      q: "A physician decides NOT to perform a renal biopsy in a 6-year-old boy with new-onset nephrotic syndrome. According to the brick, what justifies skipping the biopsy in this age group?",
+      options: [
+        "Children rarely respond to corticosteroids, making biopsy essential",
+        "Diabetic nephropathy is the presumed cause in all children",
+        "MCD is so common in children that empiric corticosteroids are given first",
+        "Renal biopsy is contraindicated before age 10 due to bleeding risk"
+      ],
+      correct: 2,
+      explain: "The brick notes that MCD accounts for ~90% of nephrotic syndrome in young children, so empiric corticosteroid treatment is given first. A biopsy exception applies if the child does not respond or has atypical features."
+    },
+    {
+      q: "A 60-year-old man is found to have 4+ proteinuria and a urine protein/creatinine ratio of 5.2. His blood pressure is 158/96. Which class of antihypertensive drug should be included in his management plan regardless of what the biopsy shows?",
+      options: [
+        "Beta-blocker for rate control",
+        "ACE inhibitor or ARB to reduce proteinuria and slow CKD progression",
+        "Calcium channel blocker as first-line for nephrotic proteinuria",
+        "Loop diuretic as blood pressure control in glomerular disease"
+      ],
+      correct: 1,
+      explain: "The brick states all patients with nephrotic syndrome should receive an ACE inhibitor or ARB (angiotensin receptor blocker). These lower blood pressure, reduce proteinuria, and slow progression of glomerular disease regardless of the underlying cause."
+    },
+    {
+      q: "A patient with nephrotic syndrome and hyperlipidemia asks why she is being prescribed a statin. According to the brick, why are statins specifically important in nephrotic patients beyond lowering cholesterol?",
+      options: [
+        "Statins directly reduce urinary protein excretion",
+        "Statins block the hepatic overproduction of lipoproteins caused by nephrotic syndrome",
+        "Nephrotic patients have increased atherosclerotic and cardiovascular mortality risk",
+        "Statins prevent thrombosis by restoring antithrombin levels lost in the urine"
+      ],
+      correct: 2,
+      explain: "The brick specifically states that nephrotic patients have an increased risk of atherosclerotic disease and cardiovascular mortality, which is why statins are used. The hyperlipidemia of nephrotic syndrome is due to increased hepatic lipoprotein production when oncotic pressure is low."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

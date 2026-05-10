@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenarios — Module 47</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 47</a></div>
+  <h1>Game 5 — Clinical Scenarios</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💡</div>
+      <h2>Five fresh clinical scenarios — apply what you know</h2>
+    </div>
+    <div class="game-instructions">
+      Five new case-based questions drawn from brick content (not the brick's own review questions). Each tests a single key concept from a novel angle.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Scenarios complete!</h3>
+      <p>You've applied anti-GBM disease concepts across presentation, pathophysiology, diagnosis, and management. Take on the boss round to put it all together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ============================================================
+     ALL 5 questions are NEW scenarios — NOT paraphrased from the
+     brick's own review questions (which asked about IF pattern,
+     recurrence, specific serologic test, and cyclophosphamide).
+     ============================================================ */
+  const questions = [
+    {
+      q: "A 26-year-old male smoker presents with 3 days of worsening hemoptysis and tea-colored urine. Serology is pending. Which mechanism best explains why smokers may be MORE likely to develop pulmonary hemorrhage in anti-GBM disease compared to non-smokers?",
+      options: [
+        "Smoking increases anti-GBM antibody production via B-cell activation",
+        "Smoking damages alveolar membranes, making them susceptible to antibody attack",
+        "Smoking causes pulmonary hypertension that drives blood into alveolar spaces",
+        "Smoking impairs renal clearance of anti-GBM antibodies, raising serum levels"
+      ],
+      correct: 1,
+      explain: "The brick states that some other form of lung damage — such as that caused by smoking — may be needed to make the basement membrane susceptible to antibody damage. Smoking injures alveolar BM, permitting anti-GBM antibodies access."
+    },
+    {
+      q: "A nephrologist sees a 34-year-old woman with rapidly progressive glomerulonephritis. ELISA for anti-GBM antibodies is positive. She also has a mild positive p-ANCA. What does the brick say about ordering ANCA studies in suspected anti-GBM disease?",
+      options: [
+        "ANCA studies are not needed; anti-GBM ELISA alone confirms the diagnosis",
+        "ANCA studies are also ordered, as GPA can co-occur with anti-GBM disease",
+        "ANCA studies are only ordered after renal biopsy confirms crescentic GN",
+        "p-ANCA positivity rules out anti-GBM disease, so no biopsy is needed"
+      ],
+      correct: 1,
+      explain: "Per the brick: because the presentation of granulomatosis with polyangiitis (GPA) is similar to anti-GBM disease, ANCA studies (cytoplasmic c-ANCA and perinuclear p-ANCA) are also ordered when anti-GBM disease is suspected."
+    },
+    {
+      q: "A 58-year-old woman with anti-GBM disease starts plasmapheresis. The procedure removes plasma from her blood and replaces it with albumin solution. What is the primary therapeutic goal of this intervention in anti-GBM disease?",
+      options: [
+        "Remove circulating anti-GBM autoantibodies from the bloodstream",
+        "Replace depleted complement proteins consumed by immune complexes",
+        "Dilute serum creatinine to falsely improve apparent renal function",
+        "Provide fresh IgG to outcompete anti-GBM antibodies at the GBM"
+      ],
+      correct: 0,
+      explain: "The brick states plasmapheresis (plasma exchange) is used to remove antibodies from the body. In anti-GBM disease, the pathogenic autoantibodies circulate in plasma; removing them via plasma exchange reduces ongoing binding to the GBM and alveolar basement membrane."
+    },
+    {
+      q: "A 19-year-old man with anti-GBM disease has a serum creatinine of 3.2 mg/dL at presentation. He begins treatment with plasmapheresis, glucocorticoids, and cyclophosphamide. The brick states his prognosis is 'good' under this condition. What specific serum value is the brick referring to when predicting a good prognosis with treatment?",
+      options: [
+        "Serum albumin below 2.5 g/dL at presentation",
+        "Serum creatinine below 5.7 mg/dL at presentation",
+        "Serum hemoglobin above 10 g/dL at presentation",
+        "Anti-GBM antibody titer below 200 U/mL at presentation"
+      ],
+      correct: 1,
+      explain: "The brick states that if the serum creatinine level is below 5.7 mg/dL at presentation, the prognosis is good. If dialysis is already required at presentation, the prognosis is quite poor and renal function will not likely recover."
+    },
+    {
+      q: "A pathology resident reviews a kidney biopsy report describing 'glomerular crescents composed of epithelial cells, fibrin, and plasma proteins filling Bowman's space.' Which clinical syndrome does this light microscopy finding most specifically indicate?",
+      options: [
+        "Focal segmental glomerulosclerosis with nephrotic syndrome",
+        "Minimal change disease with massive proteinuria",
+        "Rapidly progressive (crescentic) glomerulonephritis",
+        "Diabetic nephropathy with Kimmelstiel-Wilson nodule formation"
+      ],
+      correct: 2,
+      explain: "Glomerular crescents on light microscopy are the hallmark of rapidly progressive glomerulonephritis (RPGN). The brick describes this as a type of renal histology seen in some other nephritic diseases, characterized by extensive glomerular crescents — crescentic glomerulonephritis is the light microscopy finding in anti-GBM disease."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) {
+      Game.celebrate("winBanner");
+    }
+  }
+</script>
+</body>
+</html>

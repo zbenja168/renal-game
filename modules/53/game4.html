@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Antibiotic Builder — Module 53</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 53</a></div>
+  <h1>Game 4 — Antibiotic Builder</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Drag the correct first-line antibiotic to each clinical scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Match each antibiotic to the scenario where it is the first-line choice. Use the brick's Table 2 treatment guidelines.
+    </div>
+
+    <div class="score-bar">
+      <span>Matched: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Antibiotics</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Antibiotic map complete!</h3>
+      <p>Uncomplicated UTI first-line: nitrofurantoin, TMP-SMX, or fosfomycin. Complicated UTI: fluoroquinolone or 3rd-gen cephalosporin. Pyelonephritis / hospitalized: IV fluoroquinolone (e.g., ciprofloxacin) or IV 3rd-gen cephalosporin. Avoid nitrofurantoin in pyelonephritis — it doesn't reach renal parenchyma.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "s1", label: "Uncomplicated cystitis — healthy, non-pregnant female, no allergies", answer: "Nitrofurantoin" },
+    { id: "s2", label: "Uncomplicated cystitis — second oral option; inhibits folate synthesis", answer: "TMP-SMX" },
+    { id: "s3", label: "Uncomplicated cystitis — single oral dose option", answer: "Fosfomycin" },
+    { id: "s4", label: "Complicated cystitis — male patient with diabetes, oral therapy", answer: "Ciprofloxacin (oral)" },
+    { id: "s5", label: "Pyelonephritis — outpatient, stable patient, oral fluoroquinolone", answer: "Levofloxacin (oral)" },
+    { id: "s6", label: "Pyelonephritis — hospitalized, IV fluoroquinolone first-line", answer: "Ciprofloxacin (IV)" },
+    { id: "s7", label: "Pyelonephritis — IV 3rd-generation cephalosporin (empiric)", answer: "Ceftriaxone (IV)" },
+    { id: "s8", label: "Pseudomonas suspected — broad-spectrum carbapenem (last resort)", answer: "Meropenem (IV)" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+  let placed = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML  = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.slotId = s.id;
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => { dragSource = el; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", el.dataset.label); });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); dragSource = null; });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      const dropped = dragSource.dataset.label;
+      if (dropped === zone.dataset.answer) {
+        zone.innerHTML = "";
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dropped;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb(`✓ Correct — ${dropped} placed.`, "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dropped} is not the first-line choice for this scenario.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

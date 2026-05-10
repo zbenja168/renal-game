@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histology Hotspot — Module 47</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  /* Click zones live INSIDE the SVG so they share its coordinate space */
+  .histo-zone { cursor: pointer; }
+  .histo-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .histo-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .histo-zone text { pointer-events: none; user-select: none; }
+
+  .histo-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .histo-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 47</a></div>
+  <h1>Game 2 — Histology Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct microscopy finding for each scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three cases — three clicks. For each scenario, click the microscopy technique or finding that best matches the description of anti-GBM disease. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Light Microscopy -->
+        <g class="histo-zone" data-name="Light Microscopy">
+          <rect class="zone-bg" x="15" y="40" width="140" height="200" rx="12"
+                fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="85" y="28"  text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Light Microscopy</text>
+          <text x="85" y="65"  text-anchor="middle" font-size="10" fill="#92400e">(H&amp;E / PAS stain)</text>
+          <text x="85" y="95"  text-anchor="middle" font-size="10" fill="#444">Glomerular</text>
+          <text x="85" y="110" text-anchor="middle" font-size="10" fill="#444">crescents</text>
+          <text x="85" y="135" text-anchor="middle" font-size="10" fill="#444">Epithelial cells,</text>
+          <text x="85" y="150" text-anchor="middle" font-size="10" fill="#444">fibrin, plasma</text>
+          <text x="85" y="165" text-anchor="middle" font-size="10" fill="#444">proteins filling</text>
+          <text x="85" y="180" text-anchor="middle" font-size="10" fill="#444">Bowman's space</text>
+          <text x="85" y="210" text-anchor="middle" font-size="10" fill="#888">Crescentic GN</text>
+        </g>
+
+        <!-- Immunofluorescence -->
+        <g class="histo-zone" data-name="Immunofluorescence">
+          <rect class="zone-bg" x="170" y="40" width="140" height="200" rx="12"
+                fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+          <text x="240" y="28"  text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Immunofluorescence</text>
+          <text x="240" y="65"  text-anchor="middle" font-size="10" fill="#065f46">(IF staining)</text>
+          <text x="240" y="95"  text-anchor="middle" font-size="10" fill="#444">Linear IgG</text>
+          <text x="240" y="110" text-anchor="middle" font-size="10" fill="#444">deposition along</text>
+          <text x="240" y="125" text-anchor="middle" font-size="10" fill="#444">the GBM</text>
+          <text x="240" y="150" text-anchor="middle" font-size="10" fill="#444">Ribbon-like</text>
+          <text x="240" y="165" text-anchor="middle" font-size="10" fill="#444">pattern, distinct</text>
+          <text x="240" y="180" text-anchor="middle" font-size="10" fill="#444">from granular</text>
+          <text x="240" y="210" text-anchor="middle" font-size="10" fill="#888">Hallmark of anti-GBM</text>
+        </g>
+
+        <!-- Electron Microscopy -->
+        <g class="histo-zone" data-name="Electron Microscopy">
+          <rect class="zone-bg" x="325" y="40" width="140" height="200" rx="12"
+                fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+          <text x="395" y="28"  text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">Electron Microscopy</text>
+          <text x="395" y="65"  text-anchor="middle" font-size="10" fill="#1e3a8a">(EM ultrastructure)</text>
+          <text x="395" y="95"  text-anchor="middle" font-size="10" fill="#444">No immune</text>
+          <text x="395" y="110" text-anchor="middle" font-size="10" fill="#444">complex deposits</text>
+          <text x="395" y="135" text-anchor="middle" font-size="10" fill="#444">Antibody binds</text>
+          <text x="395" y="150" text-anchor="middle" font-size="10" fill="#444">directly to GBM</text>
+          <text x="395" y="165" text-anchor="middle" font-size="10" fill="#444">— no "humps"</text>
+          <text x="395" y="195" text-anchor="middle" font-size="10" fill="#888">Distinguishes from PIGN</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three cases classified!</h3>
+      <p>The hallmark of anti-GBM disease is linear IgG deposition on immunofluorescence (ribbon-like along the GBM). Light microscopy shows crescentic glomerulonephritis. Electron microscopy shows NO immune complex humps — antibody binds the GBM directly.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A kidney biopsy from a patient with anti-GBM disease is examined with fluorescent antibody staining. Which finding is the hallmark that distinguishes this disease from postinfectious glomerulonephritis?",
+      answer: "Immunofluorescence",
+      explain: "Anti-GBM disease shows a linear (ribbon-like) IgG deposition pattern on immunofluorescence. PIGN shows a granular (starry sky) pattern because immune complexes deposit unevenly. The linear pattern is the hallmark of anti-GBM disease."
+    },
+    {
+      text: "Histologic sections of a glomerulus from a patient with rapidly progressive renal failure show Bowman's space nearly obliterated by a proliferation of epithelial cells, monocytes, and fibrin. Which microscopy technique and finding is described?",
+      answer: "Light Microscopy",
+      explain: "Crescentic glomerulonephritis (glomerular crescents) is identified on light microscopy using H&E or PAS staining. Crescents consist of epithelial cells, fibrin, plasma proteins, monocytes, and macrophages filling Bowman's space — the hallmark of RPGN including anti-GBM disease."
+    },
+    {
+      text: "At the ultrastructural level, electron microscopy of a biopsy from a patient with anti-GBM disease would show which of the following — a finding that helps distinguish it from immune-complex mediated diseases?",
+      answer: "Electron Microscopy",
+      explain: "On electron microscopy, anti-GBM disease shows NO electron-dense immune complex deposits (no 'humps'). The autoantibodies bind directly to the GBM alpha-3 chain of type IV collagen. This absence of deposits contrasts with PIGN, which shows characteristic subepithelial humps."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".histo-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3000);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite. Consider which technique reveals the defining feature of anti-GBM disease.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Scenario Quiz — Module 41</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 41</a></div>
+  <h1>Game 5 — Clinical Scenario Quiz</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Five fresh cases — apply MCD knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Answer five novel clinical scenarios testing your understanding of minimal change disease. These scenarios are new — not the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Quiz complete!</h3>
+      <p>MCD: treat with corticosteroids, expect a good response, monitor for relapse, and consider cyclosporine if steroids cause adverse effects. In children, skip the biopsy first. Foot process effacement is the EM finding that seals the diagnosis.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      q: "A 5-year-old girl presents with periorbital puffiness noticed by her mother. Urine dipstick shows 4+ protein, serum albumin is 1.9 g/dL, and creatinine is normal. What is the most appropriate next step according to the brick?",
+      options: [
+        "Perform an immediate renal biopsy to confirm diagnosis",
+        "Order antinuclear antibody testing before starting any treatment",
+        "Start empiric corticosteroids without a biopsy",
+        "Begin cyclosporine as first-line therapy in children"
+      ],
+      correct: 2,
+      explain: "The brick states that in children aged 1–10 years, MCD is so common (about 90% of cases) that empiric corticosteroids are given without a biopsy. Biopsy is reserved for children who fail to respond or have atypical features."
+    },
+    {
+      q: "A 28-year-old man is diagnosed with MCD on renal biopsy. He responds well to prednisone and enters remission. Six months later proteinuria returns. According to the brick, what is the expected course for most adults with MCD?",
+      options: [
+        "The majority progress to FSGS within two years without further therapy",
+        "Adults commonly relapse, but 65%–95% achieve remission with steroids",
+        "Second episodes indicate a transition to membranous nephropathy",
+        "Adults with MCD do not respond to steroids after the first relapse"
+      ],
+      correct: 1,
+      explain: "The brick states that in adults, 65%–95% will remit with corticosteroid therapy. Relapse is common. Most achieve remission again with retreatment; only a minority progress to more severe glomerular disease."
+    },
+    {
+      q: "A pathologist reviews a kidney biopsy from an adult with nephrotic syndrome. Light microscopy shows completely normal-appearing glomeruli. Immunofluorescence is negative. Electron microscopy reveals widespread flattening of podocyte foot processes. What diagnosis does this pattern confirm?",
+      options: [
+        "Focal segmental glomerulosclerosis",
+        "Membranoproliferative glomerulonephritis",
+        "Minimal change disease",
+        "Membranous nephropathy"
+      ],
+      correct: 2,
+      explain: "This is the classic MCD triad: normal light microscopy, negative immunofluorescence (no immune deposits), and podocyte foot process effacement on EM. The brick emphasizes MCD is unique because the glomeruli look normal on LM."
+    },
+    {
+      q: "A 40-year-old woman with MCD develops significant side effects from high-dose prednisone. Which drug can be added to allow a lower steroid dose, based on the brick's treatment section?",
+      options: [
+        "Rituximab",
+        "Cyclosporine",
+        "Mycophenolate mofetil",
+        "Tacrolimus"
+      ],
+      correct: 1,
+      explain: "The brick states cyclosporine can be added in patients who experience adverse effects from steroids. It may allow for a reduced steroid dose while maintaining disease control."
+    },
+    {
+      q: "A medical student asks why protein leaks into the urine in MCD if no immune complexes are depositing in the GBM. What is the correct explanation based on the brick's pathophysiology section?",
+      options: [
+        "Complement activation destroys the GBM, making it porous to all proteins",
+        "Inflammatory cells infiltrate the mesangium and damage the filtration slit",
+        "Foot process effacement and loss of the charge barrier allow albumin through",
+        "Tubular reabsorption of filtered albumin is overwhelmed by increased GFR"
+      ],
+      correct: 2,
+      explain: "The brick explains two mechanisms in MCD: first, effacement of podocyte foot processes disrupts the slit diaphragm; second, loss of the podocytes' negative charge allows negatively charged albumin to pass through the filter. No immune complex deposition is involved."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

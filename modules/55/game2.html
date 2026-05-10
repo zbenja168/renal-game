@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Species Hotspot — Module 55</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .sp-zone { cursor: pointer; }
+  .sp-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .sp-zone:hover .zone-bg { filter: brightness(1.05); stroke-width: 3; }
+  .sp-zone text { pointer-events: none; user-select: none; }
+  .sp-zone.found .zone-bg { stroke: #16a34a; stroke-width: 4; filter: drop-shadow(0 0 8px rgba(22,163,74,0.5)); }
+  .sp-zone.miss  .zone-bg { stroke: #dc2626; stroke-width: 4; animation: shake55 0.4s; }
+  @keyframes shake55 { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 55</a></div>
+  <h1>Game 2 — Species Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🗺️</div>
+      <h2>Click the correct Schistosoma species for each clue</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three clinical and geographic clues about the three main Schistosoma species. Each time, click the correct species zone. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="clueBox" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Clue <span id="clueNum">1</span> of 3:</strong>
+      <p id="clueText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- S. mansoni -->
+        <g class="sp-zone" data-name="S. mansoni">
+          <rect class="zone-bg" x="10" y="20" width="148" height="240" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="84" y="48"  text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">S. mansoni</text>
+          <text x="84" y="68"  text-anchor="middle" font-size="10" fill="#1e3a8a">Sub-Saharan Africa</text>
+          <text x="84" y="82"  text-anchor="middle" font-size="10" fill="#1e3a8a">S. America, Caribbean</text>
+          <text x="84" y="100" text-anchor="middle" font-size="10" fill="#444">Eggs shed in stool</text>
+          <text x="84" y="114" text-anchor="middle" font-size="10" fill="#444">Lateral spine on egg</text>
+          <text x="84" y="130" text-anchor="middle" font-size="10" fill="#444">Inferior mesenteric</text>
+          <text x="84" y="144" text-anchor="middle" font-size="10" fill="#444">venules (large intestine)</text>
+          <text x="84" y="168" text-anchor="middle" font-size="10" fill="#888">Hepatosplenic disease</text>
+          <text x="84" y="182" text-anchor="middle" font-size="10" fill="#888">Portal hypertension</text>
+        </g>
+
+        <!-- S. haematobium -->
+        <g class="sp-zone" data-name="S. haematobium">
+          <rect class="zone-bg" x="178" y="20" width="148" height="240" rx="10"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="252" y="48"  text-anchor="middle" font-size="11" font-weight="700" fill="#9d174d">S. haematobium</text>
+          <text x="252" y="68"  text-anchor="middle" font-size="10" fill="#831843">Africa, Middle East</text>
+          <text x="252" y="82"  text-anchor="middle" font-size="10" fill="#831843">Nile River area</text>
+          <text x="252" y="100" text-anchor="middle" font-size="10" fill="#444">Eggs shed in urine</text>
+          <text x="252" y="114" text-anchor="middle" font-size="10" fill="#444">Terminal spine on egg</text>
+          <text x="252" y="130" text-anchor="middle" font-size="10" fill="#444">Venous plexus of</text>
+          <text x="252" y="144" text-anchor="middle" font-size="10" fill="#444">bladder and ureters</text>
+          <text x="252" y="168" text-anchor="middle" font-size="10" fill="#888">Urogenital disease</text>
+          <text x="252" y="182" text-anchor="middle" font-size="10" fill="#888">Squamous cell carcinoma</text>
+        </g>
+
+        <!-- S. japonicum -->
+        <g class="sp-zone" data-name="S. japonicum">
+          <rect class="zone-bg" x="346" y="20" width="148" height="240" rx="10"
+                fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+          <text x="420" y="48"  text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">S. japonicum</text>
+          <text x="420" y="68"  text-anchor="middle" font-size="10" fill="#78350f">China, Philippines</text>
+          <text x="420" y="82"  text-anchor="middle" font-size="10" fill="#78350f">Sulawesi (eliminated Japan)</text>
+          <text x="420" y="100" text-anchor="middle" font-size="10" fill="#444">Eggs shed in stool</text>
+          <text x="420" y="114" text-anchor="middle" font-size="10" fill="#444">Small lateral knob on egg</text>
+          <text x="420" y="130" text-anchor="middle" font-size="10" fill="#444">Superior mesenteric</text>
+          <text x="420" y="144" text-anchor="middle" font-size="10" fill="#444">venules (small intestine)</text>
+          <text x="420" y="168" text-anchor="middle" font-size="10" fill="#888">Most prolific egg producer</text>
+          <text x="420" y="182" text-anchor="middle" font-size="10" fill="#888">Highest intensity disease</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All species identified!</h3>
+      <p>S. mansoni (Africa/Americas, lateral-spined egg, stool, large intestine) → hepatosplenic disease. S. haematobium (Africa/Middle East, terminal-spined egg, urine, bladder) → urogenital disease and bladder cancer. S. japonicum (Asia, small lateral knob, stool, small intestine) → highest disease burden per worm.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const clues = [
+    {
+      text: "A 34-year-old woman returning from East Africa has terminal hematuria. Urine microscopy shows eggs with a terminal spine. She has no fever currently. Which Schistosoma species is responsible?",
+      answer: "S. haematobium",
+      explain: "Schistosoma haematobium is the species that infects the venous plexus of the bladder and ureters, causing urogenital schistosomiasis. Its eggs have a terminal (end) spine and are shed in urine. It is endemic in Africa and the Middle East."
+    },
+    {
+      text: "A patient from China presents with hepatosplenomegaly and portal hypertension. Stool examination shows eggs with a small lateral knob. Which species causes this pattern?",
+      answer: "S. japonicum",
+      explain: "Schistosoma japonicum is found in China, the Philippines, and Sulawesi. It migrates to the superior mesenteric venules (supplying the small intestine) and produces eggs with a small lateral knob shed in stool. It produces the most eggs per worm, causing the most severe disease."
+    },
+    {
+      text: "A traveler returning from sub-Saharan Africa develops Katayama fever weeks after swimming in a lake. Stool examination reveals eggs with a prominent lateral spine. Which species is responsible?",
+      answer: "S. mansoni",
+      explain: "Schistosoma mansoni is endemic in sub-Saharan Africa, South America, and the Caribbean. It migrates to the inferior mesenteric venules (large intestine). Its eggs have a prominent lateral spine and are shed in stool. It commonly causes hepatosplenic and portal hypertension in chronic disease."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const clueNumEl = document.getElementById("clueNum");
+  const clueTextEl= document.getElementById("clueText");
+  const zones     = canvas.querySelectorAll(".sp-zone");
+
+  let current = 0, correct = 0, misses = 0, lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadClue() {
+    if (current >= clues.length) return;
+    clueNumEl.textContent = current + 1;
+    clueTextEl.textContent = clues[current].text;
+    zones.forEach(z => { z.classList.remove("found","miss"); z.style.pointerEvents = "auto"; });
+    lock = false;
+  }
+
+  function init() {
+    current = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadClue();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || current >= clues.length) return;
+      const picked   = z.dataset.name;
+      const expected = clues[current].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb("✓ Correct! " + clues[current].explain, "correct");
+        current++;
+        if (current === clues.length) setTimeout(() => Game.celebrate("winBanner"), 600);
+        else setTimeout(loadClue, 2900);
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Wrong species — check the geographic region and egg morphology.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

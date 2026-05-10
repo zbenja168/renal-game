@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 49</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 49</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of 16 labels covering all of DKD. Drop each onto the correct clinical, pathophysiologic, diagnostic, or management slot. Wrong drops count as misses — aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the DKD brick!</h3>
+      <p>DKD is the most common cause of ESKD. Tight glycemic control + ACE inhibitors/ARBs + SGLT2 inhibitors are the cornerstones of treatment. Detect it early with ACR screening in all diabetic patients.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "clin", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "c1", label: "Most common cause of end-stage kidney disease in the US", answer: "Diabetic kidney disease (DKD)" },
+        { id: "c2", label: "DKD is often detected this way before symptoms develop", answer: "Routine lab screening" },
+        { id: "c3", label: "Symptom indicating advanced DKD with fluid retention", answer: "Edema" },
+        { id: "c4", label: "In type 1 DM: typically develops after at least this many years of disease", answer: "5 or more years of diabetes" }
+      ]
+    },
+    {
+      id: "path", title: "Pathophysiology", lo: "LO2",
+      slots: [
+        { id: "p1", label: "Early hemodynamic change: GFR rises above normal due to glomerular pressure", answer: "Hyperfiltration" },
+        { id: "p2", label: "Pathognomonic nodular ECM deposits in the glomerular mesangium", answer: "Kimmelstiel-Wilson nodules" },
+        { id: "p3", label: "Process by which glucose spontaneously bonds to proteins", answer: "Nonenzymatic glycation (NEG)" },
+        { id: "p4", label: "Cytokine released by AGE-stimulated mesangial cells driving fibrosis", answer: "TGF-β" }
+      ]
+    },
+    {
+      id: "diag", title: "Diagnosis", lo: "LO3",
+      slots: [
+        { id: "d1", label: "First sign of DKD kidney involvement: albumin excretion >30 mg/24 h", answer: "Albuminuria / increased ACR" },
+        { id: "d2", label: "Preferred test: spot urine albumin divided by creatinine concentration", answer: "Albumin/creatinine ratio (ACR)" },
+        { id: "d3", label: "eGFR threshold that, with DM history, diagnoses DKD without biopsy", answer: "eGFR < 60 mL/min/1.73 m²" },
+        { id: "d4", label: "Reason renal biopsy is NOT routinely done in DKD diagnosis", answer: "Clinical pattern is sufficient for diagnosis" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "Primary treatment goal: maintain blood glucose 70–100 mg/dL; HbA1c <7%", answer: "Tight glycemic control" },
+        { id: "m2", label: "BP target in DKD: systolic <130 mmHg, diastolic <80 mmHg", answer: "Antihypertensive therapy" },
+        { id: "m3", label: "Drug class that reduces intraglomerular pressure and is first-line in DKD", answer: "ACE inhibitors or ARBs" },
+        { id: "m4", label: "Adjunct drug class with proven kidney-protective effects beyond glucose lowering", answer: "SGLT2 inhibitors" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const ICONS = { clin: "🏥", path: "🔬", diag: "🩺", mgmt: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0, misses = 0, dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>
