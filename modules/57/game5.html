@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 57</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 57</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Five fresh clinical scenarios</h2>
+    </div>
+    <div class="game-instructions">
+      Five new scenarios — not copied from the brick — that link embryology, anatomy, and clinical presentations of congenital lower urinary tract disorders.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>Connecting embryology to clinical outcome is the core skill of this brick — knowing why a malformation happens helps you predict what it does and how to manage it.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions only — strictly from brick content, not paraphrased from its review questions */
+  const questions = [
+    {
+      q: "A male infant with known posterior urethral valves develops oligohydramnios in utero. Which mechanism directly links PUV to reduced amniotic fluid?",
+      options: [
+        "PUV causes the fetus to produce less urine because the kidneys are hypoplastic from birth",
+        "Obstructed outflow reduces fetal urine, the main source of amniotic fluid after mid-gestation",
+        "PUV blocks the prostatic urethra, causing fetal urine to be reabsorbed by the placenta",
+        "PUV triggers maternal ADH release, reducing maternal urine production and amniotic fluid"
+      ],
+      correct: 1,
+      explain: "Fetal urine is the primary source of amniotic fluid after mid-gestation. PUV obstructs urinary outflow, reducing fetal urine entering the amniotic sac. Oligohydramnios results, which impairs lung maturation — a key complication of severe PUV."
+    },
+    {
+      q: "A 3-year-old girl with recurrent UTIs is found on VCUG to have Grade III bilateral vesicoureteral reflux. Which pathologic process most directly leads to renal scarring in VUR?",
+      options: [
+        "Direct pressure necrosis from the dilated ureter crushing renal parenchyma",
+        "Retrograde flow carries bacteria to the pelvis, causing pyelonephritis and scarring",
+        "Ischemia from reduced arterial perfusion caused by the dilated collecting system",
+        "Loss of the juxtaglomerular apparatus due to backpressure on the afferent arteriole"
+      ],
+      correct: 1,
+      explain: "In VUR, retrograde urine flow carries bacteria from the bladder to the renal pelvis. Repeated pyelonephritis causes reflux nephropathy — progressive renal scarring that can eventually lead to renal impairment."
+    },
+    {
+      q: "A surgeon performing pyeloplasty for UPJ obstruction discovers an aberrant blood vessel at the operative site. Which vessel is most commonly responsible for extrinsic compression of the UPJ?",
+      options: [
+        "The left gonadal vein crossing anterior to the ureter",
+        "An aberrant lower-pole renal artery crossing the ureter near the UPJ",
+        "The inferior mesenteric artery pressing on the renal pelvis",
+        "A retroaortic renal vein compressing the ureteropelvic junction"
+      ],
+      correct: 1,
+      explain: "In some cases of UPJ obstruction, an aberrant renal artery (often a lower-pole accessory artery) crosses anterior to the ureter at the UPJ, compressing it externally. This extrinsic cause must be identified during pyeloplasty."
+    },
+    {
+      q: "A 1-year-old boy with known ureteral duplication is noted on ultrasound to have a dilated upper-pole moiety ureter inserting below the normal trigone. His parents are concerned about continuous wetness despite normal voiding. What explains the wetness?",
+      options: [
+        "The duplicated ureter inserts ectopically below the external sphincter, causing continuous urine leakage",
+        "The duplicated ureter refluxes during sleep, causing nocturnal enuresis only",
+        "The complete duplication causes bladder overactivity and urge incontinence",
+        "The ectopic ureter drains into the bladder neck, causing functional bladder outlet obstruction"
+      ],
+      correct: 0,
+      explain: "In complete ureteral duplication, abnormal migration can result in ectopic ureteral insertion below the sphincter mechanism. In males, this can lead to the ureter draining into the prostatic urethra; when below the sphincter, continuous urine leakage results."
+    },
+    {
+      q: "Bladder exstrophy is more common in males than females. Which embryologic event, when it fails, best explains the exposed bladder mucosa seen at birth?",
+      options: [
+        "Failure of the urorectal septum to divide the cloaca in the first trimester",
+        "Failure of the allantois to regress, leading to persistence of a midline structure",
+        "Failed mesodermal migration between ectoderm and endoderm of the anterior wall",
+        "Failure of the ureteric bud to contact the metanephric blastema"
+      ],
+      correct: 2,
+      explain: "Bladder exstrophy results from failure of mesoderm to migrate between the ectoderm and endoderm during folding. Without this mesodermal reinforcement of the anterior abdominal and bladder walls, both rupture and the bladder mucosa is exposed on the abdomen."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) {
+      Game.celebrate("winBanner");
+    }
+  }
+</script>
+</body>
+</html>

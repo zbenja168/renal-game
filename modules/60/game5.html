@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 60</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 60</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Five fresh clinical scenarios — apply your Wilms tumor knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Answer each scenario. These are new questions testing the same brick concepts from different angles — not the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>Ready for the boss round — Game 6 ties everything together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      q: "A 3-year-old girl is brought to clinic after her father noticed a firm lump while helping her dress. She is afebrile and playful. Abdominal exam reveals a smooth, non-tender left flank mass that does not cross the midline. Which initial imaging modality avoids radiation while confirming a renal mass?",
+      options: [
+        "Plain abdominal X-ray",
+        "CT scan of the abdomen",
+        "Renal ultrasound",
+        "PET scan of the abdomen"
+      ],
+      correct: 2,
+      explain: "Renal ultrasound is the first-line imaging for a suspected Wilms tumor because it confirms the presence of a renal mass without exposing the child to ionizing radiation. CT or MRI is then used to evaluate extent and metastasis."
+    },
+    {
+      q: "A pediatric oncologist reviews the pathology of a resected Wilms tumor. The report notes 'large cells with pleomorphic, hyperchromatic nuclei and multipolar mitoses in 5% of the specimen.' How does this affect prognosis compared with a tumor lacking these features?",
+      options: [
+        "Prognosis is better; anaplastic cells indicate terminal differentiation",
+        "Prognosis is the same; histology does not affect outcome in Wilms tumor",
+        "Prognosis is worse; anaplastic cells confer unfavorable histology",
+        "Prognosis is better; pleomorphic nuclei respond well to vincristine alone"
+      ],
+      correct: 2,
+      explain: "Anaplastic cells (large with pleomorphic nuclei) define 'unfavorable histology,' present in about 5% of Wilms tumors. Favorable histology lacks anaplasia and carries 85–100% survival; unfavorable histology has a significantly worse prognosis."
+    },
+    {
+      q: "A 4-year-old boy with Wilms tumor is found at surgery to have tumor cells in a regional lymph node, but no evidence of distant spread. The surgeon reports a complete gross resection with no peritoneal spill. According to the surgical-pathologic staging system, what stage is this tumor?",
+      options: [
+        "Stage I — confined to kidney, complete resection",
+        "Stage II — extended beyond kidney, fully resected",
+        "Stage III — residual or lymph node disease after surgery",
+        "Stage IV — distant hematogenous metastases"
+      ],
+      correct: 2,
+      explain: "Lymph node involvement constitutes Stage III disease even if the primary tumor is grossly resected, because residual non-hematogenous disease (including regional lymph node spread) defines Stage III."
+    },
+    {
+      q: "A child with Wilms tumor undergoes chemotherapy. The treatment protocol includes a drug that binds to tubulin and inhibits formation of the mitotic spindle. Which chemotherapy agent has this mechanism?",
+      options: [
+        "Doxorubicin — cross-links DNA chains via anthracycline mechanism",
+        "Vincristine — binds tubulin and arrests cells in mitosis",
+        "Dactinomycin — intercalates between DNA base pairs",
+        "Cyclophosphamide — alkylates and cross-links DNA strands"
+      ],
+      correct: 1,
+      explain: "Vincristine (a vinca alkaloid) binds tubulin and inhibits polymerization of the mitotic spindle, arresting cell division. It is one of the most common chemotherapy agents used for Wilms tumor."
+    },
+    {
+      q: "A 2-year-old girl with a newly diagnosed Wilms tumor is found on workup to have bilateral kidney involvement. Separate staging for each kidney reveals one side at Stage II and the other at Stage I. What is the overall designation for this presentation?",
+      options: [
+        "Stage II — the higher of the two individual kidney stages determines overall stage",
+        "Stage IV — bilateral disease always implies distant spread",
+        "Stage V — bilateral Wilms tumor at diagnosis",
+        "Stage III — bilateral disease means lymphatic spread has occurred"
+      ],
+      correct: 2,
+      explain: "Bilateral Wilms tumor at diagnosis is classified as Stage V. Each kidney is staged individually, but the overall designation is Stage V. Treatment typically aims for bilateral nephron-sparing surgery when possible."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

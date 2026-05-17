@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 64</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 64</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across both learning objectives.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of sixteen labels from both learning objectives. Drop each onto the correct slot across storage/voiding phases, neural pathways, and the control loop. Wrong drops cost misses. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the Micturition brick!</h3>
+      <p>You placed every phase, pathway, and neural loop element correctly. You understand the two-phase switch and how disruptions lead to clinical dysfunction.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "storage", title: "Storage Phase", lo: "LO1",
+      slots: [
+        { id: "st1", label: "Dominant neural division during storage",                    answer: "Sympathetic (T10–L2)" },
+        { id: "st2", label: "Receptor on detrusor that causes relaxation during storage", answer: "β3 adrenergic receptor" },
+        { id: "st3", label: "Receptor on IUS that causes contraction during storage",     answer: "α1 adrenergic receptor" },
+        { id: "st4", label: "Nerve providing voluntary EUS contraction during storage",   answer: "Pudendal nerve (somatic)" }
+      ]
+    },
+    {
+      id: "voiding", title: "Voiding Phase", lo: "LO1",
+      slots: [
+        { id: "vo1", label: "Dominant neural division during voiding",                    answer: "Parasympathetic (S2–S4)" },
+        { id: "vo2", label: "Primary receptor driving detrusor contraction during voiding",answer: "M3 muscarinic receptor" },
+        { id: "vo3", label: "What happens to sympathetic and somatic tone during voiding",answer: "Withdrawn / suppressed" },
+        { id: "vo4", label: "Nerve pathway carrying parasympathetic voiding signals",     answer: "Pelvic nerve" }
+      ]
+    },
+    {
+      id: "loop_afferent", title: "Neural Loop — Afferent Limb", lo: "LO2",
+      slots: [
+        { id: "la1", label: "Fiber type that detects bladder wall tension as it fills",   answer: "Aδ (A-delta) myelinated fibers" },
+        { id: "la2", label: "Brainstem structure that receives fullness signals and gates them", answer: "Periaqueductal gray (PAG)" },
+        { id: "la3", label: "Structure providing conscious urgency sensation from the PAG signal", answer: "Prefrontal cortex (voluntary control)" },
+        { id: "la4", label: "Spinal reflex that reinforces EUS contraction during pressure rises", answer: "Guarding reflex (sacral spinal loop)" }
+      ]
+    },
+    {
+      id: "loop_efferent", title: "Neural Loop — Efferent Limb", lo: "LO2",
+      slots: [
+        { id: "le1", label: "Brainstem structure that orchestrates coordinated voiding", answer: "Pontine micturition center (PMC)" },
+        { id: "le2", label: "Nucleus suppressed by PMC to allow EUS relaxation",         answer: "Onuf's nucleus" },
+        { id: "le3", label: "Failure of PMC coordination: both detrusor and EUS contract simultaneously", answer: "Detrusor-sphincter dyssynergia" },
+        { id: "le4", label: "Allows voiding to be voluntarily deferred despite a full bladder", answer: "Cortical inhibition of PMC" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+
+  const ICONS = { storage: "🏪", voiding: "💧", loop_afferent: "📡", loop_efferent: "⚡" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

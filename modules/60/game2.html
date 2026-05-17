@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syndrome Spotter — Module 60</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .syndrome-zone { cursor: pointer; }
+  .syndrome-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .syndrome-zone:hover .zone-bg { filter: brightness(1.04); stroke-width: 3; }
+  .syndrome-zone text { pointer-events: none; user-select: none; }
+  .syndrome-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .syndrome-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 60</a></div>
+  <h1>Game 2 — Syndrome Spotter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧬</div>
+      <h2>Click the syndrome that matches each clinical scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each scenario, click the syndrome panel that best matches. Three syndromes — three cases. A miss costs you a tally.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- WAGR -->
+        <g class="syndrome-zone" data-name="WAGR">
+          <rect class="zone-bg" x="10" y="30" width="155" height="220" rx="10"
+                fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+          <text x="87" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#0c4a6e">WAGR</text>
+          <text x="87" y="58" text-anchor="middle" font-size="11" fill="#0369a1">Wilms tumor</text>
+          <text x="87" y="75" text-anchor="middle" font-size="11" fill="#0369a1">Aniridia</text>
+          <text x="87" y="92" text-anchor="middle" font-size="11" fill="#0369a1">GU anomalies</text>
+          <text x="87" y="109" text-anchor="middle" font-size="11" fill="#0369a1">mental Retardation</text>
+          <text x="87" y="135" text-anchor="middle" font-size="10" fill="#444">WT1 gene deletion</text>
+          <text x="87" y="152" text-anchor="middle" font-size="10" fill="#444">Chromosome 11p13</text>
+          <text x="87" y="175" text-anchor="middle" font-size="10" fill="#666">Surveillance US</text>
+          <text x="87" y="191" text-anchor="middle" font-size="10" fill="#666">every 3 months</text>
+          <text x="87" y="207" text-anchor="middle" font-size="10" fill="#666">until age 5</text>
+        </g>
+
+        <!-- Denys-Drash -->
+        <g class="syndrome-zone" data-name="Denys-Drash">
+          <rect class="zone-bg" x="182" y="30" width="155" height="220" rx="10"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="260" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#831843">Denys-Drash</text>
+          <text x="260" y="58" text-anchor="middle" font-size="11" fill="#9d174d">Wilms tumor</text>
+          <text x="260" y="75" text-anchor="middle" font-size="11" fill="#9d174d">Chronic kidney disease</text>
+          <text x="260" y="92" text-anchor="middle" font-size="11" fill="#9d174d">Abnormal external</text>
+          <text x="260" y="109" text-anchor="middle" font-size="11" fill="#9d174d">genitalia</text>
+          <text x="260" y="135" text-anchor="middle" font-size="10" fill="#444">WT1 missense mutation</text>
+          <text x="260" y="155" text-anchor="middle" font-size="10" fill="#666">Diffuse mesangial</text>
+          <text x="260" y="171" text-anchor="middle" font-size="10" fill="#666">sclerosis</text>
+        </g>
+
+        <!-- Beckwith-Wiedemann -->
+        <g class="syndrome-zone" data-name="Beckwith-Wiedemann">
+          <rect class="zone-bg" x="354" y="30" width="155" height="220" rx="10"
+                fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+          <text x="432" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Beckwith-Wiedemann</text>
+          <text x="432" y="56" text-anchor="middle" font-size="11" fill="#166534">Wilms tumor</text>
+          <text x="432" y="73" text-anchor="middle" font-size="11" fill="#166534">Organomegaly</text>
+          <text x="432" y="90" text-anchor="middle" font-size="11" fill="#166534">Macroglossia</text>
+          <text x="432" y="107" text-anchor="middle" font-size="11" fill="#166534">Hemihypertrophy</text>
+          <text x="432" y="124" text-anchor="middle" font-size="11" fill="#166534">Omphalocele</text>
+          <text x="432" y="148" text-anchor="middle" font-size="10" fill="#444">Imprinting disorder</text>
+          <text x="432" y="164" text-anchor="middle" font-size="10" fill="#444">11p15 region</text>
+          <text x="432" y="184" text-anchor="middle" font-size="10" fill="#666">Surveillance US</text>
+          <text x="432" y="200" text-anchor="middle" font-size="10" fill="#666">every 3 months</text>
+          <text x="432" y="216" text-anchor="middle" font-size="10" fill="#666">until age 7</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three syndromes identified!</h3>
+      <p>WAGR: WT1 deletion at 11p13 — aniridia is the clue. Denys-Drash: WT1 missense — kidney failure + genital abnormality. Beckwith-Wiedemann: 11p15 imprinting — overgrowth (macroglossia, hemihypertrophy, omphalocele).</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 2-year-old boy with a known kidney tumor also has absent irises in both eyes and is noted on workup to have genital abnormalities and intellectual disability. His tumor arose from a germline deletion on chromosome 11p13. Which syndrome does this child have?",
+      answer: "WAGR",
+      explain: "WAGR = Wilms tumor + Aniridia + GU anomalies + mental Retardation. Caused by a germline WT1 gene deletion at chromosome 11p13."
+    },
+    {
+      text: "A 3-year-old girl with Wilms tumor is also found to have diffuse mesangial sclerosis leading to early chronic kidney disease. She has a WT1 missense mutation and ambiguous external genitalia. Which syndrome is this?",
+      answer: "Denys-Drash",
+      explain: "Denys-Drash syndrome combines Wilms tumor, nephropathy (diffuse mesangial sclerosis causing CKD), and disorders of sexual development — all due to a missense mutation in the WT1 gene."
+    },
+    {
+      text: "A 4-year-old boy with Wilms tumor also has an unusually large tongue, enlargement of multiple organs, asymmetric limb growth, and had an abdominal wall defect repaired at birth. His tumor is linked to imprinting dysregulation at 11p15. Which syndrome is this?",
+      answer: "Beckwith-Wiedemann",
+      explain: "Beckwith-Wiedemann syndrome is an overgrowth syndrome (macroglossia, organomegaly, hemihypertrophy, omphalocele) caused by imprinting dysregulation in the 11p15 region. Surveillance ultrasound is recommended every 3 months until age 7."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".syndrome-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb(`✓ Correct! ${cases[currentCase].explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 3000);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — review the key features of each syndrome.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

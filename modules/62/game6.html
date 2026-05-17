@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 62</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 62</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of 16 labels covering oncocytoma and AML. Drop each onto the correct slot. Wrong drops cost a miss tally. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Other Renal Tumors!</h3>
+      <p>Both oncocytoma and AML are benign (classic AML) — but look malignant enough that they require surgical workup. Fat on CT = AML. Eosinophilic cells + mitochondria + no vascular invasion = oncocytoma. TSC → multiple bilateral AMLs → mTOR inhibitor or surgery. You are exam-ready.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "present", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "p1", label: "Oncocytoma: accounts for this proportion of all kidney tumors (benign)", answer: "5–10% of kidney tumors" },
+        { id: "p2", label: "Oncocytoma epidemiology: most common age group, sex predominance", answer: "Age 50–80, male > female (2:1)" },
+        { id: "p3", label: "AML: most common symptom in sporadic cases — most are discovered this way", answer: "Asymptomatic (incidental finding)" },
+        { id: "p4", label: "Dangerous AML complication: potentially life-threatening because this space can hold 4 L of blood", answer: "Retroperitoneal hemorrhage" }
+      ]
+    },
+    {
+      id: "patho", title: "Pathophysiology & Genetics", lo: "LO2",
+      slots: [
+        { id: "h1", label: "Oncocytoma gross appearance: color, no necrosis, not encapsulated", answer: "Mahogany brown, circumscribed" },
+        { id: "h2", label: "Oncocytoma microscopy: cells filled with this organelle → eosinophilic cytoplasm", answer: "Abundant mitochondria" },
+        { id: "h3", label: "AML tissue components (name all three — the 'angio-myo-lipo' of the name)", answer: "Blood vessels, smooth muscle, fat" },
+        { id: "h4", label: "Tumor suppressor genes mutated in tuberous sclerosis — loss drives AML formation", answer: "TSC1 and TSC2 genes" }
+      ]
+    },
+    {
+      id: "dx", title: "Diagnosis & Imaging", lo: "LO3",
+      slots: [
+        { id: "d1", label: "Key imaging feature of AML on unenhanced CT: lower/negative Hounsfield units", answer: "Macroscopic fat on CT" },
+        { id: "d2", label: "Why oncocytoma cannot be diagnosed by CT or fine-needle aspiration", answer: "Indistinguishable from RCC on imaging" },
+        { id: "d3", label: "The only definitive diagnostic method for oncocytoma", answer: "Surgical pathology after resection" },
+        { id: "d4", label: "AML feature absent in most RCCs — the radiologic clue that points away from malignancy", answer: "Macroscopic fat on CT" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "Standard treatment for oncocytoma despite benign nature — reason: cannot rule out RCC", answer: "Surgical resection (nephrectomy)" },
+        { id: "m2", label: "AML management for small asymptomatic lesions less than 4 cm", answer: "Surveillance imaging" },
+        { id: "m3", label: "Targeted drug for TSC-associated AML — inhibits the mTOR pathway to reduce tumor size", answer: "Everolimus (mTOR inhibitor)" },
+        { id: "m4", label: "Prognosis for benign oncocytoma after resection", answer: "Excellent — no decrease in life expectancy" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  const ICONS = { present: "🟤", patho: "🧬", dx: "🔭", mgmt: "🩺" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

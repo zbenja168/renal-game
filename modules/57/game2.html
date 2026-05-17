@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imaging Hotspot — Module 57</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .dx-zone { cursor: pointer; }
+  .dx-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .dx-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .dx-zone text { pointer-events: none; user-select: none; }
+  .dx-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .dx-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 57</a></div>
+  <h1>Game 2 — Imaging Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩻</div>
+      <h2>Click the correct diagnosis for each imaging scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each clinical and imaging finding, click the diagnosis panel that matches. Five cases — five clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 5</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbea;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 5:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 520 260" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- VUR -->
+        <g class="dx-zone" data-name="Vesicoureteral reflux (VUR)">
+          <rect class="zone-bg" x="10" y="20" width="90" height="220" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="55" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#1d4ed8">VUR</text>
+          <text x="55" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8">Retrograde</text>
+          <text x="55" y="64" text-anchor="middle" font-size="9" fill="#1d4ed8">urine flow</text>
+          <text x="55" y="84" text-anchor="middle" font-size="9" fill="#555">VCUG shows</text>
+          <text x="55" y="98" text-anchor="middle" font-size="9" fill="#555">reflux into</text>
+          <text x="55" y="112" text-anchor="middle" font-size="9" fill="#555">ureter during</text>
+          <text x="55" y="126" text-anchor="middle" font-size="9" fill="#555">voiding</text>
+          <text x="55" y="155" text-anchor="middle" font-size="9" fill="#888">1–5% of</text>
+          <text x="55" y="169" text-anchor="middle" font-size="9" fill="#888">children</text>
+        </g>
+
+        <!-- UPJ -->
+        <g class="dx-zone" data-name="UPJ obstruction">
+          <rect class="zone-bg" x="115" y="20" width="90" height="220" rx="10"
+                fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+          <text x="160" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">UPJ Obs.</text>
+          <text x="160" y="50" text-anchor="middle" font-size="9" fill="#15803d">Renal pelvis</text>
+          <text x="160" y="64" text-anchor="middle" font-size="9" fill="#15803d">narrows at</text>
+          <text x="160" y="78" text-anchor="middle" font-size="9" fill="#15803d">ureter junction</text>
+          <text x="160" y="100" text-anchor="middle" font-size="9" fill="#555">Prenatal US:</text>
+          <text x="160" y="114" text-anchor="middle" font-size="9" fill="#555">"bear paw"</text>
+          <text x="160" y="128" text-anchor="middle" font-size="9" fill="#555">hydronephrosis</text>
+          <text x="160" y="148" text-anchor="middle" font-size="9" fill="#555">No ureteral</text>
+          <text x="160" y="162" text-anchor="middle" font-size="9" fill="#555">dilation</text>
+        </g>
+
+        <!-- Bladder exstrophy -->
+        <g class="dx-zone" data-name="Bladder exstrophy">
+          <rect class="zone-bg" x="220" y="20" width="90" height="220" rx="10"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="265" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">Exstrophy</text>
+          <text x="265" y="50" text-anchor="middle" font-size="9" fill="#92400e">Bladder mucosa</text>
+          <text x="265" y="64" text-anchor="middle" font-size="9" fill="#92400e">visible on lower</text>
+          <text x="265" y="78" text-anchor="middle" font-size="9" fill="#92400e">abdominal wall</text>
+          <text x="265" y="100" text-anchor="middle" font-size="9" fill="#555">2nd-trimester</text>
+          <text x="265" y="114" text-anchor="middle" font-size="9" fill="#555">US: no bladder</text>
+          <text x="265" y="128" text-anchor="middle" font-size="9" fill="#555">visualization</text>
+          <text x="265" y="148" text-anchor="middle" font-size="9" fill="#555">Associated</text>
+          <text x="265" y="162" text-anchor="middle" font-size="9" fill="#555">pelvic defects</text>
+        </g>
+
+        <!-- PUV -->
+        <g class="dx-zone" data-name="Posterior urethral valves (PUV)">
+          <rect class="zone-bg" x="325" y="20" width="90" height="220" rx="10"
+                fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+          <text x="370" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#9d174d">PUV</text>
+          <text x="370" y="50" text-anchor="middle" font-size="9" fill="#9d174d">Obstructive</text>
+          <text x="370" y="64" text-anchor="middle" font-size="9" fill="#9d174d">valves in</text>
+          <text x="370" y="78" text-anchor="middle" font-size="9" fill="#9d174d">posterior urethra</text>
+          <text x="370" y="100" text-anchor="middle" font-size="9" fill="#555">VCUG: "keyhole</text>
+          <text x="370" y="114" text-anchor="middle" font-size="9" fill="#555">sign" — dilated</text>
+          <text x="370" y="128" text-anchor="middle" font-size="9" fill="#555">bladder &amp; post.</text>
+          <text x="370" y="142" text-anchor="middle" font-size="9" fill="#555">urethra</text>
+          <text x="370" y="162" text-anchor="middle" font-size="9" fill="#888">Males only</text>
+        </g>
+
+        <!-- Patent urachus -->
+        <g class="dx-zone" data-name="Patent urachus">
+          <rect class="zone-bg" x="430" y="20" width="80" height="220" rx="10"
+                fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+          <text x="470" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#5b21b6">Patent</text>
+          <text x="470" y="28" text-anchor="middle" font-size="10" font-weight="700" fill="#5b21b6">Urachus</text>
+          <text x="470" y="55" text-anchor="middle" font-size="9" fill="#5b21b6">Bladder-to-</text>
+          <text x="470" y="69" text-anchor="middle" font-size="9" fill="#5b21b6">umbilicus</text>
+          <text x="470" y="83" text-anchor="middle" font-size="9" fill="#5b21b6">fistula</text>
+          <text x="470" y="105" text-anchor="middle" font-size="9" fill="#555">Urine leaks</text>
+          <text x="470" y="119" text-anchor="middle" font-size="9" fill="#555">from umbilicus</text>
+          <text x="470" y="145" text-anchor="middle" font-size="9" fill="#888">US or</text>
+          <text x="470" y="159" text-anchor="middle" font-size="9" fill="#888">VCUG confirms</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All imaging findings matched!</h3>
+      <p>VCUG is the gold standard for both VUR and PUV. Prenatal ultrasound detects hydronephrosis and the keyhole sign. Bladder exstrophy is detected when no bladder is visualized on 2nd-trimester scan. Patent urachus presents as urine draining from the umbilicus.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 6-month-old girl presents with a second urinary tract infection in three months. A voiding cystourethrogram (VCUG) shows contrast moving retrograde from the bladder into the right ureter and renal pelvis during voiding. What is the diagnosis?",
+      answer: "Vesicoureteral reflux (VUR)",
+      explain: "VCUG is the gold standard for diagnosing VUR. It visualizes the retrograde flow of urine from the bladder into the ureter during voiding — the hallmark of the abnormal ureterovesical junction. VUR affects 1–5% of children."
+    },
+    {
+      text: "A prenatal ultrasound at 20 weeks shows dilation of the renal pelvis with a 'bear paw' pattern on the left side. After birth, postnatal imaging confirms dilation of the renal pelvis with a normal-caliber ureter. What is the most likely diagnosis?",
+      answer: "UPJ obstruction",
+      explain: "UPJ obstruction causes hydronephrosis (the 'bear paw' pattern) with dilation of the renal pelvis but NOT the ureter, because the obstruction is at the pelvis-to-ureter junction. Contrast this with VUR which dilates the ureter as well."
+    },
+    {
+      text: "A second-trimester obstetric ultrasound at 22 weeks fails to visualize the fetal bladder. At delivery, a moist red mucosal surface is visible on the lower abdomen below the umbilicus. What is the diagnosis?",
+      answer: "Bladder exstrophy",
+      explain: "Bladder exstrophy results from failure of midline closure of the anterior body wall and bladder wall. On prenatal US, the bladder cannot be visualized. After birth, the exposed bladder mucosa appears as a moist red surface on the lower abdomen."
+    },
+    {
+      text: "A 2-day-old male infant has a poor urinary stream, bilateral hydronephrosis on ultrasound, and a thickened bladder wall. A VCUG shows the classic 'keyhole sign' with dilation of both the bladder and the posterior urethra. What is the diagnosis?",
+      answer: "Posterior urethral valves (PUV)",
+      explain: "The keyhole sign on VCUG — showing a dilated bladder connected to a dilated posterior urethra — is the hallmark of PUV. This condition occurs only in males and is caused by obstructing folds in the posterior prostatic urethra."
+    },
+    {
+      text: "A newborn boy's nurse notices clear fluid draining from the umbilicus. The fluid tests positive for urine on dip. Ultrasound confirms a tract connecting the bladder apex to the umbilicus. What is the diagnosis?",
+      answer: "Patent urachus",
+      explain: "A patent urachus is a complete failure of the allantois to obliterate, leaving a direct connection between the bladder apex and the umbilicus. Urine draining from the umbilicus in a neonate is the classic presentation."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".dx-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3500);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, 5);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      const explain = cases[currentCase].explain;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 5);
+        showFb(`✓ Correct! ${explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb(`✗ Not quite. Think about the imaging modality and specific finding described.`, "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

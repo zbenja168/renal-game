@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 65</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 65</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Five clinical scenarios — bladder dysfunction in practice</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Five fresh clinical scenarios drawn from brick content (not the brick's own review questions). Each tests one key concept about incontinence types, neurogenic bladder, or management.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>You applied bladder dysfunction concepts from presentation through management. Take on the boss round to consolidate everything.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions — NOT paraphrases of brick review questions */
+  const questions = [
+    {
+      q: "A 38-year-old woman who has had three vaginal deliveries reports small amounts of urine leaking whenever she goes to the gym and does jumping jacks. She has no urgency and denies nocturia. What is the most likely underlying mechanism?",
+      options: [
+        "Detrusor overactivity producing involuntary premature contractions",
+        "Inadequate mechanical support of the urethra from weakened levator ani muscles",
+        "Bladder outlet obstruction from pelvic organ prolapse with overflow dribbling",
+        "Loss of central nervous system inhibition of the micturition reflex"
+      ],
+      correct: 1,
+      explain: "Stress incontinence from multiple vaginal deliveries results from weakness of the levator ani muscles and inadequate urethral support. With intra-abdominal pressure rises (jumping), urethral closure pressure is overcome. The mechanism is mechanical, not neurogenic."
+    },
+    {
+      q: "A pharmacist notes that a patient on alpha-1 blocking drugs (terazosin) for BPH is now complaining of new stress incontinence. What is the explanation?",
+      options: [
+        "Alpha-1 blockers cause detrusor overactivity and urge incontinence",
+        "Alpha-1 blockers excessively relax the internal urethral sphincter, worsening outlet resistance",
+        "Alpha-1 blockers increase intra-abdominal pressure, overcoming the urethral closure mechanism",
+        "Alpha-1 blockers stimulate the pudendal nerve, causing EUS spasm and overflow"
+      ],
+      correct: 1,
+      explain: "Alpha-1 blocking drugs (terazosin, doxazosin) reduce BPH-related obstruction by relaxing smooth muscle in the prostate and bladder neck. However, they may excessively relax the internal urethral sphincter, reducing outlet resistance and precipitating or worsening stress incontinence."
+    },
+    {
+      q: "A 58-year-old woman with an overactive bladder that has not responded to lifestyle changes is started on mirabegron instead of oxybutynin. What is the primary advantage of mirabegron over anticholinergics for this indication?",
+      options: [
+        "Mirabegron directly suppresses the pontine micturition center to prevent voiding",
+        "Mirabegron has a lower risk of dry mouth and constipation (fewer anticholinergic effects)",
+        "Mirabegron stimulates M3 receptors to increase bladder capacity by relaxing the detrusor",
+        "Mirabegron is the only drug approved for use in patients with concurrent BPH"
+      ],
+      correct: 1,
+      explain: "Mirabegron is a β3 agonist that stimulates β3 receptors in the detrusor, promoting storage phase relaxation. Its key safety advantage over anticholinergics (oxybutynin, tolterodine) is a lower rate of dry mouth and constipation, which are common reasons patients discontinue anticholinergic therapy."
+    },
+    {
+      q: "A patient with a spastic neurogenic bladder from spinal cord injury above T12 is being evaluated. His bladder is small-capacity and hyper-reflexic. Which first-line non-surgical management is most appropriate based on the brick's content?",
+      options: [
+        "Bladder retraining to voiding every 5–6 hours to increase capacity",
+        "Pelvic floor (Kegel) exercises to strengthen the urethral sphincter",
+        "Anticholinergic medications (e.g., oxybutynin) to reduce detrusor overactivity",
+        "Alpha-1 blockers to relax the bladder neck and improve outlet resistance"
+      ],
+      correct: 2,
+      explain: "A spastic neurogenic bladder has uninhibited detrusor overactivity. Anticholinergic medications block M receptors on the detrusor, reducing involuntary contractions and increasing functional bladder capacity. Pelvic floor exercises are useful for stress incontinence, not for hyperreflexic detrusor."
+    },
+    {
+      q: "A 67-year-old man has urinary frequency, urgency, and a post-void residual of 280 mL on ultrasound. His digital rectal exam reveals an enlarged, smooth, rubbery prostate. Which incontinence mechanism is most likely operating here?",
+      options: [
+        "Stress incontinence from external sphincter weakness caused by prostate enlargement",
+        "Overflow incontinence from bladder outlet obstruction leading to chronic overdistension",
+        "Functional incontinence from his inability to reach the bathroom quickly enough",
+        "Urge incontinence from a detrusor myopathy causing bladder wall fibrosis"
+      ],
+      correct: 1,
+      explain: "Benign prostatic hyperplasia (BPH) causes bladder outlet obstruction. The bladder cannot empty fully, leading to chronically elevated post-void residuals and eventually overflow incontinence as the bladder overdistends beyond its capacity. The large PVR (280 mL) is the clinical clue."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Loop Sorter — Module 64</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 64</a></div>
+  <h1>Game 4 — Neural Loop Sorter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔁</div>
+      <h2>Place each step of the micturition neural loop in order</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> The micturition neural control loop has 8 sequential steps from bladder filling to coordinated voiding. Drag each step label from the pool into the correct numbered slot.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-pieces">
+        <h4>Steps (shuffled)</h4>
+        <div class="pieces-list" id="piecesList"></div>
+      </div>
+
+      <div class="builder-zones" id="zonesList"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Neural loop complete!</h3>
+      <p>The loop: Bladder fills → Aδ fibers detect wall tension → signal travels to PAG → PAG gates signal to PMC based on cortical input → PMC activates sacral parasympathetic + suppresses Onuf's nucleus → detrusor contracts + sphincters relax → voiding. Cortical modulation allows voluntary deferral.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const slots = [
+    { id: "s1", label: "Step 1: Bladder fills → detrusor wall tension rises",
+      answer: "Bladder fills with urine from kidneys" },
+    { id: "s2", label: "Step 2: Sensory fibers detect the stretch",
+      answer: "Aδ (A-delta) myelinated fibers detect wall tension" },
+    { id: "s3", label: "Step 3: Signal transmitted via pelvic nerve to spinal cord, then ascends",
+      answer: "Signal ascends spinal cord to supraspinal centers" },
+    { id: "s4", label: "Step 4: Midbrain relay / integrator receives the signal",
+      answer: "Periaqueductal gray (PAG) receives the signal" },
+    { id: "s5", label: "Step 5: Cortical input modulates whether voiding proceeds",
+      answer: "Cortex/prefrontal modulation (voluntary deferral or permission)" },
+    { id: "s6", label: "Step 6: Brainstem switch coordinates detrusor and sphincters",
+      answer: "Pontine micturition center (PMC) is activated" },
+    { id: "s7", label: "Step 7: PMC activates this sacral nucleus for detrusor contraction",
+      answer: "Sacral parasympathetic nucleus (S2–S4 pelvic nerve)" },
+    { id: "s8", label: "Step 8: PMC inhibits this nucleus to allow EUS relaxation",
+      answer: "Onuf's nucleus suppressed → EUS relaxes" }
+  ];
+
+  const piecesEl = document.getElementById("piecesList");
+  const zonesEl  = document.getElementById("zonesList");
+  const scoreEl  = document.getElementById("score");
+  const fbEl     = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, slots.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    piecesEl.innerHTML = "";
+    zonesEl.innerHTML = "";
+
+    const labels = Game.shuffle(slots.map(s => s.answer).slice());
+    labels.forEach(text => {
+      const p = document.createElement("div");
+      p.className = "drag-item";
+      p.draggable = true;
+      p.dataset.label = text;
+      p.textContent = text;
+      attachDrag(p);
+      piecesEl.appendChild(p);
+    });
+
+    slots.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.slotId = s.id;
+      zone.dataset.answer = s.answer;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      row.appendChild(zone);
+      zonesEl.appendChild(row);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const dropped = dragSource.dataset.label;
+      const correct = zone.dataset.answer;
+      if (zone.classList.contains("correct")) return;
+
+      if (dropped === correct) {
+        zone.innerHTML = "";
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dropped;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, slots.length);
+        showFb(`✓ Correct — ${dropped}`, "correct");
+        if (placed === slots.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That step belongs elsewhere in the loop.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

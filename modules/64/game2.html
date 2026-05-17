@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathway Hotspot — Module 64</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .pathway-zone { cursor: pointer; }
+  .pathway-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .pathway-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .pathway-zone text { pointer-events: none; user-select: none; }
+  .pathway-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.5));
+  }
+  .pathway-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 64</a></div>
+  <h1>Game 2 — Pathway Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">⚡</div>
+      <h2>Click the correct neural pathway for each scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Four scenarios — four clicks. For each drug or nerve scenario, click which of the three neural pathways (Sympathetic, Parasympathetic, or Somatic) is being activated or blocked. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Scenario <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 240" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Sympathetic -->
+        <g class="pathway-zone" data-name="Sympathetic">
+          <rect class="zone-bg" x="15" y="30" width="140" height="190" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="85" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">Sympathetic</text>
+          <text x="85" y="58" text-anchor="middle" font-size="11" fill="#1e40af">T10–L2</text>
+          <text x="85" y="76" text-anchor="middle" font-size="11" fill="#1e40af">Hypogastric nerve</text>
+          <text x="85" y="104" text-anchor="middle" font-size="10" fill="#444">β3 → detrusor</text>
+          <text x="85" y="118" text-anchor="middle" font-size="10" fill="#444">relaxation (↑cAMP)</text>
+          <text x="85" y="140" text-anchor="middle" font-size="10" fill="#444">α1 → IUS</text>
+          <text x="85" y="154" text-anchor="middle" font-size="10" fill="#444">contraction (Gq/IP3)</text>
+          <text x="85" y="178" text-anchor="middle" font-size="9" fill="#888">Storage phase</text>
+        </g>
+
+        <!-- Parasympathetic -->
+        <g class="pathway-zone" data-name="Parasympathetic">
+          <rect class="zone-bg" x="170" y="30" width="140" height="190" rx="10"
+                fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+          <text x="240" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">Parasympathetic</text>
+          <text x="240" y="58" text-anchor="middle" font-size="11" fill="#15803d">S2–S4</text>
+          <text x="240" y="76" text-anchor="middle" font-size="11" fill="#15803d">Pelvic nerve</text>
+          <text x="240" y="104" text-anchor="middle" font-size="10" fill="#444">M3 → detrusor</text>
+          <text x="240" y="118" text-anchor="middle" font-size="10" fill="#444">contraction (Ca²⁺)</text>
+          <text x="240" y="140" text-anchor="middle" font-size="10" fill="#444">M2 amplifies</text>
+          <text x="240" y="154" text-anchor="middle" font-size="10" fill="#444">contraction (↓cAMP)</text>
+          <text x="240" y="178" text-anchor="middle" font-size="9" fill="#888">Voiding phase</text>
+        </g>
+
+        <!-- Somatic -->
+        <g class="pathway-zone" data-name="Somatic">
+          <rect class="zone-bg" x="325" y="30" width="140" height="190" rx="10"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="395" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#854d0e">Somatic</text>
+          <text x="395" y="58" text-anchor="middle" font-size="11" fill="#854d0e">S2–S4</text>
+          <text x="395" y="76" text-anchor="middle" font-size="11" fill="#854d0e">Pudendal nerve</text>
+          <text x="395" y="104" text-anchor="middle" font-size="10" fill="#444">ACh → nicotinic</text>
+          <text x="395" y="118" text-anchor="middle" font-size="10" fill="#444">receptors on EUS</text>
+          <text x="395" y="140" text-anchor="middle" font-size="10" fill="#444">Voluntary EUS</text>
+          <text x="395" y="154" text-anchor="middle" font-size="10" fill="#444">contraction (storage)</text>
+          <text x="395" y="178" text-anchor="middle" font-size="9" fill="#888">Primary continence site</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All pathways identified!</h3>
+      <p>Sympathetic (T10–L2): storage — relaxes detrusor (β3), contracts IUS (α1). Parasympathetic (S2–S4): voiding — contracts detrusor (M3/M2). Somatic/Pudendal (S2–S4): voluntary EUS control — active during storage, suppressed during voiding.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A drug selectively activates β3-adrenergic receptors on the detrusor and α1-adrenergic receptors on the internal urethral sphincter. Which pathway is this drug mimicking?",
+      answer: "Sympathetic",
+      explain: "β3 receptors on the detrusor and α1 receptors on the IUS are activated by the sympathetic pathway via the hypogastric nerve (T10–L2). This promotes the storage phase: detrusor relaxation + IUS contraction."
+    },
+    {
+      text: "A neurotoxin selectively blocks M3 muscarinic receptors on the detrusor. A patient taking this drug would be expected to have difficulty doing what?",
+      answer: "Parasympathetic",
+      explain: "M3 muscarinic receptors are activated by the parasympathetic pathway (S2–S4, pelvic nerve). Blocking M3 would impair detrusor contraction, making voiding difficult. This is the mechanism of anticholinergic drugs used to treat overactive bladder."
+    },
+    {
+      text: "During a Valsalva maneuver, intra-abdominal pressure suddenly rises. A spinal reflex loop immediately increases contraction of the external urethral sphincter to maintain continence. Which pathway mediates this guarding reflex?",
+      answer: "Somatic",
+      explain: "The guarding reflex is mediated by the somatic (pudendal) pathway. Bladder afferents activate pudendal motor neurons via interneurons in the sacral cord, reinforcing EUS contraction independently of supraspinal control."
+    },
+    {
+      text: "Pontine micturition center (PMC) activation simultaneously sends excitatory signals to the sacral parasympathetic nucleus and inhibitory signals to Onuf's nucleus. What is the net result?",
+      answer: "Parasympathetic",
+      explain: "When the PMC fires, it activates sacral parasympathetic output (detrusor contraction via M3) and simultaneously suppresses pudendal motor neurons (via Onuf's nucleus), allowing the EUS to relax. The dominant pathway driving emptying is parasympathetic."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".pathway-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb(`✓ Correct! ${cases[currentCase].explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb(`✗ Not quite. Think about which neural division controls that receptor/structure.`, "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

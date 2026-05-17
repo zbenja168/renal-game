@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase Builder — Module 64</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 64</a></div>
+  <h1>Game 1 — Phase Builder</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔄</div>
+      <h2>Drag each statement into the correct micturition phase</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Micturition consists of two opposing phases. Sort each statement about detrusor and sphincter activity, neural dominance, and physiological effects into either the Storage phase or the Voiding phase.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 10</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Phase statements</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Phases built!</h3>
+      <p>Storage = sympathetic + somatic (pudendal) dominant. Detrusor relaxes, sphincters contract, bladder fills. Voiding = parasympathetic dominant, sympathetic and somatic withdrawn. Detrusor contracts, sphincters relax, urine expelled. The transition is a switch-like neural event driven by brainstem circuits.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "s1",  label: "Detrusor muscle is relaxed, allowing low-pressure filling",  bucket: "storage" },
+    { id: "s2",  label: "Internal urethral sphincter (IUS) is contracted",            bucket: "storage" },
+    { id: "s3",  label: "External urethral sphincter (EUS) is contracted (active)",   bucket: "storage" },
+    { id: "s4",  label: "Sympathetic tone (T10–L2) via hypogastric nerve is dominant",bucket: "storage" },
+    { id: "s5",  label: "Pudendal nerve maintains EUS contraction via ACh on nicotinic receptors", bucket: "storage" },
+    { id: "v1",  label: "Detrusor contracts strongly to drive bladder emptying",       bucket: "voiding" },
+    { id: "v2",  label: "IUS opens passively as bladder neck descends",               bucket: "voiding" },
+    { id: "v3",  label: "EUS is actively released by withdrawal of somatic tone",     bucket: "voiding" },
+    { id: "v4",  label: "Parasympathetic from S2–S4 (pelvic nerve) is dominant",     bucket: "voiding" },
+    { id: "v5",  label: "M3 muscarinic receptor activation raises intracellular Ca²⁺, contracting detrusor", bucket: "voiding" }
+  ];
+
+  const buckets = [
+    { id: "storage", label: "Storage Phase" },
+    { id: "voiding", label: "Voiding Phase" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct!`, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ Re-check: does this describe filling or emptying?`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genetics &amp; Pathology Match — Module 62</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 62</a></div>
+  <h1>Game 3 — Genetics &amp; Pathology Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧬</div>
+      <h2>Match each feature to the correct tumor type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Click a card on the left, then click its match on the right. Multiple left-side features share the same right-side tumor category — matchKey logic is used.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 8</span></span>
+      <span>Tries: <span class="score" id="tries">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-pairs-board">
+      <div class="match-col" id="leftCol"></div>
+      <div class="match-col" id="rightCol"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Genetics and pathology matched!</h3>
+      <p>Oncocytoma: eosinophilic cells packed with mitochondria, organoid pattern, no mitoses, circumscribed but not encapsulated. AML: vessels + smooth muscle + fat; classic variant is benign; epithelioid variant can metastasize; TSC1/TSC2 loss drives TSC-associated AML.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Large eosinophilic cells with abundant mitochondria; small benign-appearing nuclei; no mitotic figures", b: "Renal Oncocytoma" },
+    { a: "Cells arranged in nests or tubules; organoid pattern; circumscribed but NOT encapsulated", b: "Renal Oncocytoma" },
+    { a: "Thick-walled blood vessels, spindle-shaped smooth muscle cells, and adipose tissue on histology", b: "Classic AML" },
+    { a: "Tumor suppressor genes TSC1 and TSC2 — loss-of-function mutations drive AML in tuberous sclerosis", b: "Classic AML" },
+    { a: "Contains epithelial-like (large and eosinophilic) cells; rare malignant variant with potential for distant metastases", b: "Epithelioid AML" },
+    { a: "Never invades renal vessels or perirenal fat — if vessel invasion is present, suspect RCC instead", b: "Renal Oncocytoma" },
+    { a: "Tumor components include angio (blood vessels), myo (smooth muscle), and lipo (fat)", b: "Classic AML" },
+    { a: "Most common symptomatic presentation: asymptomatic; can also present with hematuria or flank pain from hemorrhage", b: "Epithelioid AML" }
+  ];
+
+  const leftCol = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
+  const scoreEl = document.getElementById("score");
+  const triesEl = document.getElementById("tries");
+  const fbEl = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let tries = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2200);
+  }
+
+  function init() {
+    matched = 0; tries = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    triesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    leftCol.innerHTML = "";
+    rightCol.innerHTML = "";
+
+    const lefts  = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
+    lefts.forEach(it => makeCard(it, leftCol));
+    rights.forEach(it => makeCard(it, rightCol));
+  }
+
+  function makeCard(it, col) {
+    const c = document.createElement("div");
+    c.className = "match-pair-card";
+    c.dataset.matchKey = it.matchKey;
+    c.dataset.side = it.side;
+    c.textContent = it.text;
+    c.addEventListener("click", () => onPick(c));
+    col.appendChild(c);
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("matched")) return;
+    if (firstPick === card) {
+      card.classList.remove("selected");
+      firstPick = null;
+      return;
+    }
+    if (!firstPick) {
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    if (firstPick.dataset.side === card.dataset.side) {
+      firstPick.classList.remove("selected");
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    tries++;
+    triesEl.textContent = tries;
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
+      firstPick.classList.remove("selected");
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      const a = firstPick, b = card;
+      a.classList.add("miss"); b.classList.add("miss");
+      showFb("✗ Not a match — try another.", "incorrect");
+      setTimeout(() => {
+        a.classList.remove("miss", "selected");
+        b.classList.remove("miss");
+        firstPick = null;
+        lock = false;
+      }, 700);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

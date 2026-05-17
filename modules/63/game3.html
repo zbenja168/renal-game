@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cancer Type Match — Module 63</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 63</a></div>
+  <h1>Game 3 — Cancer Type Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Match each feature to the correct bladder cancer type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Click a feature on the left, then click its matching cancer type on the right. Multiple features share the same cancer type — that is intentional. Match by category, not by pair index.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 8</span></span>
+      <span>Tries: <span class="score" id="tries">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-pairs-board">
+      <div class="match-col" id="leftCol"></div>
+      <div class="match-col" id="rightCol"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All features matched!</h3>
+      <p>UCC (transitional cell carcinoma) is by far the most common bladder cancer — 90% of cases — and is strongly linked to smoking and chemical exposures. SCC is rare (5%), usually high-grade at diagnosis, has a poor prognosis, and is linked to chronic irritation and schistosomiasis.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  // matchKey = right-side category text. Multiple lefts share the same matchKey.
+  const pairs = [
+    { a: "Most common type (90% of bladder cancers)",                  b: "Urothelial Carcinoma (UCC)" },
+    { a: "Can be noninvasive papillary or flat (CIS)",                 b: "Urothelial Carcinoma (UCC)" },
+    { a: "Mutations in TP53 and RB tumor suppressor genes",           b: "Urothelial Carcinoma (UCC)" },
+    { a: "Treated with BCG instillation for superficial disease",      b: "Urothelial Carcinoma (UCC)" },
+    { a: "Only 5% of bladder cancers; generally poor prognosis",       b: "Squamous Cell Carcinoma (SCC)" },
+    { a: "Majority are high-grade, often muscle-invasive at diagnosis",b: "Squamous Cell Carcinoma (SCC)" },
+    { a: "Linked to Schistosoma haematobium infection",               b: "Squamous Cell Carcinoma (SCC)" },
+    { a: "Treated with radical cystectomy",                           b: "Squamous Cell Carcinoma (SCC)" }
+  ];
+
+  const leftCol  = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
+  const scoreEl  = document.getElementById("score");
+  const triesEl  = document.getElementById("tries");
+  const fbEl     = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let tries = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2200);
+  }
+
+  function init() {
+    matched = 0; tries = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    triesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    leftCol.innerHTML = "";
+    rightCol.innerHTML = "";
+
+    const lefts  = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
+    lefts.forEach(it  => makeCard(it, leftCol));
+    rights.forEach(it => makeCard(it, rightCol));
+  }
+
+  function makeCard(it, col) {
+    const c = document.createElement("div");
+    c.className = "match-pair-card";
+    c.dataset.matchKey = it.matchKey;
+    c.dataset.side = it.side;
+    c.textContent = it.text;
+    c.addEventListener("click", () => onPick(c));
+    col.appendChild(c);
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("matched")) return;
+    if (firstPick === card) {
+      card.classList.remove("selected");
+      firstPick = null;
+      return;
+    }
+    if (!firstPick) {
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    if (firstPick.dataset.side === card.dataset.side) {
+      firstPick.classList.remove("selected");
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    tries++;
+    triesEl.textContent = tries;
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
+      firstPick.classList.remove("selected");
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      const a = firstPick, b = card;
+      a.classList.add("miss"); b.classList.add("miss");
+      showFb("✗ Not a match — try another pair.", "incorrect");
+      setTimeout(() => {
+        a.classList.remove("miss", "selected");
+        b.classList.remove("miss");
+        firstPick = null;
+        lock = false;
+      }, 700);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

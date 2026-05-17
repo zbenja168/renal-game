@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 56</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 56</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all three learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of labels — sixteen of them. Drop each onto the correct histologic, structural, or clinical slot. Items refuse to land in the wrong slot, so a wrong drop costs you a tally on the misses counter. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the brick!</h3>
+      <p>From transitional epithelium to the detrusor, from adventitia to serosa, and from preprostatic to penile — you know the histology of the entire lower urinary tract.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "layers", title: "Histologic Layers (LO1)", lo: "LO1",
+      slots: [
+        { id: "l1", label: "Innermost layer: epithelium + lamina propria",                           answer: "Mucosa" },
+        { id: "l2", label: "Special stratified epithelium lining ureters, bladder, proximal urethra", answer: "Transitional epithelium" },
+        { id: "l3", label: "Middle layer: smooth muscle that moves urine",                            answer: "Muscularis" },
+        { id: "l4", label: "Outer layer on retroperitoneal organs (ureters); loose connective tissue", answer: "Adventitia" }
+      ]
+    },
+    {
+      id: "ureter", title: "Ureter Structure (LO2)", lo: "LO2",
+      slots: [
+        { id: "u1", label: "Ureter inner epithelium thickness (compressed state)",                   answer: "4–5 cells thick" },
+        { id: "u2", label: "Inner muscularis sublayer of the ureter",                                answer: "Inner longitudinal muscle" },
+        { id: "u3", label: "Middle muscularis sublayer of the ureter",                               answer: "Middle circular muscle" },
+        { id: "u4", label: "Outer muscularis sublayer of the ureter",                                answer: "Outer longitudinal muscle" }
+      ]
+    },
+    {
+      id: "bladder", title: "Bladder Structure (LO2)", lo: "LO2",
+      slots: [
+        { id: "b1", label: "Bladder epithelium thickness (when filled/distended)",                   answer: "3 cells (flattened)" },
+        { id: "b2", label: "Thick smooth muscle layer of the bladder wall; contracts to void",       answer: "Detrusor muscle" },
+        { id: "b3", label: "Outer layer on the superior bladder surface (intraperitoneal)",          answer: "Serosa" },
+        { id: "b4", label: "Bladder function: stores urine until voluntary contraction allows this", answer: "Micturition" }
+      ]
+    },
+    {
+      id: "urethra", title: "Urethra Histology (LO3)", lo: "LO3",
+      slots: [
+        { id: "r1", label: "Epithelium of the male preprostatic and prostatic urethra",              answer: "Transitional epithelium" },
+        { id: "r2", label: "Epithelium of the male membranous urethra (deep perineal pouch)",        answer: "Stratified/pseudostrat. columnar" },
+        { id: "r3", label: "Epithelium of the distal penile urethra near the external opening",      answer: "Stratified squamous epithelium" },
+        { id: "r4", label: "Length of the female urethra",                                           answer: "3–5 cm" }
+      ]
+    }
+  ];
+
+  const pool     = document.getElementById("pool");
+  const board    = document.getElementById("board");
+  const scoreEl  = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl     = document.getElementById("feedback");
+
+  const ICONS = { layers: "🔬", ureter: "🌊", bladder: "💧", urethra: "🚿" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't belong there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

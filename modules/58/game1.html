@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PKD Gene Builder — Module 58</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 58</a></div>
+  <h1>Game 1 — PKD Gene Builder</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧬</div>
+      <h2>Drag each fact into the correct PKD type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each genetic, molecular, or epidemiological fact from the pool into the correct bucket — ADPKD or ARPKD. Use the brick's genetics section to guide you.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 10</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Facts to sort</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Gene map complete!</h3>
+      <p>ADPKD: PKD1 (chr 4) or PKD2 (chr 4) — actually chr 16 and 4 respectively — autosomal dominant, adult onset. ARPKD: PKHD1 (chr 6), autosomal recessive, presents in infancy and childhood with fibrocystin protein defect.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "i1",  label: "Caused by mutations in PKD1 or PKD2 genes",              bucket: "adpkd" },
+    { id: "i2",  label: "Caused by mutation in the PKHD1 gene on chromosome 6",   bucket: "arpkd" },
+    { id: "i3",  label: "Autosomal dominant inheritance pattern",                  bucket: "adpkd" },
+    { id: "i4",  label: "Autosomal recessive inheritance pattern",                 bucket: "arpkd" },
+    { id: "i5",  label: "Defective protein: polycystin-1 or polycystin-2",         bucket: "adpkd" },
+    { id: "i6",  label: "Defective protein: fibrocystin",                          bucket: "arpkd" },
+    { id: "i7",  label: "Typically presents in the 3rd or 4th decade of life",     bucket: "adpkd" },
+    { id: "i8",  label: "Often presents in infancy or childhood",                  bucket: "arpkd" },
+    { id: "i9",  label: "Most common hereditary renal disorder; 1 in 400–1,000",   bucket: "adpkd" },
+    { id: "i10", label: "Rare condition; prevalence ~1 in 20,000 live births",     bucket: "arpkd" }
+  ];
+
+  const buckets = [
+    { id: "adpkd", label: "ADPKD (Autosomal Dominant)" },
+    { id: "arpkd", label: "ARPKD (Autosomal Recessive)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb("✓ Correct!", "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Not quite — check which PKD type that fact belongs to.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

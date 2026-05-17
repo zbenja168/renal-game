@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 59</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 59</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of sixteen labels. Drop each onto the correct slot spanning presentation, pathophysiology, diagnosis, and management. Wrong drops count as misses. Aim for zero.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the Medullary Sponge Kidney brick!</h3>
+      <p>You correctly placed every feature of MSK — from collecting duct pathology and genetics to CT findings and management. You are ready for this topic on a real exam.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "present", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "p1", label: "Most common symptomatic complaint in MSK patients",                          answer: "Kidney stone symptoms (flank pain, hematuria)" },
+        { id: "p2", label: "Congenital syndrome associated with MSK — includes hemihypertrophy, macroglossia", answer: "Beckwith-Wiedemann syndrome" },
+        { id: "p3", label: "Course in most MSK patients: they never develop symptoms",                   answer: "Asymptomatic for life" },
+        { id: "p4", label: "Urinary symptom besides flank pain that suggests UTI complication in MSK",  answer: "Dysuria and urinary frequency" }
+      ]
+    },
+    {
+      id: "patho", title: "Pathophysiology", lo: "LO2",
+      slots: [
+        { id: "g1", label: "Renal zone where cystic dilation occurs in MSK",                          answer: "Medullary collecting ducts" },
+        { id: "g2", label: "Renal zone that remains NORMAL in MSK",                                    answer: "Cortex (unaffected)" },
+        { id: "g3", label: "Proposed but unconfirmed genetic factor in MSK — encodes a growth factor", answer: "GDNF gene" },
+        { id: "g4", label: "Developmental disruption thought to cause MSK — at this embryonic interface", answer: "Ureteric bud / metanephric blastema" }
+      ]
+    },
+    {
+      id: "diag", title: "Diagnosis", lo: "LO3",
+      slots: [
+        { id: "d1", label: "Definitive imaging showing paintbrush/bouquet contrast pattern in pyramids", answer: "CT with contrast" },
+        { id: "d2", label: "Ultrasound finding in MSK — bright medullary tissue",                        answer: "Echogenic medullary pyramids" },
+        { id: "d3", label: "Lab finding suggesting distal RTA in MSK — low serum value",                 answer: "Decreased serum bicarbonate" },
+        { id: "d4", label: "Most common stone type in MSK per the brick",                               answer: "Calcium stones" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management & Prognosis", lo: "LO4",
+      slots: [
+        { id: "m1", label: "Drug used to reduce urinary calcium excretion and prevent stone recurrence", answer: "Thiazide diuretics" },
+        { id: "m2", label: "Basis for specific stone-prevention recommendations in MSK",                 answer: "24-hour urine collection results" },
+        { id: "m3", label: "What happens to kidney function in most MSK patients long-term",             answer: "Remains normal (excellent prognosis)" },
+        { id: "m4", label: "When ESRD may rarely occur in MSK",                                         answer: "Repeated obstruction or recurrent infections" }
+      ]
+    }
+  ];
+
+  const pool    = document.getElementById("pool");
+  const board   = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl= document.getElementById("misses");
+  const fbEl    = document.getElementById("feedback");
+
+  const ICONS = { present: "🩺", patho: "🧬", diag: "🔬", mgmt: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't belong there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

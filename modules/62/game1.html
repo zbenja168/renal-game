@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feature Builder — Module 62</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 62</a></div>
+  <h1>Game 1 — Feature Builder</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🟤</div>
+      <h2>Sort each feature to the correct tumor type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each feature from the pool into the correct bucket: Renal Oncocytoma or Renal Angiomyolipoma (AML). Both are benign tumors, but they have very different compositions and associations.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 10</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Tumor features</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Features correctly sorted!</h3>
+      <p>Oncocytoma: mahogany brown, central stellate scar, eosinophilic cells packed with mitochondria — 5–10% of kidney tumors, male-predominant. AML: fat + smooth muscle + blood vessels; associated with tuberous sclerosis; hemorrhage risk especially with large lesions (&gt;4 cm) or TSC.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "f1",  label: "Characteristically mahogany brown on gross exam; no necrosis",        bucket: "onco" },
+    { id: "f2",  label: "Central stellate scar (seen in one-third of cases)",                  bucket: "onco" },
+    { id: "f3",  label: "Cells contain abundant mitochondria — intensely eosinophilic cytoplasm", bucket: "onco" },
+    { id: "f4",  label: "5–10% of all renal tumors; most common in adults aged 50–80 years",   bucket: "onco" },
+    { id: "f5",  label: "Male-to-female ratio 2:1; usually incidentally discovered",            bucket: "onco" },
+    { id: "f6",  label: "Composed of blood vessels, smooth muscle cells, and fat tissue",      bucket: "aml" },
+    { id: "f7",  label: "Associated with tuberous sclerosis complex (TSC)",                     bucket: "aml" },
+    { id: "f8",  label: "Risk of life-threatening retroperitoneal hemorrhage (retroperitoneal space can hold up to 4 L)", bucket: "aml" },
+    { id: "f9",  label: "TSC1 and TSC2 tumor suppressor gene mutations drive tumor formation",  bucket: "aml" },
+    { id: "f10", label: "Female-to-male ratio 4:1 for sporadic lesions",                        bucket: "aml" }
+  ];
+
+  const buckets = [
+    { id: "onco", label: "Renal Oncocytoma" },
+    { id: "aml",  label: "Renal Angiomyolipoma (AML)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct!`, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That feature belongs to the other tumor type.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

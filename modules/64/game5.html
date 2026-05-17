@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Application — Module 64</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 64</a></div>
+  <h1>Game 5 — Clinical Application</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Round 1: Receptor classification</h2>
+    </div>
+    <div class="game-instructions">
+      Sort each receptor or nerve action into the correct phase: storage or voiding. This reinforces the pharmacological basis of drugs that target the micturition pathway.
+    </div>
+
+    <div class="score-bar">
+      <span>Sorted: <span class="score" id="score">0 / 6</span></span>
+      <button class="btn secondary" id="resetBtn">Reset round 1</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Receptor / nerve actions</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="game-shell" style="margin-top: 24px;">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Round 2: Apply micturition concepts</h2>
+    </div>
+    <div class="game-instructions">
+      Five fresh clinical scenarios drawing on brick content (not the brick's own review questions). Each tests a single concept from the storage-voiding model or neural loop.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 You completed the Clinical Application!</h3>
+      <p>Take on the boss round to consolidate everything from both LOs.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* ===== ROUND 1 ===== */
+  const nerves = [
+    { label: "β3 activation → ↑cAMP → smooth muscle relaxation",       bin: "storage" },
+    { label: "α1 activation → IUS contracts (Gq/IP3 pathway)",         bin: "storage" },
+    { label: "Pudendal nerve active → EUS contraction (nicotinic ACh)", bin: "storage" },
+    { label: "M3 activation → Gq/PLC/Ca²⁺ → detrusor contraction",    bin: "voiding" },
+    { label: "M2 activation → ↓cAMP → amplifies detrusor contraction", bin: "voiding" },
+    { label: "Withdrawal of sympathetic + somatic autonomic tone",      bin: "voiding" }
+  ];
+
+  const bins = [
+    { id: "storage", label: "Storage Phase" },
+    { id: "voiding", label: "Voiding Phase" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function initRound1() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, nerves.length);
+    fbEl.classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(nerves.slice()).forEach(n => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bin = n.bin;
+      el.textContent = n.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    bins.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.binId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bin === zone.dataset.binId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, nerves.length);
+        showFb("✓ Correct.", "correct");
+        if (placed === nerves.length) showFb("Round 1 done — scroll down for Round 2!", "info");
+      } else {
+        zone.classList.add("incorrect");
+        showFb("✗ Re-think which phase this action belongs to.", "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", initRound1);
+  initRound1();
+
+  /* ===== ROUND 2: NEW questions ===== */
+  const questions = [
+    {
+      q: "A urologist administers a drug that blocks M3 muscarinic receptors. A patient taking this drug would experience which primary change in bladder function?",
+      options: [
+        "Stronger detrusor contraction and easier voiding",
+        "Reduced detrusor contraction and impaired voiding",
+        "Relaxed internal urethral sphincter and stress incontinence",
+        "Suppressed pudendal nerve activity and EUS relaxation"
+      ],
+      correct: 1,
+      explain: "M3 muscarinic receptors, activated by the parasympathetic pathway, drive detrusor contraction during voiding. Blocking M3 (e.g., oxybutynin) reduces detrusor contractility, making voiding harder. This is used therapeutically for overactive bladder/urge incontinence."
+    },
+    {
+      q: "A surgeon accidentally damages the pelvic nerve (S2–S4) during a pelvic dissection. What is the most likely consequence for the patient's bladder function?",
+      options: [
+        "Loss of voluntary EUS control and inability to defer voiding",
+        "Inability to relax the internal urethral sphincter during storage",
+        "Loss of parasympathetic drive: detrusor cannot contract adequately for voiding",
+        "Detrusor overactivity with frequent uncontrolled contractions"
+      ],
+      correct: 2,
+      explain: "The pelvic nerve carries parasympathetic fibers (S2–S4) that contract the detrusor via M3 receptors. Injury to the pelvic nerve impairs this pathway, resulting in detrusor underactivity or inability to void — leading to urinary retention rather than incontinence."
+    },
+    {
+      q: "Dyssynergia is described in the brick as 'failure of coordination' during voiding. Which combination of events defines detrusor-sphincter dyssynergia?",
+      options: [
+        "Detrusor contraction with simultaneous EUS contraction (instead of relaxation)",
+        "Detrusor relaxation with simultaneous EUS contraction during the storage phase",
+        "Simultaneous relaxation of both detrusor and EUS during voiding",
+        "Detrusor overactivity with a paradoxically contracted internal sphincter only"
+      ],
+      correct: 0,
+      explain: "Dyssynergia is failure of the normal coordination: detrusor contracts AND EUS contracts simultaneously (instead of EUS relaxing). This results in obstructed voiding and incomplete bladder emptying. It occurs in spinal cord injuries that disrupt the PMC's coordinating signal."
+    },
+    {
+      q: "The PAG (periaqueductal gray) plays a critical gating role in micturition. A researcher blocks all PAG output. What would be the predicted result?",
+      options: [
+        "Immediate continuous voiding due to uncontrolled PMC activation",
+        "Impaired relaying of bladder fullness to the PMC; voiding initiation disrupted",
+        "Permanent EUS contraction via unopposed pudendal activation",
+        "Loss of Aδ fiber stretch detection from the detrusor wall"
+      ],
+      correct: 1,
+      explain: "The PAG is the relay and integrator between bladder afferents and the PMC. It receives fullness signals and gates them based on cortical input and context. Blocking PAG output would prevent the signal from reaching the PMC, disrupting voiding initiation — even if the bladder is full."
+    },
+    {
+      q: "A spinal cord injury at T6 eliminates cortical and supraspinal input to the sacral cord but leaves the sacral cord intact. What describes the resulting bladder behavior during the storage phase?",
+      options: [
+        "Normal storage: detrusor relaxes, sphincters contract, no change expected",
+        "Overactive storage: sympathetic signals from T10–L2 are still intact, reinforcing detrusor relaxation",
+        "Underactive storage: loss of supraspinal signals removes all inhibition from the sacral cord",
+        "Loss of guarding reflex: EUS cannot contract in response to sudden pressure rises"
+      ],
+      correct: 1,
+      explain: "A T6 injury leaves the T10–L2 sympathetic segments intact, so sympathetic storage signals (β3 and α1) can still reach the bladder. The guarding reflex (spinal loop via sacral interneurons) is also preserved. The primary deficit is loss of voluntary cortical control over voiding timing, not storage itself."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

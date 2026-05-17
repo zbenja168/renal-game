@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 61</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 61</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all four learning objectives.</p>
+</header>
+
+<main class="container">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of 16 labels. Drop each onto the correct slot. Wrong drops cost a miss tally. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered Renal Cell Carcinoma!</h3>
+      <p>RCC: the great mimic. Clear cell (70%, VHL/3p), papillary (15%, MET), chromophobe (5%). Classic triad in only 10%. Paraneoplastic syndromes precede diagnosis. Localized = surgery; metastatic = immunotherapy + targeted agents. 70% 5-year survival for localized disease.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "present", title: "Clinical Presentation", lo: "LO1",
+      slots: [
+        { id: "p1", label: "Most common primary adult renal malignancy; accounts for 4% of adult cancers", answer: "Renal cell carcinoma (RCC)" },
+        { id: "p2", label: "Classic triad: present in only 10% of patients — hematuria, flank pain, palpable mass", answer: "Classic triad (10% of patients)" },
+        { id: "p3", label: "Most significant modifiable risk factor — doubles RCC incidence", answer: "Tobacco smoking" },
+        { id: "p4", label: "Most common way RCC is discovered in practice", answer: "Incidental imaging finding" }
+      ]
+    },
+    {
+      id: "patho", title: "Pathophysiology (Subtypes & Genetics)", lo: "LO2",
+      slots: [
+        { id: "h1", label: "Most common RCC subtype (70%): yellow, clear cytoplasm, glycogen/lipid; VHL mutation", answer: "Clear cell carcinoma" },
+        { id: "h2", label: "Second most common (15%): papillary fronds, fibrovascular cores, MET mutations", answer: "Papillary carcinoma" },
+        { id: "h3", label: "Third subtype (5%): tan-brown, eosinophilic with perinuclear halos; best prognosis", answer: "Chromophobe carcinoma" },
+        { id: "h4", label: "Gene mutated in ~95% of clear cell RCCs; normally promotes HIF-1α degradation", answer: "VHL gene" }
+      ]
+    },
+    {
+      id: "dx", title: "Diagnosis & Paraneoplastic Syndromes", lo: "LO3",
+      slots: [
+        { id: "d1", label: "Preferred initial diagnostic imaging for symptomatic patients — abdomen and pelvis", answer: "CT scan with contrast" },
+        { id: "d2", label: "Preferred imaging when contrast is contraindicated (pregnant patients, contrast allergy)", answer: "Renal ultrasound" },
+        { id: "d3", label: "RCC produces this hormone → polycythemia (elevated RBC mass)", answer: "Ectopic erythropoietin" },
+        { id: "d4", label: "RCC produces this peptide → hypercalcemia (can precede RCC diagnosis)", answer: "PTHrP" }
+      ]
+    },
+    {
+      id: "mgmt", title: "Management", lo: "LO4",
+      slots: [
+        { id: "m1", label: "Standard surgery for localized RCC — removes tumor, kidney, adrenal gland, nodes", answer: "Radical nephrectomy" },
+        { id: "m2", label: "Kidney-sparing surgery preferred for small tumors or patients with single kidney", answer: "Partial nephrectomy" },
+        { id: "m3", label: "First-line combination immunotherapy for metastatic RCC (anti-PD1 + anti-CTLA4)", answer: "Nivolumab + ipilimumab" },
+        { id: "m4", label: "5-year survival for localized (non-metastatic) RCC per the brick", answer: "~95%" }
+      ]
+    }
+  ];
+
+  const pool = document.getElementById("pool");
+  const board = document.getElementById("board");
+  const scoreEl = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl = document.getElementById("feedback");
+  const winEl = document.getElementById("winBanner");
+
+  const ICONS = { present: "🩺", patho: "🔬", dx: "🧪", mgmt: "💊" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0; misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't fit there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

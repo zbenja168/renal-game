@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staging Hotspot — Module 63</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .stage-zone { cursor: pointer; }
+  .stage-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .stage-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .stage-zone text { pointer-events: none; user-select: none; }
+  .stage-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.5));
+  }
+  .stage-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 63</a></div>
+  <h1>Game 2 — Staging Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct invasion stage for each patient scenario</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three patients, three stages. For each clinical description, click the correct stage zone on the diagram. The key question is: how far has the tumor invaded the bladder wall? Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 540 300" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Stage 0 / Noninvasive -->
+        <g class="stage-zone" data-name="Stage 0 (noninvasive)">
+          <rect class="zone-bg" x="15" y="40" width="120" height="220" rx="10"
+                fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="75" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">Stage 0</text>
+          <text x="75" y="72" text-anchor="middle" font-size="10" fill="#1e40af">Noninvasive</text>
+          <text x="75" y="88" text-anchor="middle" font-size="10" fill="#1e40af">(papillary/flat)</text>
+          <text x="75" y="112" text-anchor="middle" font-size="10" fill="#444">Confined to</text>
+          <text x="75" y="126" text-anchor="middle" font-size="10" fill="#444">epithelium</text>
+          <text x="75" y="150" text-anchor="middle" font-size="10" fill="#666">CIS = flat</text>
+          <text x="75" y="165" text-anchor="middle" font-size="10" fill="#666">non-invasive</text>
+          <text x="75" y="190" text-anchor="middle" font-size="9" fill="#888">No muscle</text>
+          <text x="75" y="203" text-anchor="middle" font-size="9" fill="#888">involvement</text>
+        </g>
+
+        <!-- Stage 1-2 / Muscle invasion -->
+        <g class="stage-zone" data-name="Stage 1–2 (muscle invasion)">
+          <rect class="zone-bg" x="155" y="40" width="130" height="220" rx="10"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="220" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#854d0e">Stage 1–2</text>
+          <text x="220" y="72" text-anchor="middle" font-size="10" fill="#854d0e">Lamina propria</text>
+          <text x="220" y="86" text-anchor="middle" font-size="10" fill="#854d0e">→ Detrusor</text>
+          <text x="220" y="112" text-anchor="middle" font-size="10" fill="#444">Invades below</text>
+          <text x="220" y="126" text-anchor="middle" font-size="10" fill="#444">basement</text>
+          <text x="220" y="140" text-anchor="middle" font-size="10" fill="#444">membrane</text>
+          <text x="220" y="166" text-anchor="middle" font-size="10" fill="#666">Stage 2 = muscle</text>
+          <text x="220" y="180" text-anchor="middle" font-size="10" fill="#666">wall invasion</text>
+          <text x="220" y="200" text-anchor="middle" font-size="9" fill="#888">Key surgical</text>
+          <text x="220" y="213" text-anchor="middle" font-size="9" fill="#888">decision point</text>
+        </g>
+
+        <!-- Stage 3-4 / Spread beyond bladder -->
+        <g class="stage-zone" data-name="Stage 3–4 (extravesical/metastatic)">
+          <rect class="zone-bg" x="305" y="40" width="220" height="220" rx="10"
+                fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="415" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">Stage 3–4</text>
+          <text x="415" y="72" text-anchor="middle" font-size="10" fill="#991b1b">Extravesical /</text>
+          <text x="415" y="86" text-anchor="middle" font-size="10" fill="#991b1b">Metastatic</text>
+          <text x="415" y="112" text-anchor="middle" font-size="10" fill="#444">Stage 3: invades</text>
+          <text x="415" y="126" text-anchor="middle" font-size="10" fill="#444">perivesical fat,</text>
+          <text x="415" y="140" text-anchor="middle" font-size="10" fill="#444">adjacent organs</text>
+          <text x="415" y="162" text-anchor="middle" font-size="10" fill="#666">Stage 4: lymph</text>
+          <text x="415" y="176" text-anchor="middle" font-size="10" fill="#666">node or distant</text>
+          <text x="415" y="190" text-anchor="middle" font-size="10" fill="#666">metastases</text>
+          <text x="415" y="212" text-anchor="middle" font-size="9" fill="#888">Poor prognosis</text>
+          <text x="415" y="225" text-anchor="middle" font-size="9" fill="#888">(~4 mo if bone/liver)</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All three cases staged correctly!</h3>
+      <p>The key staging landmark for UCC is invasion of the basement membrane (into invasive UCC) and then the detrusor (muscle-invasive = stage 2). Stage 0–1 disease is treated with cystoscopic resection + intravesical BCG. Stage 2+ requires cystectomy or systemic therapy.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 68-year-old man has painless hematuria. Cystoscopy reveals a papillary lesion. Biopsy shows neoplastic urothelial cells with fibrovascular stalks — all confined above the basement membrane. No invasion detected.",
+      answer: "Stage 0 (noninvasive)",
+      explain: "Tumor confined to the epithelium = Stage 0 noninvasive (papillary urothelial carcinoma). These lesions are treated with local cystoscopic resection followed by intravesical BCG."
+    },
+    {
+      text: "A 72-year-old woman has gross hematuria and flank pain. CT reveals a bladder mass. Biopsy shows high-grade urothelial cells extending through the lamina propria and into the detrusor (smooth muscle) layer.",
+      answer: "Stage 1–2 (muscle invasion)",
+      explain: "Extension into the detrusor muscle = Stage 2 (muscle-invasive). This is the critical threshold — radical cystectomy becomes the standard treatment at this stage."
+    },
+    {
+      text: "A 77-year-old man presents with weight loss and back pain. Imaging shows a bladder mass infiltrating the perivesical fat with enlarged iliac lymph nodes. Bone scan reveals skeletal metastases.",
+      answer: "Stage 3–4 (extravesical/metastatic)",
+      explain: "Perivesical fat infiltration = Stage 3; lymph node and distant (bone) metastases = Stage 4. Prognosis is very poor (~4 months median survival with bone/liver involvement). Treatment: systemic chemotherapy ± targeted therapy."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".stage-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, 3);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, 3);
+        showFb(`✓ Correct! ${cases[currentCase].explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 700);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb(`✗ Not quite. Consider how deeply the tumor has invaded the bladder wall.`, "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

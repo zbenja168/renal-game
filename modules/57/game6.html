@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Brick — Module 57</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-royal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 57</a></div>
+  <h1>Game 6 — Master the Brick</h1>
+  <p>The boss round. Place every label into its correct slot across all three learning objectives.</p>
+</header>
+
+<main class="container">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">👑</div>
+      <h2>Place all 16 items into the correct slots</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> One pool of labels — sixteen of them. Drop each onto the correct embryologic, anatomical, or clinical slot. A wrong drop costs you a miss. Aim for zero misses.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed: <span class="score" id="score">0 / 16</span></span>
+      <span>Misses: <span class="score" id="misses" style="color: var(--bad)">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Drag from this pool</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="master-board" id="board"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>👑 You mastered the brick!</h3>
+      <p>From ureteric bud anomalies and allantois remnants to the keyhole sign of PUV and the staged repair of bladder exstrophy — you can link embryology, anatomy, and clinical outcome for every congenital disorder of the lower urinary tract.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game5.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="../../index.html">All modules →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const sections = [
+    {
+      id: "ureter_anom", title: "Ureteral Anomalies (LO1–3)", lo: "LO1",
+      slots: [
+        { id: "ua1", label: "Embryologic origin of all ureteral structures",                              answer: "Ureteric bud" },
+        { id: "ua2", label: "VUR primary type: weakened valve within the bladder wall at this junction", answer: "Ureterovesical junction" },
+        { id: "ua3", label: "Gold-standard imaging study to diagnose both VUR and PUV",                  answer: "VCUG (voiding cystourethrogram)" },
+        { id: "ua4", label: "UPJ obstruction imaging sign: dilated calices surrounding compressed renal parenchyma", answer: "Bear paw pattern" }
+      ]
+    },
+    {
+      id: "bladder_anom", title: "Bladder Anomalies (LO1–3)", lo: "LO2",
+      slots: [
+        { id: "ba1", label: "Bladder exstrophy embryologic failure: mesoderm fails to migrate between these two layers", answer: "Ectoderm and endoderm" },
+        { id: "ba2", label: "Prenatal ultrasound finding consistent with bladder exstrophy",                answer: "Absent bladder visualization" },
+        { id: "ba3", label: "Definitive treatment approach for bladder exstrophy",                         answer: "Complex staged surgical repair" },
+        { id: "ba4", label: "Complication of untreated bladder exstrophy affecting continence mechanism",  answer: "Pelvic floor defects" }
+      ]
+    },
+    {
+      id: "urachus", title: "Urachal Anomalies (LO1–3)", lo: "LO2",
+      slots: [
+        { id: "ur1", label: "Fetal structure that normally regresses; remnant forms the median umbilical ligament", answer: "Allantois (urachus)" },
+        { id: "ur2", label: "Urachal anomaly with both ends open: direct bladder-to-umbilicus connection",  answer: "Patent urachus" },
+        { id: "ur3", label: "Urachal anomaly where only the midportion stays open, forming a cyst",        answer: "Urachal cyst" },
+        { id: "ur4", label: "Long-term risk driving surgical excision of all urachal remnants in adults",   answer: "Malignant transformation" }
+      ]
+    },
+    {
+      id: "puv", title: "Posterior Urethral Valves (LO1–3)", lo: "LO3",
+      slots: [
+        { id: "pv1", label: "Embryologic structure from which PUV folds arise",                            answer: "Urogenital sinus" },
+        { id: "pv2", label: "PUV prenatal ultrasound sign: dilated bladder and posterior urethra together", answer: "Keyhole sign" },
+        { id: "pv3", label: "Percentage of PUV patients who develop CKD in childhood",                     answer: "20–64%" },
+        { id: "pv4", label: "First-line postnatal treatment to relieve PUV obstruction",                    answer: "Endoscopic valve ablation" }
+      ]
+    }
+  ];
+
+  const pool     = document.getElementById("pool");
+  const board    = document.getElementById("board");
+  const scoreEl  = document.getElementById("score");
+  const missesEl = document.getElementById("misses");
+  const fbEl     = document.getElementById("feedback");
+
+  const ICONS = { ureter_anom: "🌊", bladder_anom: "💧", urachus: "🔗", puv: "🚫" };
+  const TOTAL = sections.reduce((s, sec) => s + sec.slots.length, 0);
+
+  let placed = 0;
+  let misses = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, TOTAL);
+    missesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    board.innerHTML = "";
+
+    const allItems = [];
+    sections.forEach(sec => sec.slots.forEach(s => allItems.push({ slotId: s.id, text: s.answer })));
+    Game.shuffle(allItems);
+    allItems.forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.slotId = it.slotId;
+      el.textContent = it.text;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    sections.forEach(sec => {
+      const card = document.createElement("div");
+      card.className = "master-section";
+      card.innerHTML = `<h3>${ICONS[sec.id] || "•"} ${sec.title} <span class="pill">${sec.lo}</span></h3>`;
+      const list = document.createElement("div");
+      list.className = "builder-zones";
+      sec.slots.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "zone-row";
+        row.innerHTML = `<div class="zone-label">${s.label}</div>`;
+        const zone = document.createElement("div");
+        zone.className = "drop-zone";
+        zone.dataset.slotId = s.id;
+        zone.innerHTML = '<span class="label">drop here</span>';
+        attachDrop(zone);
+        row.appendChild(zone);
+        list.appendChild(row);
+      });
+      card.appendChild(list);
+      board.appendChild(card);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (zone.classList.contains("correct")) return;
+
+      if (dragSource.dataset.slotId === zone.dataset.slotId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        zone.classList.add("correct");
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, TOTAL);
+        showFb(`✓ ${placedItem.textContent}`, "correct");
+        if (placed === TOTAL) Game.celebrate("winBanner");
+      } else {
+        misses++;
+        missesEl.textContent = misses;
+        zone.classList.add("incorrect");
+        showFb(`✗ ${dragSource.textContent} doesn't belong there.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

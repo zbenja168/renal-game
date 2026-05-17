@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSK Clinical Vignettes — Module 59</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 59</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Five fresh clinical scenarios — apply the brick</h2>
+    </div>
+    <div class="game-instructions">
+      Five new scenarios (not the brick's own review questions) that test MSK diagnosis, pathophysiology, and management from different clinical angles.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>You can apply MSK pathophysiology, imaging findings, and management to real patient scenarios. Take on the boss round to consolidate everything.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions — not the brick's own review questions.
+     All facts strictly from brick content. */
+  const questions = [
+    {
+      q: "A 32-year-old woman has her third calcium oxalate kidney stone in 18 months. A 24-hour urine collection shows elevated urinary calcium. CT with contrast reveals a paintbrush appearance at both renal papillae. She asks whether this condition will progress to dialysis. Which statement is most consistent with the brick's prognosis?",
+      options: [
+        "MSK invariably leads to ESRD within 10 years if stones are not surgically removed",
+        "GFR declines at a predictable rate similar to ADPKD due to progressive cyst expansion",
+        "Kidney function tends to remain normal unless repeated obstruction or infections occur",
+        "The condition is premalignant and requires annual renal biopsy for surveillance"
+      ],
+      correct: 2,
+      explain: "The brick states: 'Kidney function tends to remain normal in most patients unless they have repeated obstruction with stones or repeated infections. Rarely, end-stage renal disease may develop.' MSK has an excellent prognosis when complications are managed."
+    },
+    {
+      q: "A nephrologist evaluates a 27-year-old man with MSK and a serum bicarbonate of 18 mEq/L. Urine pH is persistently above 6.0 despite systemic acidosis. Which tubular defect best explains this finding?",
+      options: [
+        "Impaired proximal tubule bicarbonate reabsorption causing type 2 RTA",
+        "Excessive aldosterone effect on the collecting duct causing hyperkalemic RTA",
+        "Poor secretion of hydrogen ions by the distal nephron causing distal (type 1) RTA",
+        "Overproduction of ammonium in the thick ascending loop causing metabolic alkalosis"
+      ],
+      correct: 2,
+      explain: "MSK causes distal renal tubular acidosis (type 1 RTA) due to poor renal secretion of hydrogen ions in the distal nephron. This leads to decreased serum bicarbonate and a persistently alkaline urine pH — which also promotes calcium phosphate stone formation."
+    },
+    {
+      q: "A 35-year-old woman with MSK reports she passes 2–3 kidney stones per year. Her urologist explains the underlying reason she forms so many stones. Which mechanism from the brick best explains the high stone frequency in MSK?",
+      options: [
+        "Increased uric acid production due to collecting duct enzyme deficiency",
+        "Urinary stasis in cystically dilated collecting ducts combined with hypercalciuria",
+        "Elevated parathyroid hormone causing hypercalcemia and calcium precipitation",
+        "Immune complex deposition in the medullary papillae obstructing tubular flow"
+      ],
+      correct: 1,
+      explain: "The brick explains that in MSK, abnormal tubular function in the distal nephron — specifically urinary stasis within the dilated collecting ducts combined with hypercalciuria — promotes calcium stone formation. This is the primary mechanism for recurrent kidney stones in MSK."
+    },
+    {
+      q: "A radiologist reads a CT urogram on a 40-year-old man and reports 'contrast pooling in the medullary pyramids bilaterally, giving a paintbrush/calyceal brush appearance, without cortical involvement.' An incidental finding of medullary nephrocalcinosis is also noted. Which statement about the cortex in MSK is correct?",
+      options: [
+        "The cortex shows cystic changes identical to the medulla but are smaller and harder to detect",
+        "The cortex is normal; MSK selectively involves the medullary collecting ducts",
+        "The cortex shows focal scarring from recurrent urinary infections that damaged the nephrons",
+        "The cortex is enlarged and hyperechoic on ultrasound due to polycystin protein dysfunction"
+      ],
+      correct: 1,
+      explain: "Per the brick's pathophysiology: MSK does not involve the cortex. The condition is characterized by cystic dilation selectively in the distal collecting ducts of the renal medulla. 'The condition does not involve the cortex.' This distinguishes MSK from ADPKD, where cysts can occur anywhere along the nephron."
+    },
+    {
+      q: "A 22-year-old woman with MSK is told she has a condition that sometimes clusters in families, suggesting a possible genetic link. However, she wants to know the definitive genetic cause. Which statement best reflects the brick's position on MSK genetics?",
+      options: [
+        "MSK is caused by autosomal dominant mutations in PKD1 or PKD2 with full penetrance",
+        "MSK is caused by autosomal recessive mutations in PKHD1 with variable expressivity",
+        "A possible link to the GDNF gene has been studied, but no definitive genetic cause has been identified",
+        "MSK is caused exclusively by de novo mutations with no familial clustering reported"
+      ],
+      correct: 2,
+      explain: "The brick states: 'Some researchers have suggested the cause for MSK might be a mutation in the gene for glial cell-derived neurotrophic factor (GDNF). However, a definitive genetic cause has not been identified.' MSK can cluster in families, suggesting a genetic component, but the exact gene remains unconfirmed."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

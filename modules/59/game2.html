@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSK Imaging Hotspot — Module 59</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .msk-zone { cursor: pointer; }
+  .msk-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .msk-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .msk-zone text { pointer-events: none; user-select: none; }
+  .msk-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .msk-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 59</a></div>
+  <h1>Game 2 — MSK Imaging Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the correct imaging modality for each MSK finding</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each imaging description, click the correct modality zone. Three cases — three clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 3</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 3:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- CT with contrast -->
+        <g class="msk-zone" data-name="CT">
+          <rect class="zone-bg" x="20" y="30" width="140" height="200" rx="12"
+                fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+          <text x="90" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#0c4a6e">CT with Contrast</text>
+          <text x="90" y="70" text-anchor="middle" font-size="10" fill="#0c4a6e">Paintbrush / bouquet</text>
+          <text x="90" y="86" text-anchor="middle" font-size="10" fill="#0c4a6e">appearance in medulla</text>
+          <text x="90" y="110" text-anchor="middle" font-size="9" fill="#444">Contrast pools in</text>
+          <text x="90" y="126" text-anchor="middle" font-size="9" fill="#444">dilated collecting ducts</text>
+          <text x="90" y="150" text-anchor="middle" font-size="9" fill="#777">Definitive diagnosis</text>
+          <text x="90" y="166" text-anchor="middle" font-size="9" fill="#777">modality</text>
+        </g>
+
+        <!-- Renal Ultrasound -->
+        <g class="msk-zone" data-name="Ultrasound">
+          <rect class="zone-bg" x="180" y="30" width="140" height="200" rx="12"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="250" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Renal Ultrasound</text>
+          <text x="250" y="70" text-anchor="middle" font-size="10" fill="#92400e">Echogenic medullary</text>
+          <text x="250" y="86" text-anchor="middle" font-size="10" fill="#92400e">pyramids</text>
+          <text x="250" y="110" text-anchor="middle" font-size="9" fill="#444">Findings may be</text>
+          <text x="250" y="126" text-anchor="middle" font-size="9" fill="#444">subtle</text>
+          <text x="250" y="150" text-anchor="middle" font-size="9" fill="#777">Normal-sized kidneys</text>
+          <text x="250" y="166" text-anchor="middle" font-size="9" fill="#777">on US</text>
+        </g>
+
+        <!-- KUB / Plain X-ray -->
+        <g class="msk-zone" data-name="X-ray">
+          <rect class="zone-bg" x="340" y="30" width="120" height="200" rx="12"
+                fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+          <text x="400" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#14532d">KUB / Plain X-ray</text>
+          <text x="400" y="70" text-anchor="middle" font-size="10" fill="#14532d">Calcifications in</text>
+          <text x="400" y="86" text-anchor="middle" font-size="10" fill="#14532d">renal medulla</text>
+          <text x="400" y="110" text-anchor="middle" font-size="9" fill="#444">Nephrocalcinosis</text>
+          <text x="400" y="126" text-anchor="middle" font-size="9" fill="#444">pattern</text>
+          <text x="400" y="150" text-anchor="middle" font-size="9" fill="#777">Interstitial</text>
+          <text x="400" y="166" text-anchor="middle" font-size="9" fill="#777">calcifications visible</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All imaging findings identified!</h3>
+      <p>MSK diagnosis relies on imaging: CT with contrast shows the classic paintbrush/bouquet appearance of contrast pooling in dilated collecting ducts. Ultrasound reveals echogenic medullary pyramids (often subtle). Plain X-ray may show medullary nephrocalcinosis.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 34-year-old woman with recurrent calcium kidney stones undergoes imaging. The radiologist notes 'streaky opacifications radiating from the papillae into the medulla, resembling a paintbrush or bouquet of flowers.' Which modality produced this characteristic finding?",
+      answer: "CT",
+      explain: "CT with contrast is the definitive modality for MSK. Contrast pools in the cystically dilated medullary collecting ducts, creating the classic paintbrush (calyceal brush) or bouquet appearance at the papillae."
+    },
+    {
+      text: "A 28-year-old man with a family history of kidney disease has a renal study showing bilateral bright (hyperechoic) medullary pyramids without obvious cortical abnormality. The cortex appears entirely normal. Which imaging modality produced this finding?",
+      answer: "Ultrasound",
+      explain: "Renal ultrasound in MSK shows echogenic (bright) medullary pyramids due to the tiny calcifications and cystic changes in the collecting ducts. The cortex appears normal. Findings can be subtle."
+    },
+    {
+      text: "An abdominal plain film obtained for a different reason in a 45-year-old woman with distal renal tubular acidosis shows diffuse calcifications distributed throughout both kidneys in a medullary pattern. Which modality is this?",
+      answer: "X-ray",
+      explain: "Nephrocalcinosis — diffuse medullary calcification — can be visible on plain radiograph (KUB). In MSK, distal tubular acidosis impairs H⁺ secretion, raising urinary pH and promoting calcium phosphate precipitation in the medulla."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".msk-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — re-read the imaging description.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Factor Sorter — Module 63</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 63</a></div>
+  <h1>Game 1 — Risk Factor Sorter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🚬</div>
+      <h2>Drag each risk factor into the correct bladder cancer type</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Some risk factors predispose to urothelial (transitional cell) carcinoma, others to squamous cell carcinoma — and one is shared. Sort them correctly based on the brick's pathophysiology content.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 8</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Risk factors</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Risk factors sorted!</h3>
+      <p>Smoking is the dominant UCC risk factor — increasing risk 3- to 7-fold. Aromatic amine dyes (used in chemical/dye manufacturing) and cyclophosphamide are also UCC risks. Schistosoma haematobium and chronic bladder irritation (calculi, catheters, infections) drive squamous cell transformation.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "smoking",       label: "Tobacco smoking",                                  bucket: "ucc" },
+    { id: "arylamines",    label: "Occupational exposure to arylamine dyes",          bucket: "ucc" },
+    { id: "cyclophos",     label: "Cyclophosphamide immunosuppressive therapy",       bucket: "ucc" },
+    { id: "ionizing",      label: "Ionizing radiation (e.g., pelvic radiotherapy)",  bucket: "ucc" },
+    { id: "schistosoma",   label: "Schistosoma haematobium infection",                bucket: "scc" },
+    { id: "calculi",       label: "Chronic bladder calculi (stones)",                 bucket: "scc" },
+    { id: "catheter",      label: "Long-term indwelling urinary catheter",            bucket: "scc" },
+    { id: "opiate",        label: "Illicit opiate use / arsenic in drinking water",   bucket: "ucc" }
+  ];
+
+  const buckets = [
+    { id: "ucc", label: "Urothelial Carcinoma (UCC)" },
+    { id: "scc", label: "Squamous Cell Carcinoma (SCC)" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct: ${placedItem.textContent}`, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ Not quite — re-check which cancer type this risk factor is associated with.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 62</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 62</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💡</div>
+      <h2>Five fresh scenarios — apply your knowledge of oncocytoma and AML</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Answer each scenario. These are new questions testing the brick's concepts from fresh clinical angles — not the brick's own review questions.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>Ready for the boss round — Game 6 ties everything together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      q: "A 63-year-old man has a 3.5 cm right renal mass discovered on CT done for kidney stones. The lesion appears as a nonspecific, sharply demarcated solid nodule with a possible central stellate scar. No fat density is identified. A fine-needle aspiration is performed; the pathologist states the sample is 'insufficient to exclude malignancy.' What is the most appropriate next step?",
+      options: [
+        "Repeat fine-needle aspiration in 3 months with a larger needle",
+        "Surgical resection to obtain a definitive histologic diagnosis",
+        "MRI of the abdomen to better characterize the fat content",
+        "Annual surveillance CT — the central stellate scar is diagnostic of oncocytoma"
+      ],
+      correct: 1,
+      explain: "Renal oncocytoma cannot be definitively distinguished from RCC by imaging or fine-needle aspiration (FNA is insufficient due to lack of reliable histologic features on cytology). The only definitive diagnosis is by surgical pathology after resection. Therefore, surgical resection is the standard approach."
+    },
+    {
+      q: "A 34-year-old woman with tuberous sclerosis complex (TSC) is found to have multiple bilateral AMLs, the largest measuring 6 cm. She is asymptomatic. Which treatment approach targets the underlying genetic pathway (TSC1/TSC2 → mTOR) and can reduce tumor size without surgery?",
+      options: [
+        "High-dose corticosteroids to suppress tumor growth",
+        "Anti-VEGF therapy with bevacizumab",
+        "mTOR inhibitor such as everolimus",
+        "Checkpoint immunotherapy with nivolumab"
+      ],
+      correct: 2,
+      explain: "AML associated with TSC results from loss-of-function mutations in TSC1 or TSC2, which leads to constitutive mTOR pathway activation. mTOR inhibitors (e.g., everolimus) reduce AML tumor size by inhibiting this pathway. This is a targeted approach that avoids surgery, especially important for bilateral TSC-associated AMLs."
+    },
+    {
+      q: "A 52-year-old woman's CT abdomen shows a 2 cm renal lesion with very low attenuation values (–50 Hounsfield units) on unenhanced CT, consistent with macroscopic fat. She is otherwise healthy with no symptoms. What is the most appropriate management for this lesion?",
+      options: [
+        "Immediate surgical resection to exclude malignancy",
+        "Surveillance imaging — small asymptomatic AML less than 4 cm can be monitored",
+        "Embolization — all AMLs require arterial embolization regardless of size",
+        "Fine-needle aspiration to confirm the presence of fat before any follow-up"
+      ],
+      correct: 1,
+      explain: "For asymptomatic AML smaller than 4 cm (and without signs of active bleeding), surveillance with periodic imaging (CT or ultrasound) is the standard approach. Surgical intervention is reserved for larger lesions (≥4 cm), symptomatic disease, or active hemorrhage."
+    },
+    {
+      q: "A patient with renal oncocytoma undergoes partial nephrectomy. The pathologist's report notes: 'Tumor circumscribed but not encapsulated. Cells with eosinophilic granular cytoplasm, small round nuclei, no mitotic figures, no vascular invasion.' The surgeon asks: 'Does this confirm benign behavior?' Which histologic finding, if present, would most strongly suggest the lesion is NOT a benign oncocytoma?",
+      options: [
+        "Tumor circumscription without a true fibrous capsule",
+        "Cells with abundant mitochondria giving eosinophilic cytoplasm",
+        "Invasion of the renal vein or perirenal fat",
+        "A small central stellate scar seen on gross pathology"
+      ],
+      correct: 2,
+      explain: "Renal oncocytomas are benign and never invade renal vessels or perirenal fat. Per the brick: if vascular or perirenal invasion is present, the lesion should be reclassified as renal cell carcinoma. All other listed features are consistent with benign oncocytoma."
+    },
+    {
+      q: "A 45-year-old woman presents with acute right flank pain and hypotension. CT reveals a large retroperitoneal hematoma surrounding the right kidney and a 7 cm right renal mass with areas of fat. Which statement from the brick best explains why retroperitoneal hemorrhage from AML is potentially life-threatening?",
+      options: [
+        "AML hemorrhage always extends into the peritoneal cavity, causing diffuse peritonitis",
+        "The retroperitoneal space can accommodate up to 4 liters of blood before it becomes visible externally",
+        "AML bleeds at a rate 10 times faster than other renal tumors due to vessel composition",
+        "Hemorrhage from AML invariably causes acute kidney failure within 24 hours"
+      ],
+      correct: 1,
+      explain: "Per the brick: the retroperitoneal space has the potential to hold up to 4 L of blood without it being externally visible. This is why retroperitoneal hemorrhage from a large AML can be life-threatening — massive blood loss can occur silently before the patient collapses."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 63</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 63</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Five clinical scenarios — apply your bladder cancer knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Five fresh clinical scenarios drawn from brick content (not the brick's own review questions). Each tests a single key concept. Select the best answer for each.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>You applied bladder cancer concepts from presentation through management. Take on the boss round to tie everything together.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions — NOT paraphrases of the brick's own review questions */
+  const questions = [
+    {
+      q: "A 55-year-old male factory worker who spent 20 years mixing industrial dyes develops painless gross hematuria. Cystoscopy reveals a papillary bladder lesion. Which occupational exposure is the most likely contributing cause?",
+      options: [
+        "Asbestos inhalation in an insulation factory",
+        "Arylamine (aromatic amine) compounds used in dye manufacturing",
+        "Benzene vapors from a fuel storage facility",
+        "Heavy metal dust from metalworking machinery"
+      ],
+      correct: 1,
+      explain: "Per the brick: occupational exposure to arylamines used in dyes may cause UCC 15–40 years after first exposure. Occupations that include chemical workers, metal workers, painters, cement workers, and those who manufacture carpets and paints are at risk."
+    },
+    {
+      q: "A pathologist reports 'carcinoma in situ' (CIS) on a bladder biopsy. Which of the following best describes this lesion?",
+      options: [
+        "Papillary tumor with fibrovascular stalks extending into the lumen",
+        "Non-papillary flat lesion with malignant cytology confined to the epithelium",
+        "Tumor that has invaded through the basement membrane into lamina propria",
+        "Squamous metaplasia with early keratinization of the bladder wall"
+      ],
+      correct: 1,
+      explain: "CIS (carcinoma in situ) is a noninvasive flat lesion — it has the cytologic features of malignancy but is confined to the epithelium. It does not extend beyond the basement membrane. Despite being noninvasive, CIS is high-grade and a recognized precursor to invasive UCC."
+    },
+    {
+      q: "A 44-year-old man immigrated from Egypt 10 years ago and now presents with chronic irritative voiding symptoms and hematuria. Cystoscopy reveals a bladder wall mass. Biopsy shows squamous cell carcinoma. Which organism best explains his risk?",
+      options: [
+        "Schistosoma mansoni, causing hepatic fibrosis and portal hypertension",
+        "Schistosoma haematobium, whose ova lodge in the bladder wall",
+        "Echinococcus granulosus, forming hydatid cysts in solid organs",
+        "Strongyloides stercoralis, causing intestinal malabsorption"
+      ],
+      correct: 1,
+      explain: "Schistosoma haematobium (not S. mansoni) is endemic in parts of Africa and the Middle East. Its ova lodge in bladder and ureter walls, inducing chronic granulomatous inflammation and squamous metaplasia — a major risk factor for SCC of the bladder."
+    },
+    {
+      q: "Following cystoscopic resection of a noninvasive papillary UCC lesion, intravesical BCG is instilled. What is the mechanism of BCG's therapeutic effect?",
+      options: [
+        "BCG directly kills tumor cells by disrupting cell membranes",
+        "BCG causes systemic immunosuppression that prevents tumor regrowth",
+        "BCG induces local bladder wall inflammation that treats residual UCC",
+        "BCG delivers a targeted cytotoxic agent that binds UCC surface receptors"
+      ],
+      correct: 2,
+      explain: "BCG (bacillus Calmette-Guérin) contains live attenuated Mycobacterium bovis. When instilled into the bladder, it does not cause clinical tuberculosis but induces local bladder wall inflammation. This inflammatory response helps treat superficial UCC, including lesions not targeted by the initial resection."
+    },
+    {
+      q: "A 70-year-old with stage 0 UCC has a 96% 5-year survival if localized. A colleague asks about prognosis for stage 4 with bone metastases. What is the approximate median survival?",
+      options: [
+        "Approximately 5 years with systemic chemotherapy",
+        "Approximately 18 months with combination immunotherapy",
+        "Approximately 4 months even with treatment",
+        "Approximately 12 months with radical cystectomy alone"
+      ],
+      correct: 2,
+      explain: "Per the brick: if bone or liver metastases are present (Stage 4), the patient is likely to have approximately a 4-month survival. Stage 0 localized disease has ~96% 5-year survival; stage 1 roughly 70%; stage 2 roughly 30–40%; stage 3–4 declines sharply."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

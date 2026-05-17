@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drug Mechanism Match — Module 65</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-crimson">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 65</a></div>
+  <h1>Game 3 — Drug Mechanism Match</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Match each drug to its mechanism/target dysfunction</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Click a drug on the left, then its mechanism or target indication on the right. Multiple drugs share the same mechanism category — match by category using the matchKey approach.
+    </div>
+
+    <div class="score-bar">
+      <span>Pairs found: <span class="score" id="score">0 / 8</span></span>
+      <span>Tries: <span class="score" id="tries">0</span></span>
+      <button class="btn secondary" id="resetBtn">New Game</button>
+    </div>
+
+    <div class="match-pairs-board">
+      <div class="match-col" id="leftCol"></div>
+      <div class="match-col" id="rightCol"></div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All drugs matched!</h3>
+      <p>Anticholinergics (oxybutynin, tolterodine, solifenacin, darifenacin) block M3 receptors → reduce urge incontinence. Mirabegron stimulates β3 → relaxes detrusor for urge incontinence (less dry mouth). Bethanechol stimulates M3 → promotes voiding in flaccid bladder. α1-blockers (tamsulosin) reduce outlet resistance for BPH/overflow.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game2.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game4.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const pairs = [
+    { a: "Oxybutynin",    b: "Anticholinergic — blocks M receptors → reduces urge incontinence" },
+    { a: "Tolterodine",   b: "Anticholinergic — blocks M receptors → reduces urge incontinence" },
+    { a: "Solifenacin",   b: "Anticholinergic — blocks M receptors → reduces urge incontinence" },
+    { a: "Darifenacin",   b: "Anticholinergic — blocks M receptors → reduces urge incontinence" },
+    { a: "Mirabegron",    b: "β3 agonist — relaxes detrusor for urge/OAB; avoids dry mouth" },
+    { a: "Bethanechol",   b: "Cholinergic agonist — stimulates M3 → promotes detrusor contraction (flaccid bladder)" },
+    { a: "Tamsulosin",    b: "α1 blocker — relaxes smooth muscle of prostate/bladder neck for BPH/overflow" },
+    { a: "Doxazosin",     b: "α1 blocker — relaxes smooth muscle of prostate/bladder neck for BPH/overflow" }
+  ];
+
+  const leftCol  = document.getElementById("leftCol");
+  const rightCol = document.getElementById("rightCol");
+  const scoreEl  = document.getElementById("score");
+  const triesEl  = document.getElementById("tries");
+  const fbEl     = document.getElementById("feedback");
+
+  let firstPick = null;
+  let lock = false;
+  let matched = 0;
+  let tries = 0;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2200);
+  }
+
+  function init() {
+    matched = 0; tries = 0; firstPick = null; lock = false;
+    Game.setScore(scoreEl, 0, pairs.length);
+    triesEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    leftCol.innerHTML = "";
+    rightCol.innerHTML = "";
+
+    const lefts  = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.a, side: "left" })));
+    const rights = Game.shuffle(pairs.map(p => ({ matchKey: p.b, text: p.b, side: "right" })));
+    lefts.forEach(it  => makeCard(it, leftCol));
+    rights.forEach(it => makeCard(it, rightCol));
+  }
+
+  function makeCard(it, col) {
+    const c = document.createElement("div");
+    c.className = "match-pair-card";
+    c.dataset.matchKey = it.matchKey;
+    c.dataset.side = it.side;
+    c.textContent = it.text;
+    c.addEventListener("click", () => onPick(c));
+    col.appendChild(c);
+  }
+
+  function onPick(card) {
+    if (lock || card.classList.contains("matched")) return;
+    if (firstPick === card) {
+      card.classList.remove("selected");
+      firstPick = null;
+      return;
+    }
+    if (!firstPick) {
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    if (firstPick.dataset.side === card.dataset.side) {
+      firstPick.classList.remove("selected");
+      firstPick = card;
+      card.classList.add("selected");
+      return;
+    }
+    tries++;
+    triesEl.textContent = tries;
+    if (firstPick.dataset.matchKey === card.dataset.matchKey) {
+      firstPick.classList.remove("selected");
+      firstPick.classList.add("matched");
+      card.classList.add("matched");
+      matched++;
+      Game.setScore(scoreEl, matched, pairs.length);
+      showFb("✓ Matched!", "correct");
+      firstPick = null;
+      if (matched === pairs.length) Game.celebrate("winBanner");
+    } else {
+      lock = true;
+      const a = firstPick, b = card;
+      a.classList.add("miss"); b.classList.add("miss");
+      showFb("✗ Not a match — try another combination.", "incorrect");
+      setTimeout(() => {
+        a.classList.remove("miss", "selected");
+        b.classList.remove("miss");
+        firstPick = null;
+        lock = false;
+      }, 700);
+    }
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

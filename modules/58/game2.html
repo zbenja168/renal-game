@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extrarenal Complication Hotspot — Module 58</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .pkd-zone { cursor: pointer; }
+  .pkd-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .pkd-zone:hover .zone-bg { filter: brightness(1.06); stroke-width: 3; }
+  .pkd-zone text { pointer-events: none; user-select: none; }
+  .pkd-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .pkd-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 58</a></div>
+  <h1>Game 2 — Extrarenal Complication Hotspot</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🫀</div>
+      <h2>Click the organ system affected by each ADPKD complication</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> For each extrarenal complication described below, click the correct organ system zone on the diagram. Four cases — four clicks. Misses count against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Case <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Brain / Cerebrovascular -->
+        <g class="pkd-zone" data-name="Brain">
+          <rect class="zone-bg" x="15" y="30" width="110" height="220" rx="12"
+                fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+          <text x="70" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">Brain /</text>
+          <text x="70" y="36" text-anchor="middle" font-size="12" font-weight="700" fill="#3730a3">Cerebrovascular</text>
+          <text x="70" y="80" text-anchor="middle" font-size="10" fill="#3730a3">Intracranial</text>
+          <text x="70" y="96" text-anchor="middle" font-size="10" fill="#3730a3">berry aneurysms</text>
+          <text x="70" y="120" text-anchor="middle" font-size="9" fill="#555">4–5× more likely</text>
+          <text x="70" y="136" text-anchor="middle" font-size="9" fill="#555">in ADPKD patients</text>
+          <text x="70" y="160" text-anchor="middle" font-size="9" fill="#555">~10% of patients</text>
+          <text x="70" y="176" text-anchor="middle" font-size="9" fill="#777">Risk: ~1%/yr rupture</text>
+        </g>
+
+        <!-- Liver -->
+        <g class="pkd-zone" data-name="Liver">
+          <rect class="zone-bg" x="143" y="30" width="110" height="220" rx="12"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="198" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Liver</text>
+          <text x="198" y="36" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e"> </text>
+          <text x="198" y="80" text-anchor="middle" font-size="10" fill="#92400e">Hepatic cysts</text>
+          <text x="198" y="96" text-anchor="middle" font-size="10" fill="#92400e">(most common</text>
+          <text x="198" y="112" text-anchor="middle" font-size="10" fill="#92400e">extrarenal finding)</text>
+          <text x="198" y="136" text-anchor="middle" font-size="9" fill="#555">Usually asymptomatic</text>
+          <text x="198" y="152" text-anchor="middle" font-size="9" fill="#555">No effect on liver</text>
+          <text x="198" y="168" text-anchor="middle" font-size="9" fill="#555">function</text>
+        </g>
+
+        <!-- Heart / Cardiovascular -->
+        <g class="pkd-zone" data-name="Heart">
+          <rect class="zone-bg" x="271" y="30" width="110" height="220" rx="12"
+                fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+          <text x="326" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#9d174d">Heart /</text>
+          <text x="326" y="36" text-anchor="middle" font-size="12" font-weight="700" fill="#9d174d">Cardiovascular</text>
+          <text x="326" y="80" text-anchor="middle" font-size="10" fill="#9d174d">Mitral valve</text>
+          <text x="326" y="96" text-anchor="middle" font-size="10" fill="#9d174d">prolapse (MVP)</text>
+          <text x="326" y="120" text-anchor="middle" font-size="9" fill="#555">Also: mitral or</text>
+          <text x="326" y="136" text-anchor="middle" font-size="9" fill="#555">aortic regurgitation</text>
+          <text x="326" y="160" text-anchor="middle" font-size="9" fill="#777">Extracellular matrix</text>
+          <text x="326" y="176" text-anchor="middle" font-size="9" fill="#777">changes implicated</text>
+        </g>
+
+        <!-- Colon / GI -->
+        <g class="pkd-zone" data-name="Colon">
+          <rect class="zone-bg" x="399" y="30" width="88" height="220" rx="12"
+                fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+          <text x="443" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Colon / GI</text>
+          <text x="443" y="80" text-anchor="middle" font-size="10" fill="#065f46">Colonic</text>
+          <text x="443" y="96" text-anchor="middle" font-size="10" fill="#065f46">diverticula</text>
+          <text x="443" y="120" text-anchor="middle" font-size="9" fill="#555">Also: inguinal /</text>
+          <text x="443" y="136" text-anchor="middle" font-size="9" fill="#555">abdominal wall</text>
+          <text x="443" y="152" text-anchor="middle" font-size="9" fill="#555">hernias</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All extrarenal complications identified!</h3>
+      <p>ADPKD is a systemic disease: liver cysts (most common extrarenal), intracranial berry aneurysms (4–5× more likely), mitral valve prolapse, and colonic diverticula all result from the same underlying connective-tissue / cystic dysregulation.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "A 44-year-old woman with known ADPKD presents with a sudden, severe headache she describes as 'the worst headache of my life.' CT shows subarachnoid hemorrhage. Which organ system accounts for the structure that ruptured?",
+      answer: "Brain",
+      explain: "ADPKD patients are 4–5× more likely to develop intracranial berry aneurysms (circle of Willis). Rupture presents as a thunderclap 'worst headache of life' from subarachnoid hemorrhage. Risk of rupture is ~1% per year."
+    },
+    {
+      text: "During a routine abdominal CT done for another reason, a 38-year-old man with ADPKD is found to have innumerable fluid-filled structures in a solid organ. Liver function tests are normal. Which organ is involved?",
+      answer: "Liver",
+      explain: "Hepatic cysts are the most common extrarenal finding in ADPKD. They are typically asymptomatic and incidentally discovered; they do not impair liver function."
+    },
+    {
+      text: "A 50-year-old woman with ADPKD has an echocardiogram showing posterior leaflet prolapse into the left atrium during systole, with mild regurgitation. Which organ system does this complication involve?",
+      answer: "Heart",
+      explain: "Mitral valve prolapse (MVP) is an extrarenal cardiovascular complication of ADPKD, likely caused by extracellular matrix changes. Mitral or aortic regurgitation may also occur."
+    },
+    {
+      text: "A 56-year-old man with ADPKD presents with lower left quadrant pain and fever. Imaging reveals outpouchings of the intestinal wall that have become inflamed. Which organ system is the site of this extrarenal complication?",
+      answer: "Colon",
+      explain: "Colonic diverticula are an extrarenal complication of ADPKD. Inguinal and abdominal wall hernias are also associated. These reflect widespread connective-tissue dysregulation beyond the kidney."
+    }
+  ];
+
+  const canvas   = document.getElementById("canvas");
+  const scoreEl  = document.getElementById("score");
+  const missEl   = document.getElementById("misses");
+  const fbEl     = document.getElementById("feedback");
+  const caseNumEl= document.getElementById("caseNum");
+  const caseText = document.getElementById("caseText");
+  const zones    = canvas.querySelectorAll(".pkd-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0;
+    correct = 0;
+    misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb("✓ Correct! " + cases[currentCase].explain, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 2800);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — re-read the complication described.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentation Builder — Module 61</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-coral">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 61</a></div>
+  <h1>Game 1 — Presentation Builder</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🩺</div>
+      <h2>Sort each clinical feature into the correct category</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Drag each item from the pool into the correct bucket: Classic Triad Element (the three features of the triad), Paraneoplastic Manifestation, or Risk Factor for RCC.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 10</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Clinical features</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 RCC presentation mastered!</h3>
+      <p>The classic triad is hematuria + flank pain + palpable mass — but it is only present in ~10% of patients. Most RCC is discovered incidentally. Paraneoplastic syndromes (EPO → polycythemia; PTHrP → hypercalcemia; renin → hypertension; ACTH → Cushing) can precede the diagnosis. The biggest risk factor is tobacco smoking.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="index.html">← Back to module</a>
+      <a class="btn" href="game2.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "c1", label: "Hematuria (blood in urine)",                        bucket: "triad" },
+    { id: "c2", label: "Flank pain",                                         bucket: "triad" },
+    { id: "c3", label: "Palpable flank mass",                                bucket: "triad" },
+    { id: "c4", label: "Polycythemia (excess erythropoietin production)",     bucket: "paraneoplastic" },
+    { id: "c5", label: "Hypercalcemia (PTHrP secretion by tumor)",            bucket: "paraneoplastic" },
+    { id: "c6", label: "Anemia of chronic disease (50–90% of patients)",      bucket: "paraneoplastic" },
+    { id: "c7", label: "Tobacco smoking — doubles the incidence of RCC",      bucket: "risk" },
+    { id: "c8", label: "Obesity and hypertension",                            bucket: "risk" },
+    { id: "c9", label: "Acquired cystic kidney disease",                      bucket: "risk" },
+    { id: "c10", label: "Occupational exposure to asbestos or petroleum",     bucket: "risk" }
+  ];
+
+  const buckets = [
+    { id: "triad",          label: "Classic Triad Element" },
+    { id: "paraneoplastic", label: "Paraneoplastic Manifestation" },
+    { id: "risk",           label: "Risk Factor for RCC" }
+  ];
+
+  const pool = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl = document.getElementById("score");
+  const fbEl = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      if (dragSource.dataset.bucket === zone.dataset.bucketId) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct!`, "correct");
+        if (placed === items.length) Game.celebrate("winBanner");
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That feature belongs in a different category.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

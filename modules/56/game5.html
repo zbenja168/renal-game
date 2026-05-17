@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 56</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 56</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧠</div>
+      <h2>Five fresh clinical scenarios</h2>
+    </div>
+    <div class="game-instructions">
+      Five new scenarios — not copied from the brick — that apply histology of the ureters, bladder, and urethra to real clinical situations.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>The histology of the urinary tract directly explains why UTIs are more common in women, why the bladder can hold large volumes, and where the external sphincter sits to control voiding.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  /* NEW questions only — not paraphrased from the brick's review questions */
+  const questions = [
+    {
+      q: "A 24-year-old woman develops recurrent urinary tract infections despite proper hygiene. Which anatomical feature of the female urethra most directly predisposes her to ascending bacterial infections?",
+      options: [
+        "The female urethra is lined entirely by transitional epithelium",
+        "The female urethra is 3–5 cm long and in close proximity to the rectum",
+        "The female urethra lacks a muscularis layer",
+        "The female urethra is covered by serosa on its outer surface"
+      ],
+      correct: 1,
+      explain: "The female urethra is 3–5 cm long (vs. ~20 cm in males), and its proximity to the rectum increases risk of fecal bacterial contamination. These structural differences are directly responsible for the higher UTI incidence in women."
+    },
+    {
+      q: "A man undergoes a TURP (transurethral resection of the prostate) and the surgeon notes the segment of the urethra passing through the prostate. What epithelial type lines this segment?",
+      options: [
+        "Stratified squamous epithelium, continuous with penile skin",
+        "Pseudostratified columnar epithelium throughout",
+        "Transitional epithelium (urothelium)",
+        "Simple columnar epithelium with mucous glands"
+      ],
+      correct: 2,
+      explain: "The prostatic urethra (3–4 cm) is lined by transitional epithelium, the same type that lines the bladder and ureters. This is the continuous urothelial lining from the renal pelvis down through the prostatic segment."
+    },
+    {
+      q: "A patient's biopsy of the urethral meatus shows stratified squamous epithelium. Which segment of the male urethra was most likely sampled?",
+      options: [
+        "Preprostatic urethra at the bladder neck",
+        "Prostatic urethra within the prostate gland",
+        "Membranous urethra in the deep perineal pouch",
+        "Distal penile (spongy) urethra near the external opening"
+      ],
+      correct: 3,
+      explain: "The distal penile (spongy) urethra is lined by stratified squamous epithelium distally, which is continuous with the skin of the penis. This is the expected finding at the urethral meatus."
+    },
+    {
+      q: "During a pelvic surgery, a structure is identified as a tube covered entirely by loose connective tissue (adventitia) without any peritoneal covering, lined internally by a stratified epithelium capable of significant distension. What structure is this?",
+      options: [
+        "The superior surface of the urinary bladder",
+        "The ureter",
+        "The proximal female urethra",
+        "The sigmoid colon"
+      ],
+      correct: 1,
+      explain: "The ureters are retroperitoneal tubes covered in adventitia (not serosa), lined by transitional epithelium that is 4–5 cells thick and capable of flattening significantly as the tube carries urine to the bladder."
+    },
+    {
+      q: "A urologist describes the membranous urethra as the most vulnerable segment to traumatic injury from a pelvic fracture. Which surrounding structure forms the external urethral sphincter around this segment?",
+      options: [
+        "Corpus spongiosum, which compresses the urethra voluntarily",
+        "Bulbospongiosus muscle, which surrounds the proximal penile urethra",
+        "Skeletal muscle of the deep perineal pouch",
+        "Smooth muscle of the prostate gland capsule"
+      ],
+      correct: 2,
+      explain: "The membranous urethra passes through the deep perineal pouch, and the skeletal (voluntary) muscle here forms the external urethral sphincter. This is the muscle providing voluntary control of micturition."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl   = document.getElementById("quizScore");
+  let quizScore = 0;
+  let answered  = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) {
+      Game.celebrate("winBanner");
+    }
+  }
+</script>
+</body>
+</html>

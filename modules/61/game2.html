@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subtype Spotter — Module 61</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  .rcc-zone { cursor: pointer; }
+  .rcc-zone .zone-bg { transition: filter 0.15s, stroke-width 0.15s; }
+  .rcc-zone:hover .zone-bg { filter: brightness(1.04); stroke-width: 3; }
+  .rcc-zone text { pointer-events: none; user-select: none; }
+  .rcc-zone.found .zone-bg {
+    stroke: #16a34a;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 8px rgba(22,163,74,0.45));
+  }
+  .rcc-zone.miss .zone-bg {
+    stroke: #dc2626;
+    stroke-width: 4;
+    animation: shakeSVG 0.4s;
+  }
+  @keyframes shakeSVG {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body class="theme-sun">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 61</a></div>
+  <h1>Game 2 — Subtype Spotter</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🔬</div>
+      <h2>Click the RCC subtype that matches each description</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Three subtypes of RCC are shown. For each description, click the correct subtype panel. A miss counts against you.
+    </div>
+
+    <div class="score-bar">
+      <span>Correct: <span class="score" id="score">0 / 4</span></span>
+      <span>Misses: <span class="score" id="misses" style="color:#dc3545">0</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div id="caseBox" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <strong>Description <span id="caseNum">1</span> of 4:</strong>
+      <p id="caseText" style="margin:8px 0 0;"></p>
+    </div>
+
+    <div class="hotspot-canvas" id="canvas">
+      <svg viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Clear Cell -->
+        <g class="rcc-zone" data-name="Clear Cell">
+          <rect class="zone-bg" x="10" y="30" width="160" height="240" rx="10"
+                fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+          <text x="90" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#713f12">Clear Cell</text>
+          <text x="90" y="56" text-anchor="middle" font-size="11" fill="#92400e">70% of all RCC</text>
+          <text x="90" y="76" text-anchor="middle" font-size="10" fill="#444">Yellow on gross exam</text>
+          <text x="90" y="93" text-anchor="middle" font-size="10" fill="#444">Cells: clear cytoplasm</text>
+          <text x="90" y="110" text-anchor="middle" font-size="10" fill="#444">with glycogen and lipid</text>
+          <text x="90" y="134" text-anchor="middle" font-size="10" fill="#555">VHL gene mutation</text>
+          <text x="90" y="151" text-anchor="middle" font-size="10" fill="#555">Chromosome 3p deletion</text>
+          <text x="90" y="174" text-anchor="middle" font-size="10" fill="#666">Proximal tubular</text>
+          <text x="90" y="190" text-anchor="middle" font-size="10" fill="#666">epithelium origin</text>
+          <text x="90" y="214" text-anchor="middle" font-size="10" fill="#777">HIF-1α → VEGF</text>
+          <text x="90" y="230" text-anchor="middle" font-size="10" fill="#777">→ angiogenesis</text>
+        </g>
+
+        <!-- Papillary -->
+        <g class="rcc-zone" data-name="Papillary">
+          <rect class="zone-bg" x="185" y="30" width="160" height="240" rx="10"
+                fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+          <text x="265" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#0c4a6e">Papillary</text>
+          <text x="265" y="56" text-anchor="middle" font-size="11" fill="#0369a1">15% of all RCC</text>
+          <text x="265" y="76" text-anchor="middle" font-size="10" fill="#444">Hemorrhagic and cystic</text>
+          <text x="265" y="93" text-anchor="middle" font-size="10" fill="#444">on gross exam</text>
+          <text x="265" y="116" text-anchor="middle" font-size="10" fill="#444">Papillary structures with</text>
+          <text x="265" y="133" text-anchor="middle" font-size="10" fill="#444">fibrovascular cores</text>
+          <text x="265" y="156" text-anchor="middle" font-size="10" fill="#555">MET gene mutations</text>
+          <text x="265" y="175" text-anchor="middle" font-size="10" fill="#555">Multiple chromosome</text>
+          <text x="265" y="192" text-anchor="middle" font-size="10" fill="#555">losses (sporadic)</text>
+          <text x="265" y="215" text-anchor="middle" font-size="10" fill="#666">Often multifocal</text>
+          <text x="265" y="232" text-anchor="middle" font-size="10" fill="#666">and bilateral</text>
+        </g>
+
+        <!-- Chromophobe -->
+        <g class="rcc-zone" data-name="Chromophobe">
+          <rect class="zone-bg" x="360" y="30" width="150" height="240" rx="10"
+                fill="#f3e8ff" stroke="#9333ea" stroke-width="2"/>
+          <text x="435" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#581c87">Chromophobe</text>
+          <text x="435" y="56" text-anchor="middle" font-size="11" fill="#6b21a8">5% of all RCC</text>
+          <text x="435" y="76" text-anchor="middle" font-size="10" fill="#444">Tan to brown; small,</text>
+          <text x="435" y="93" text-anchor="middle" font-size="10" fill="#444">well-circumscribed</text>
+          <text x="435" y="116" text-anchor="middle" font-size="10" fill="#444">Eosinophilic cells with</text>
+          <text x="435" y="133" text-anchor="middle" font-size="10" fill="#444">perinuclear halos</text>
+          <text x="435" y="156" text-anchor="middle" font-size="10" fill="#555">Multiple chromosome</text>
+          <text x="435" y="173" text-anchor="middle" font-size="10" fill="#555">losses (hypoploidy)</text>
+          <text x="435" y="196" text-anchor="middle" font-size="10" fill="#666">Distal collecting</text>
+          <text x="435" y="213" text-anchor="middle" font-size="10" fill="#666">duct cells origin</text>
+          <text x="435" y="233" text-anchor="middle" font-size="10" fill="#777">Best prognosis</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 All subtypes identified!</h3>
+      <p>Clear cell (70%): yellow, VHL/chr3p, proximal tubule origin. Papillary (15%): hemorrhagic, MET mutations, often bilateral. Chromophobe (5%): tan, perinuclear halos, best prognosis — arises from collecting duct intercalated cells.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game1.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game3.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const cases = [
+    {
+      text: "On cross-section, the resected renal tumor is characteristically yellow-gold in color with areas of hemorrhage. Microscopy shows nests of tumor cells with abundant clear cytoplasm containing glycogen and lipid, separated by delicate branching blood vessels. A genetic workup reveals loss of the short arm of chromosome 3. Which RCC subtype is this?",
+      answer: "Clear Cell",
+      explain: "Clear cell RCC (70%): yellow gross appearance, clear cytoplasm with glycogen/lipid, VHL gene mutation and chromosome 3p deletion. This is the most common form."
+    },
+    {
+      text: "Pathology of a renal tumor shows numerous papillary fronds with fibrovascular cores and foamy macrophages. The tumor is multifocal. Genetic testing reveals mutations in the MET proto-oncogene. Which RCC subtype is this?",
+      answer: "Papillary",
+      explain: "Papillary RCC (15%): papillary structures with fibrovascular cores; can be multifocal and bilateral; associated with MET gene mutations. Grossly hemorrhagic and cystic."
+    },
+    {
+      text: "The smallest and least common of the three main RCC subtypes is resected from a 58-year-old woman. The cut surface is tan-brown, well-circumscribed, without necrosis. Microscopically the tumor cells are large and eosinophilic with distinct cell membranes and perinuclear halos. It arises from intercalated cells of the collecting duct. Which subtype?",
+      answer: "Chromophobe",
+      explain: "Chromophobe RCC (5%): tan-brown, eosinophilic cells with perinuclear halos, multiple chromosome losses (hypoploidy). Arises from collecting duct intercalated cells. Has the best prognosis among the three common subtypes."
+    },
+    {
+      text: "A patient with a known germline mutation in a ubiquitin ligase complex gene develops bilateral clear cell renal carcinomas. The mutated gene normally promotes degradation of HIF-1α. Loss of this gene leads to constitutive activation of HIF-1α, upregulating VEGF and promoting tumor angiogenesis. Which gene is mutated?",
+      answer: "Clear Cell",
+      explain: "The VHL gene (von Hippel-Lindau) is lost in ~95% of clear cell RCCs. VHL normally promotes HIF-1α degradation; when VHL is lost, HIF-1α remains active, driving VEGF expression and angiogenesis. Patients with germline VHL mutations develop VHL disease with bilateral clear cell RCCs."
+    }
+  ];
+
+  const canvas    = document.getElementById("canvas");
+  const scoreEl   = document.getElementById("score");
+  const missEl    = document.getElementById("misses");
+  const fbEl      = document.getElementById("feedback");
+  const winEl     = document.getElementById("winBanner");
+  const caseNumEl = document.getElementById("caseNum");
+  const caseText  = document.getElementById("caseText");
+  const zones     = canvas.querySelectorAll(".rcc-zone");
+
+  let currentCase = 0;
+  let correct = 0;
+  let misses = 0;
+  let lock = false;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 3200);
+  }
+
+  function loadCase() {
+    if (currentCase >= cases.length) return;
+    caseNumEl.textContent = currentCase + 1;
+    caseText.textContent = cases[currentCase].text;
+    zones.forEach(z => {
+      z.classList.remove("found", "miss");
+      z.style.pointerEvents = "auto";
+    });
+    lock = false;
+  }
+
+  function init() {
+    currentCase = 0; correct = 0; misses = 0;
+    Game.setScore(scoreEl, 0, cases.length);
+    missEl.textContent = "0";
+    fbEl.classList.remove("show");
+    winEl.classList.remove("show");
+    loadCase();
+  }
+
+  zones.forEach(z => {
+    z.addEventListener("click", () => {
+      if (lock || currentCase >= cases.length) return;
+      const picked = z.dataset.name;
+      const expected = cases[currentCase].answer;
+      if (picked === expected) {
+        lock = true;
+        z.classList.add("found");
+        zones.forEach(x => x.style.pointerEvents = "none");
+        correct++;
+        Game.setScore(scoreEl, correct, cases.length);
+        showFb(`✓ Correct! ${cases[currentCase].explain}`, "correct");
+        currentCase++;
+        if (currentCase === cases.length) {
+          setTimeout(() => Game.celebrate("winBanner"), 600);
+        } else {
+          setTimeout(loadCase, 3200);
+        }
+      } else {
+        misses++;
+        missEl.textContent = misses;
+        z.classList.add("miss");
+        setTimeout(() => z.classList.remove("miss"), 600);
+        showFb("✗ Not quite — review the distinguishing features of each subtype.", "incorrect");
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Management Sorter — Module 57</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-teal">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 57</a></div>
+  <h1>Game 4 — Management Sorter</h1>
+</header>
+
+<main class="container narrow">
+
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">💊</div>
+      <h2>Drag each treatment into its correct disorder bucket</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Each treatment option listed in the brick belongs to a specific congenital disorder. Drag each into the correct bucket. Some buckets accept more than one treatment.
+    </div>
+
+    <div class="score-bar">
+      <span>Placed correctly: <span class="score" id="score">0 / 10</span></span>
+      <button class="btn secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="lymph-pool">
+      <h4>Treatment options</h4>
+      <div class="pieces-list" id="pool"></div>
+    </div>
+
+    <div class="lymph-buckets" id="buckets"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Management sorted!</h3>
+      <p>Many lower urinary tract malformations can be watched initially or treated with antibiotics — but all carry the risk of requiring surgical correction to prevent long-term renal damage or dysfunction.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game3.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game5.html">Next game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const items = [
+    { id: "i01", label: "Watchful waiting (some cases resolve spontaneously with growth)",      bucket: "vur" },
+    { id: "i02", label: "Prophylactic antibiotics to prevent recurrent UTI",                    bucket: "vur" },
+    { id: "i03", label: "Surgical correction for severe or persistent reflux",                  bucket: "vur" },
+    { id: "i04", label: "Observation with serial ultrasounds (some resolve on own)",            bucket: "upj" },
+    { id: "i05", label: "Pyeloplasty — surgical repair of the ureteropelvic junction",         bucket: "upj" },
+    { id: "i06", label: "Complex staged surgical repair to close bladder and abdominal wall",   bucket: "exstrophy" },
+    { id: "i07", label: "Endoscopic valve ablation to relieve urethral obstruction",            bucket: "puv" },
+    { id: "i08", label: "Fetal vesicoamniotic shunting under investigation for severe cases",   bucket: "puv" },
+    { id: "i09", label: "Surgical excision of the urachal tract to prevent infection/malignancy", bucket: "urachus" },
+    { id: "i10", label: "Antibiotics ± drainage for acute infected urachal cyst",              bucket: "urachus" }
+  ];
+
+  const buckets = [
+    { id: "vur",       label: "Vesicoureteral Reflux (VUR)" },
+    { id: "upj",       label: "UPJ Obstruction" },
+    { id: "exstrophy", label: "Bladder Exstrophy" },
+    { id: "puv",       label: "Posterior Urethral Valves (PUV)" },
+    { id: "urachus",   label: "Urachal Anomaly" }
+  ];
+
+  const pool      = document.getElementById("pool");
+  const bucketsEl = document.getElementById("buckets");
+  const scoreEl   = document.getElementById("score");
+  const fbEl      = document.getElementById("feedback");
+
+  let placed = 0;
+  let dragSource = null;
+
+  function showFb(msg, kind) {
+    fbEl.textContent = msg;
+    fbEl.className = "feedback show " + kind;
+    clearTimeout(showFb._t);
+    showFb._t = setTimeout(() => fbEl.classList.remove("show"), 2400);
+  }
+
+  function init() {
+    placed = 0;
+    Game.setScore(scoreEl, 0, items.length);
+    fbEl.classList.remove("show");
+    document.getElementById("winBanner").classList.remove("show");
+    pool.innerHTML = "";
+    bucketsEl.innerHTML = "";
+
+    Game.shuffle(items.slice()).forEach(it => {
+      const el = document.createElement("div");
+      el.className = "drag-item";
+      el.draggable = true;
+      el.dataset.id = it.id;
+      el.dataset.bucket = it.bucket;
+      el.textContent = it.label;
+      attachDrag(el);
+      pool.appendChild(el);
+    });
+
+    buckets.forEach(b => {
+      const wrap = document.createElement("div");
+      wrap.className = "lymph-bucket";
+      wrap.innerHTML = `<h4>${b.label}</h4>`;
+      const zone = document.createElement("div");
+      zone.className = "drop-zone";
+      zone.dataset.bucketId = b.id;
+      zone.innerHTML = '<span class="label">drop here</span>';
+      attachDrop(zone);
+      wrap.appendChild(zone);
+      bucketsEl.appendChild(wrap);
+    });
+  }
+
+  function attachDrag(el) {
+    el.addEventListener("dragstart", e => {
+      dragSource = el;
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      dragSource = null;
+    });
+  }
+
+  function attachDrop(zone) {
+    zone.addEventListener("dragover", e => {
+      e.preventDefault();
+      zone.classList.add("drag-over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      if (!dragSource) return;
+      const itemBucket = dragSource.dataset.bucket;
+      const targetBucket = zone.dataset.bucketId;
+      if (itemBucket === targetBucket) {
+        const placeholder = zone.querySelector(".label");
+        if (placeholder) placeholder.remove();
+        const placedItem = document.createElement("div");
+        placedItem.className = "drag-item placed";
+        placedItem.textContent = dragSource.textContent;
+        zone.appendChild(placedItem);
+        dragSource.remove();
+        placed++;
+        Game.setScore(scoreEl, placed, items.length);
+        showFb(`✓ Correct: ${placedItem.textContent}`, "correct");
+        if (placed === items.length) {
+          Game.celebrate("winBanner");
+        }
+      } else {
+        zone.classList.add("incorrect");
+        showFb(`✗ That treatment is used for a different disorder.`, "incorrect");
+        setTimeout(() => zone.classList.remove("incorrect"), 700);
+      }
+    });
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", init);
+  init();
+</script>
+</body>
+</html>

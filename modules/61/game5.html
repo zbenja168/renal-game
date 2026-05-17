@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clinical Vignettes — Module 61</title>
+<link rel="stylesheet" href="../../css/style.css">
+</head>
+<body class="theme-grape">
+
+<header class="module-header">
+  <div class="crumb"><a href="index.html">← Module 61</a></div>
+  <h1>Game 5 — Clinical Vignettes</h1>
+</header>
+
+<main class="container narrow">
+  <div class="game-shell">
+    <div class="game-title">
+      <div class="icon">🧪</div>
+      <h2>Five fresh RCC scenarios — apply your knowledge</h2>
+    </div>
+    <div class="game-instructions">
+      <strong>Goal:</strong> Answer each scenario. These are new questions — not the brick's own review questions — testing RCC concepts from fresh angles.
+    </div>
+
+    <div class="score-bar">
+      <span>Score: <span class="score" id="quizScore">0 / 5</span></span>
+    </div>
+
+    <div id="quizContainer"></div>
+
+    <div class="win-banner" id="winBanner">
+      <h3>🎉 Vignettes complete!</h3>
+      <p>Ready for the boss round — Game 6 consolidates all four learning objectives.</p>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn secondary" href="game4.html">← Previous</a>
+      <a class="btn secondary" href="index.html">Module hub</a>
+      <a class="btn" href="game6.html">Boss game →</a>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/shared.js"></script>
+<script>
+  const questions = [
+    {
+      q: "A 58-year-old male smoker with a 2:1 male-to-female prevalence disease is found on routine CT to have a 3-cm solid mass in the upper pole of his right kidney. He has no symptoms. Which feature of this presentation is most consistent with how RCC typically comes to attention?",
+      options: [
+        "Symptomatic presentation with hematuria and flank mass",
+        "Incidental discovery on imaging done for another reason",
+        "Discovery during workup for a paraneoplastic syndrome",
+        "Presentation with distant metastases as the initial finding"
+      ],
+      correct: 1,
+      explain: "Most RCC is discovered incidentally on imaging (CT or ultrasound) performed for unrelated reasons. The classic triad of hematuria, flank pain, and palpable mass is present in only about 10% of patients. Incidental discovery is the most common scenario."
+    },
+    {
+      q: "A patient with RCC undergoes routine labs and is found to have a serum calcium of 12.4 mg/dL. Intact PTH is suppressed. There are no bone metastases on imaging. Which mechanism most likely explains this patient's hypercalcemia?",
+      options: [
+        "Tumor invasion of the parathyroid gland causing autonomous PTH secretion",
+        "Ectopic erythropoietin production stimulating calcium absorption",
+        "PTHrP secretion by the RCC causing PTH-independent hypercalcemia",
+        "Vitamin D overproduction within the tumor causing gut calcium absorption"
+      ],
+      correct: 2,
+      explain: "RCC can produce parathyroid hormone-related peptide (PTHrP), which binds PTH receptors and raises serum calcium — a paraneoplastic hypercalcemia. Intact PTH is suppressed because calcium is high. This can precede the diagnosis of RCC."
+    },
+    {
+      q: "At surgery for localized RCC, the tumor is found to be 6 cm, confined within the renal fascia, with no lymph node or adrenal involvement and no distant spread. A 72-year-old patient with only one functioning kidney is under consideration. Which surgical approach best preserves renal function while treating the cancer?",
+      options: [
+        "Radical nephrectomy removing the entire kidney plus adrenal gland",
+        "Partial nephrectomy sparing unaffected kidney tissue",
+        "Bilateral nephrectomy followed by hemodialysis",
+        "Observation with repeat imaging in 6 months"
+      ],
+      correct: 1,
+      explain: "For localized RCC, partial (nephron-sparing) nephrectomy removes just the tumor and a margin of normal tissue, preserving kidney function. This is especially important in patients with a solitary kidney, bilateral tumors, or baseline renal impairment."
+    },
+    {
+      q: "A 65-year-old woman with metastatic RCC to the liver and lungs receives combination checkpoint inhibitor therapy. Checkpoint inhibitors work by blocking inhibitory receptors on T cells, restoring anti-tumor immune responses. Why is standard cytotoxic chemotherapy generally NOT used as first-line for metastatic RCC?",
+      options: [
+        "RCC cells lack the transport protein that imports most chemotherapy agents",
+        "RCC is generally resistant to conventional cytotoxic chemotherapy",
+        "Chemotherapy is reserved only for RCC that has spread to the brain",
+        "Chemotherapy is contraindicated in all patients over age 60"
+      ],
+      correct: 1,
+      explain: "Renal cell carcinoma is largely resistant to conventional cytotoxic chemotherapy. Treatment for metastatic disease relies on immunotherapy (checkpoint inhibitors: ipilimumab + nivolumab) and targeted anti-angiogenic agents (VEGF pathway inhibitors). Chemotherapy has minimal activity."
+    },
+    {
+      q: "A 55-year-old man with known VHL disease has undergone surveillance imaging. He now has bilateral renal masses — one in each kidney. His 5-year survival will depend on the extent of disease. According to the brick, what is the approximate 5-year survival for metastatic (as opposed to non-metastatic) RCC?",
+      options: [
+        "5% — metastatic RCC is almost uniformly fatal within 1 year",
+        "40% — modest response to immunotherapy improves median survival",
+        "70% — most metastatic RCC responds to targeted therapy",
+        "95% — overall survival is high regardless of stage"
+      ],
+      correct: 1,
+      explain: "Per the brick: the 5-year survival rate for metastatic RCC is approximately 70% for non-metastatic disease and about 40% (i.e., significantly worse) for metastatic disease. Modern immunotherapy and targeted agents have improved outcomes compared to historic figures."
+    }
+  ];
+
+  const quizContainer = document.getElementById("quizContainer");
+  const quizScoreEl = document.getElementById("quizScore");
+  const winEl = document.getElementById("winBanner");
+  let quizScore = 0;
+  let answered = 0;
+
+  questions.forEach((qd, idx) => {
+    const block = document.createElement("div");
+    block.className = "quiz-question";
+    block.innerHTML = `<div class="q-text">${idx + 1}. ${qd.q}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "quiz-options";
+    qd.options.forEach((opt, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => onAnswer(block, btn, optIdx, qd, opts));
+      opts.appendChild(btn);
+    });
+    block.appendChild(opts);
+    const exp = document.createElement("div");
+    exp.className = "quiz-explanation";
+    exp.textContent = qd.explain;
+    block.appendChild(exp);
+    quizContainer.appendChild(block);
+  });
+  Game.setScore(quizScoreEl, 0, questions.length);
+
+  function onAnswer(block, btn, picked, qd, opts) {
+    if (block.dataset.done) return;
+    block.dataset.done = "1";
+    Array.from(opts.children).forEach(c => c.disabled = true);
+    if (picked === qd.correct) {
+      btn.classList.add("correct");
+      quizScore++;
+    } else {
+      btn.classList.add("incorrect");
+      opts.children[qd.correct].classList.add("correct");
+    }
+    block.querySelector(".quiz-explanation").classList.add("show");
+    answered++;
+    Game.setScore(quizScoreEl, quizScore, questions.length);
+    if (answered === questions.length) Game.celebrate("winBanner");
+  }
+</script>
+</body>
+</html>

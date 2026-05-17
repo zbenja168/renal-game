@@ -61,6 +61,13 @@
   <p style="color: #5a6473; margin-bottom: 4px;">16 bricks. Glomerular diseases, tubulo-interstitial injury, and lower urinary tract pathology.</p>
   <div class="module-grid" id="moduleGridWk3"></div>
 
+  <div class="week-header">
+    <h2>Week 4 · Lower Urinary Tract &amp; Renal Neoplasia</h2>
+    <span class="week-sub">Histology · Congenital anomalies · Cystic kidney disease · Renal &amp; bladder tumors · Micturition disorders</span>
+  </div>
+  <p style="color: #5a6473; margin-bottom: 4px;">10 bricks. Lower urinary tract structure and function, cystic kidney disease, renal/bladder neoplasia, and bladder dysfunction.</p>
+  <div class="module-grid" id="moduleGridWk4"></div>
+
 </main>
 
 <footer>
@@ -127,12 +134,24 @@
     { num: 52, week: 3, title: "Renal Papillary Necrosis",                                   games: 6, ready: true },
     { num: 53, week: 3, title: "Cystitis and Pyelonephritis",                                games: 6, ready: true },
     { num: 54, week: 3, title: "Renal Stones",                                               games: 6, ready: true },
-    { num: 55, week: 3, title: "Renal: Schistosomiasis",                                     games: 6, ready: true }
+    { num: 55, week: 3, title: "Renal: Schistosomiasis",                                     games: 6, ready: true },
+    // ===== WEEK 4: Lower Urinary Tract & Renal Neoplasia =====
+    { num: 56, week: 4, title: "Histology of the Ureters, Bladder, and Urethra",             games: 6, ready: true },
+    { num: 57, week: 4, title: "Congenital Disorders of the Lower Urinary Tract",            games: 6, ready: true },
+    { num: 58, week: 4, title: "Polycystic Kidney Disease",                                  games: 6, ready: true },
+    { num: 59, week: 4, title: "Medullary Sponge Kidney",                                    games: 6, ready: true },
+    { num: 60, week: 4, title: "Wilms Tumor",                                                games: 6, ready: true },
+    { num: 61, week: 4, title: "Renal Cell Carcinoma",                                       games: 6, ready: true },
+    { num: 62, week: 4, title: "Other Renal Tumors (Oncocytoma and Angiomyolipoma)",         games: 6, ready: true },
+    { num: 63, week: 4, title: "Bladder Cancer",                                             games: 6, ready: true },
+    { num: 64, week: 4, title: "Micturition",                                                games: 6, ready: true },
+    { num: 65, week: 4, title: "Bladder Dysfunction: Urinary Incontinence and Neurogenic Bladder", games: 6, ready: true }
   ];
 
   const grid1 = document.getElementById("moduleGridWk1");
   const grid2 = document.getElementById("moduleGridWk2");
   const grid3 = document.getElementById("moduleGridWk3");
+  const grid4 = document.getElementById("moduleGridWk4");
   modules.forEach(m => {
     const numStr = String(m.num).padStart(2, "0");
     const card = document.createElement(m.ready ? "a" : "div");
@@ -145,7 +164,7 @@
       <h3>${m.title}</h3>
       <div class="meta">${m.ready ? `${m.games} games` : "Coming soon"}</div>
     `;
-    const grid = m.week === 3 ? grid3 : m.week === 2 ? grid2 : grid1;
+    const grid = m.week === 4 ? grid4 : m.week === 3 ? grid3 : m.week === 2 ? grid2 : grid1;
     grid.appendChild(card);
   });
 </script>
